@@ -5,6 +5,9 @@ let hw = {
 };
 
 let info = {
+	id: 'growlight',
+	type: 'LIGHT',
+	name: 'String light',
 	traits: [
 		'OnOff',
 		'Brightness',

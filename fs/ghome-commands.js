@@ -1,42 +1,84 @@
 load('ghome-core.js');
 
 // todo get pins from config
-//let pin1 = 4;
-//let pin2 = 5;
-//let pin3 = 14;
+//let hw.pin1 = 4;
+//let hw.pin2 = 5;
+//let hw.pin3 = 14;
 
 let brightness = 100;
-
-let pin1 = Cfg.get('pin1');
-let pin2 = Cfg.get('pin2');
-let pin3 = Cfg.get('pin3');
 
 //let on = false;
 //let colorR = 0;
 //let colorG = 0;
 //let colorB = 0;
-let on = true;
 let colorR = 1;
 let colorG = 0.6;
 let colorB = 0.1;
 
-if (traitOnOff) {
-	GPIO.set_mode(pin1, GPIO.MODE_OUTPUT);
-	MQTT.sub('/devices/' + deviceId + '/on', function(conn, topic, val) {
-		parseOnOffCommand(val);
-		setPins();
-	}, null);
-	RPC.addHandler('commands.OnOff', function(newState) {
-		if (typeof(newState) === 'object' && typeof(newState.on) === 'boolean') {
-			states.on = newState.on;
-		} else {
-			return {error: -1, message: 'Bad request'};
+let badRequestReponse = {error: -1, message: 'Bad request'};
+
+let commands = {
+
+	OnOff: {
+		validate: function(arg) {
+			return typeof(arg.on) === 'boolean'
+		},
+		handle: function(arg) {
+			states.on = arg.on;
 		}
+	},
+
+	BrightnessAbsolute: {
+		validate: function(arg) {
+			return typeof(arg.brightness) === 'number'
+		},
+		handle: function(arg) {
+			states.brightness = arg.brightness;
+		}
+	}
+
+};
+
+
+let traits = {};
+for (let i = 0; i < info.traits.length; i++) {
+	traits[info.traits[i]] = true
+}
+print('traits', JSON.stringify(traits));
+
+function handleCommand(cmd, data) {
+	print('handleCommand', data);
+	if (typeof(data) === 'object' && cmd.validate(data)) {
+		cmd.handle(data)
+		setPins();
+		return states;
+	} else {
+		return badRequestReponse;
+	}
+}
+
+function setupCommand(traitName, commandName) {
+	if (traits[traitName] === true) {
+		/*
+		MQTT.sub('/devices/' + deviceId + '/commands/' + commandName, function(conn, topic, val) {
+			print('MQTT', commandName, val);
+			handleCommand(JSON.parse(val));
+		}, null);
+		*/
+	}
+}
+
+
+if (traits.OnOff) {
+	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
+	RPC.addHandler('commands.OnOff', function(data) {
+		handleCommand(commands.OnOff, data)
 	});
 }
 
+
 if (traitBrightness) {
-	GPIO.set_mode(pin1, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
 	MQTT.sub('/devices/' + deviceId + '/brightness', function(conn, topic, val) {
 		parseBrightnessCommand(val);
 		setPins();
@@ -44,17 +86,13 @@ if (traitBrightness) {
 }
 
 if (traitColorSetting) {
-	GPIO.set_mode(pin1, GPIO.MODE_OUTPUT);
-	GPIO.set_mode(pin2, GPIO.MODE_OUTPUT);
-	GPIO.set_mode(pin3, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(hw.pin2, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(hw.pin3, GPIO.MODE_OUTPUT);
 	MQTT.sub('/devices/' + deviceId + '/color', function(conn, topic, val) {
 		parseColorCommand(val)
 		setPins();
 	}, null);
-}
-
-function parseOnOffCommand(str) {
-	on = str === 'true';
 }
 
 function parseBrightnessCommand(str) {
@@ -90,25 +128,25 @@ function calculatePerceivedBrightness(val) {
 
 let pwmFreq = 100;
 function setPins() {
-	//print('on', on, 'brightness', brightness);
+	//print('states.on', states.on, 'brightness', brightness);
 	if (traitBrightness) {
-		let duty = on ? calculatePerceivedBrightness(brightness) / 100 : 0;
-		print('on', on, 'brightness', brightness, 'duty', duty);
+		let duty = states.on ? calculatePerceivedBrightness(brightness) / 100 : 0;
+		print('states.on', states.on, 'brightness', brightness, 'duty', duty);
 		if (traitColorSetting) {
-			PWM.set(pin1, pwmFreq, duty * colorR);
-			PWM.set(pin2, pwmFreq, duty * colorG);
-			PWM.set(pin3, pwmFreq, duty * colorB);
+			PWM.set(hw.pin1, pwmFreq, duty * colorR);
+			PWM.set(hw.pin2, pwmFreq, duty * colorG);
+			PWM.set(hw.pin3, pwmFreq, duty * colorB);
 		} else {
-			PWM.set(pin1, pwmFreq, duty);
+			PWM.set(hw.pin1, pwmFreq, duty);
 		}
 	} else {
-		GPIO.write(pin1, on ? 1 : 0);
+		GPIO.write(hw.pin1, states.on ? 1 : 0);
 		if (traitColorSetting) {
-			GPIO.write(pin1, on ? 1 : 0);
-			GPIO.write(pin2, on ? 1 : 0);
-			GPIO.write(pin3, on ? 1 : 0);
+			GPIO.write(hw.pin1, states.on ? 1 : 0);
+			GPIO.write(hw.pin2, states.on ? 1 : 0);
+			GPIO.write(hw.pin3, states.on ? 1 : 0);
 		} else {
-			GPIO.write(pin1, on ? 1 : 0);
+			GPIO.write(hw.pin1, states.on ? 1 : 0);
 		}
 	}
 }

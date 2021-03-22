@@ -1,3 +1,4 @@
+print('--------------------------------------------------');
 load('api_config.js');
 load('api_gpio.js');
 load('api_sys.js');
@@ -12,10 +13,6 @@ load('ghome-commands.js');
 
 
 let advertiseDnsSd = ffi('void mgos_dns_sd_advertise(void)');
-
-print('--------------------------------------------------');
-print('json', JSON.stringify(info));
-print('json', JSON.stringify(states));
 
 // ------------------------- CONFIG & BOOTSTRAP --------------------------------
 

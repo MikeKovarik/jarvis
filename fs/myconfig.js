@@ -22,6 +22,6 @@ let states = {
 	on: false,
 	brightness: 100,
 	color: {
-		spectrumRgb: 0xFF00FF
+		spectrumRGB: 0xFF00FF
 	}
 };

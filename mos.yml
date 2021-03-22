@@ -1,0 +1,94 @@
+author: Michal Kovarik
+description: Jarvis firmware
+# arch: PLATFORM
+version: 1.0
+manifest_version: 2017-05-18
+libs_version: ${mos.version}
+modules_version: ${mos.version}
+mongoose_os_version: ${mos.version}
+
+tags:
+  - js
+
+filesystem:
+  - fs
+
+config_schema:
+# SCHEMA DEFINITIONS
+  - ["ghome", "o", {title: ""}]
+  - ["ghome.type", "s", {title: ""}]
+  - ["ghome.name", "s", {title: ""}]
+  - ["ghome.traits", "o", {title: ""}]
+  - ["ghome.traits.OnOff", "b", false, {title: ""}]
+  - ["ghome.traits.Brightness", "b", false, {title: ""}]
+  - ["ghome.traits.ColorSetting", "b", false, {title: ""}]
+  - ["pin1", "i", 0, {title: ""}]
+  - ["pin2", "i", 0, {title: ""}]
+  - ["pin3", "i", 0, {title: ""}]
+
+  - ["mqtt.server", "test.mosquitto.org"]
+  - ["mqtt.enable", true]
+
+  - ["debug.level", 1]
+  - ["dns_sd.enable", true]
+  - ["dns_sd.adv_only", true]
+  - ["wifi.ap.enable", false]
+  - ["wifi.sta.enable", true]
+
+  - ["pin1", 4]
+  - ["pin2", 5]
+  - ["pin3", 14]
+
+# IOT DEVICE
+#  - ["device.id", "stringlight"]
+  - ["device.id", "growlight"]
+  - ["ghome.type", "LIGHT"]
+  - ["ghome.name", "String light"]
+  - ["ghome.traits.OnOff", true]
+  - ["ghome.traits.Brightness", true]
+  - ["ghome.traits.ColorSetting", true]
+
+  - ["wifi.sta.ssid", "Oskar"]
+  - ["wifi.sta.pass", "000000000001"]
+
+#  - ["dns_sd.host_name", "jarvis-iot"]
+#  - ["wifi.sta.dhcp_hostname", "jarvis-iot"]
+
+libs:
+  - origin: https://github.com/mongoose-os-libs/boards
+  - origin: https://github.com/mongoose-os-libs/mjs
+
+  - origin: https://github.com/mongoose-os-libs/ca-bundle
+  - origin: https://github.com/mongoose-os-libs/core
+  - origin: https://github.com/mongoose-os-libs/fstab
+  - origin: https://github.com/mongoose-os-libs/http-server
+  - origin: https://github.com/mongoose-os-libs/rpc-service-config
+  - origin: https://github.com/mongoose-os-libs/rpc-service-fs
+  - origin: https://github.com/mongoose-os-libs/rpc-uart
+  - origin: https://github.com/mongoose-os-libs/rpc-ws
+  - origin: https://github.com/mongoose-os-libs/sntp # time
+  - origin: https://github.com/mongoose-os-libs/mqtt
+
+  - origin: https://github.com/mongoose-os-libs/adc
+  - origin: https://github.com/mongoose-os-libs/dns-sd
+  #- origin: https://github.com/mongoose-os-libs/i2c
+  - origin: https://github.com/mongoose-os-libs/ota-http-client
+  - origin: https://github.com/mongoose-os-libs/ota-http-server
+  - origin: https://github.com/mongoose-os-libs/pwm
+  - origin: https://github.com/mongoose-os-libs/rpc-gcp
+  - origin: https://github.com/mongoose-os-libs/rpc-loopback
+  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
+  - origin: https://github.com/mongoose-os-libs/rpc-service-gpio
+  - origin: https://github.com/mongoose-os-libs/rpc-service-i2c
+  - origin: https://github.com/mongoose-os-libs/rpc-service-ota
+  - origin: https://github.com/mongoose-os-libs/rpc-service-wifi
+  #- origin: https://github.com/mongoose-os-libs/spi
+  - origin: https://github.com/mongoose-os-libs/vfs-dev-spi-flash
+  - origin: https://github.com/mongoose-os-libs/wifi
+
+# UNKNOWN BUILTIN
+#  - origin: https://github.com/mongoose-os-libs/shadow
+#  - origin: https://github.com/mongoose-os-libs/ota-shadow
+
+# OTHER FEATURES
+#  - origin: https://github.com/mongoose-os-libs/dht # humidity and temp sensors

@@ -15,7 +15,8 @@ filesystem:
 
 config_schema:
 # SCHEMA DEFINITIONS
-  - ["mqtt.server", "test.mosquitto.org"]
+#  - ["mqtt.server", "test.mosquitto.org"]
+  - ["mqtt.server", ""]
   - ["mqtt.enable", true]
 
   - ["debug.level", 1]
@@ -23,15 +24,6 @@ config_schema:
   - ["dns_sd.adv_only", true]
   - ["wifi.ap.enable", false]
   - ["wifi.sta.enable", true]
-
-  - ["wifi.sta.ssid", "Oskar"]
-  - ["wifi.sta.pass", "000000000001"]
-
-# IOT DEVICE
-#  - ["device.id", "stringlight"]
-  - ["device.id", "growlight"]
-#  - ["dns_sd.host_name", "jarvis-iot"]
-#  - ["wifi.sta.dhcp_hostname", "jarvis-iot"]
 
 libs:
   - origin: https://github.com/mongoose-os-libs/boards
@@ -65,7 +57,9 @@ libs:
   - origin: https://github.com/mongoose-os-libs/vfs-dev-spi-flash
   - origin: https://github.com/mongoose-os-libs/wifi
 
-# UNKNOWN BUILTIN
+# OTA UPDATE - OVER LAN
+# curl -v -F file=@build/fw.zip http://IP_ADDR/update
+
 #  - origin: https://github.com/mongoose-os-libs/shadow
 #  - origin: https://github.com/mongoose-os-libs/ota-shadow
 

@@ -1,4 +1,4 @@
-load('ghome-core.js');
+load('device-config.js');
 
 
 let badRequestReponse = {error: -1, message: 'Bad request'};
@@ -56,7 +56,7 @@ function handleCommand(cmd, data) {
 }
 
 function getMqttTopic(commandName) {
-	return '/devices/' + deviceId + '/commands/' + commandName;
+	return '/devices/' + whoami.id + '/commands/' + commandName;
 }
 
 
@@ -129,32 +129,6 @@ function hexNumToRgb(num) {
 		b: num & 255
 	}
 }
-
-
-let hubHost = '';
-let hubPort = 0;
-RPC.addHandler('setHub', function(data) {
-	print('setHub', JSON.stringify(data));
-	hubHost = data.host;
-	hubPort = data.port;
-	print('hubHost', hubHost);
-	print('hubPort', hubPort);
-	Net.connect({
-		addr: 'tcp://' + hubHost + ':' + JSON.stringify(hubPort),
-		onconnect: function(conn) {
-			print('tcp onconnect');
-			Net.send(conn, JSON.stringify(states));
-			Net.close(conn);
-		},
-		onclose: function(conn) {
-			print('tcp onclose');
-		},
-		onerror: function(conn) {
-			print('tcp onerror');
-		},
-	});
-	return {}
-});
 
 /*
 OLD CODE FOR HANDLING HEX COLOR

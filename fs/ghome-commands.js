@@ -4,13 +4,14 @@ load('ghome-core.js');
 let badRequestReponse = {error: -1, message: 'Bad request'};
 
 let traits = {};
-for (let i = 0; i < info.traits.length; i++) {
-	traits[info.traits[i]] = true
+for (let i = 0; i < whoami.traits.length; i++) {
+	traits[whoami.traits[i]] = true
 }
 
 let commands = {
 
 	OnOff: {
+		fullName: 'action.devices.commands.OnOff',
 		validate: function(arg) {
 			return typeof(arg.on) === 'boolean'
 		},
@@ -20,6 +21,7 @@ let commands = {
 	},
 
 	BrightnessAbsolute: {
+		fullName: 'action.devices.commands.BrightnessAbsolute',
 		validate: function(arg) {
 			return typeof(arg.brightness) === 'number'
 		},
@@ -30,6 +32,7 @@ let commands = {
 	},
 
 	ColorAbsolute: {
+		fullName: 'action.devices.commands.ColorAbsolute',
 		validate: function(arg) {
 			return typeof(arg.color) === 'object'
 				&& typeof(arg.color.spectrumRGB) === 'number'
@@ -59,20 +62,20 @@ function getMqttTopic(commandName) {
 
 if (traits.OnOff) {
 	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
-	RPC.addHandler('commands.OnOff', function(data) {
+	RPC.addHandler(commands.OnOff.fullName, function(data) {
 		return handleCommand(commands.OnOff, data)
 	});
-	MQTT.sub(getMqttTopic('OnOff'), function(conn, topic, val) {
+	MQTT.sub(getMqttTopic(commands.OnOff.fullName), function(conn, topic, val) {
 		handleCommand(commands.OnOff, JSON.parse(val));
 	}, null);
 }
 
 
 if (traits.Brightness) {
-	RPC.addHandler('commands.BrightnessAbsolute', function(data) {
+	RPC.addHandler(commands.BrightnessAbsolute.fullName, function(data) {
 		return handleCommand(commands.BrightnessAbsolute, data)
 	});
-	MQTT.sub(getMqttTopic('BrightnessAbsolute'), function(conn, topic, val) {
+	MQTT.sub(getMqttTopic(commands.BrightnessAbsolute.fullName), function(conn, topic, val) {
 		handleCommand(commands.BrightnessAbsolute, JSON.parse(val));
 	}, null);
 }
@@ -82,10 +85,10 @@ if (traits.ColorSetting) {
 	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
 	GPIO.set_mode(hw.pin2, GPIO.MODE_OUTPUT);
 	GPIO.set_mode(hw.pin3, GPIO.MODE_OUTPUT);
-	RPC.addHandler('commands.ColorAbsolute', function(data) {
+	RPC.addHandler(commands.ColorAbsolute.fullName, function(data) {
 		return handleCommand(commands.ColorAbsolute, data)
 	});
-	MQTT.sub(getMqttTopic('ColorAbsolute'), function(conn, topic, val) {
+	MQTT.sub(getMqttTopic(commands.ColorAbsolute.fullName), function(conn, topic, val) {
 		handleCommand(commands.ColorAbsolute, JSON.parse(val));
 	}, null);
 }
@@ -99,12 +102,12 @@ function compensatePerceivedBrightness(val) {
 let pwmFreq = 100;
 function setPins() {
 	let duty = 0;
-	if (traitBrightness) {
+	if (traits.Brightness) {
 		duty = states.on ? compensatePerceivedBrightness(states.brightness) / 100 : 0;
 	} else {
 		duty = states.on ? 1 : 0;
 	}
-	if (traitColorSetting) {
+	if (traits.ColorSetting) {
 		let rgb = hexNumToRgb(states.color.spectrumRGB);
 		PWM.set(hw.pin1, pwmFreq, duty * (rgb.r / 255));
 		PWM.set(hw.pin2, pwmFreq, duty * (rgb.g / 255));
@@ -127,6 +130,31 @@ function hexNumToRgb(num) {
 	}
 }
 
+
+let hubHost = '';
+let hubPort = 0;
+RPC.addHandler('setHub', function(data) {
+	print('setHub', JSON.stringify(data));
+	hubHost = data.host;
+	hubPort = data.port;
+	print('hubHost', hubHost);
+	print('hubPort', hubPort);
+	Net.connect({
+		addr: 'tcp://' + hubHost + ':' + JSON.stringify(hubPort),
+		onconnect: function(conn) {
+			print('tcp onconnect');
+			Net.send(conn, JSON.stringify(states));
+			Net.close(conn);
+		},
+		onclose: function(conn) {
+			print('tcp onclose');
+		},
+		onerror: function(conn) {
+			print('tcp onerror');
+		},
+	});
+	return {}
+});
 
 /*
 OLD CODE FOR HANDLING HEX COLOR

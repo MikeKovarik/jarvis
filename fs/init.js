@@ -1,4 +1,5 @@
 print('--------------------------------------------------');
+load('polyfill.js');
 load('api_config.js');
 load('api_gpio.js');
 load('api_sys.js');
@@ -19,31 +20,22 @@ let advertiseDnsSd = ffi('void mgos_dns_sd_advertise(void)');
 // Re-announce the device every hour.
 let heartbeatInterval = 1000 * 60 * 60;
 
-let mdnsTxt = 'heartbeatInterval=' + JSON.stringify(heartbeatInterval) + ','
-	        + 'name=' + Cfg.get('ghome.name') + ','
-	        + 'type=' + Cfg.get('ghome.type');
-
-print('deviceId        ', deviceId);
-print('hostname        ', hostname);
-print('dns_sd.host_name', Cfg.get('dns_sd.host_name'));
-print(mdnsTxt);
-
-RPC.addHandler('info', function() {
-	return info;
+RPC.addHandler('whoami', function() {
+	return whoami;
 });
 
 RPC.addHandler('states', function() {
 	return states;
 });
 
+print('dns_sd.host_name', Cfg.get('dns_sd.host_name'))
+
 if (Cfg.get('dns_sd.host_name').indexOf('jarvis') === -1) {
 	print('CHANGING CONF');
 	Cfg.set({
 		dns_sd: {
-			enable: true,
-			adv_only: true,
 			host_name: hostname,
-			txt: mdnsTxt
+			txt: 'heartbeatInterval=' + JSON.stringify(heartbeatInterval)
 		}
 	});
 	Cfg.set({wifi: {sta: {dhcp_hostname: hostname}}});

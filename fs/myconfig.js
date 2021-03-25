@@ -4,9 +4,17 @@ let hw = {
 	pin3: 14
 };
 
-let info = {
+let states = {
+	on: false,
+	brightness: 100,
+	color: {
+		spectrumRGB: 0xFF00FF
+	}
+};
+
+let whoami = {
 	id: 'growlight',
-	type: 'LIGHT',
+	type: 'action.devices.types.LIGHT',
 	name: 'String light',
 	traits: [
 		'OnOff',
@@ -15,13 +23,6 @@ let info = {
 	],
 	attributes: {
 		colorModel: 'rgb'
-	}
-};
-
-let states = {
-	on: false,
-	brightness: 100,
-	color: {
-		spectrumRGB: 0xFF00FF
-	}
+	},
+	states: states
 };

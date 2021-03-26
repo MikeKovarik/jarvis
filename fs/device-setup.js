@@ -65,16 +65,6 @@ Event.addHandler(Net.STATUS_GOT_IP, function(ev, evdata, ud) {
 	advertiseDnsSd();
 }, null);
 
-// ------------ DEVICE INFO APIS -------------------------
-
-RPC.addHandler('whoami', function() {
-	return whoami;
-});
-
-RPC.addHandler('states', function() {
-	return states;
-});
-
 /*
 MQTT.setEventHandler(function(conn, ev, edata) {
   if (ev !== 0) console.log('MQTT event handler: got', ev);

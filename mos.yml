@@ -15,9 +15,8 @@ filesystem:
 
 config_schema:
 # SCHEMA DEFINITIONS
-#  - ["mqtt.server", "test.mosquitto.org"]
-  - ["mqtt.server", ""]
-  - ["mqtt.enable", true]
+#  - ["mqtt.server", ""]
+#  - ["mqtt.enable", true]
 
   - ["debug.level", 1]
   - ["dns_sd.enable", true]

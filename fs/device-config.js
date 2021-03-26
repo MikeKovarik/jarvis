@@ -1,7 +1,10 @@
-let hw = {
-	pin1: 4,
-	pin2: 5,
-	pin3: 14
+let pins = {
+	// LEDS
+	out1: 4,
+	out2: 5,
+	out3: 14,
+	// Button
+	in1: 0
 };
 
 let states = {
@@ -17,9 +20,9 @@ let whoami = {
 	type: 'action.devices.types.LIGHT',
 	name: 'String light',
 	traits: [
-		'OnOff',
-		'Brightness',
-		'ColorSetting'
+		'action.devices.commands.OnOff',
+		'action.devices.commands.Brightness',
+		'action.devices.commands.ColorSetting'
 	],
 	attributes: {
 		colorModel: 'rgb'

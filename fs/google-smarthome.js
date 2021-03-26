@@ -3,9 +3,12 @@ load('device-config.js');
 
 let badRequestReponse = {error: -1, message: 'Bad request'};
 
+let commandNameStem = 'action.devices.commands.';
 let traits = {};
 for (let i = 0; i < whoami.traits.length; i++) {
-	traits[whoami.traits[i]] = true
+	let fullName = whoami.traits[i];
+	let shortName = fullName.slice(commandNameStem.length);
+	traits[shortName] = true
 }
 
 let commands = {
@@ -61,7 +64,7 @@ function getMqttTopic(commandName) {
 
 
 if (traits.OnOff) {
-	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
 	RPC.addHandler(commands.OnOff.fullName, function(data) {
 		return handleCommand(commands.OnOff, data)
 	});
@@ -82,15 +85,25 @@ if (traits.Brightness) {
 
 
 if (traits.ColorSetting) {
-	GPIO.set_mode(hw.pin1, GPIO.MODE_OUTPUT);
-	GPIO.set_mode(hw.pin2, GPIO.MODE_OUTPUT);
-	GPIO.set_mode(hw.pin3, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(pins.out2, GPIO.MODE_OUTPUT);
+	GPIO.set_mode(pins.out3, GPIO.MODE_OUTPUT);
 	RPC.addHandler(commands.ColorAbsolute.fullName, function(data) {
 		return handleCommand(commands.ColorAbsolute, data)
 	});
 	MQTT.sub(getMqttTopic(commands.ColorAbsolute.fullName), function(conn, topic, val) {
 		handleCommand(commands.ColorAbsolute, JSON.parse(val));
 	}, null);
+}
+
+
+if (pins.in1 !== undefined) {
+	GPIO.set_button_handler(pins.in1, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 50, function(x) {
+		console.log('Button pressed')
+		states.on = !states.on;
+		setPins();
+		notifyHub();
+	}, true);
 }
 
 
@@ -109,14 +122,14 @@ function setPins() {
 	}
 	if (traits.ColorSetting) {
 		let rgb = hexNumToRgb(states.color.spectrumRGB);
-		PWM.set(hw.pin1, pwmFreq, duty * (rgb.r / 255));
-		PWM.set(hw.pin2, pwmFreq, duty * (rgb.g / 255));
-		PWM.set(hw.pin3, pwmFreq, duty * (rgb.b / 255));
+		PWM.set(pins.out1, pwmFreq, duty * (rgb.r / 255));
+		PWM.set(pins.out2, pwmFreq, duty * (rgb.g / 255));
+		PWM.set(pins.out3, pwmFreq, duty * (rgb.b / 255));
 	} else {
 		if (duty === 1 || duty === 0) {
-			GPIO.write(hw.pin1, duty);
+			GPIO.write(pins.out1, duty);
 		} else {
-			PWM.set(hw.pin1, pwmFreq, duty);
+			PWM.set(pins.out1, pwmFreq, duty);
 		}
 	}
 }

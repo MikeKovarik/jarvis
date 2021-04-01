@@ -1,1 +1,6 @@
-build/
+/ssl.key
+/ssl.cert
+/torrent-client
+/archived
+/secrets
+/iot-firmware/build

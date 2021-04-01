@@ -1,3 +1,25 @@
 {
-  "type": "module"
+  "name": "jarvis",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "esm": {
+    "cjs": true
+  },
+  "scripts": {
+    "proxy": "pm2 stop jarvis-proxy-tunnel && pm2 flush && pm2 start proxytunnel.cjs --name jarvis-proxy-tunnel && pm2 logs jarvis-proxy-tunnel"
+  },
+  "dependencies": {
+    "actions-on-google": "^2.13.0",
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.0",
+    "express": "^4.17.1",
+    "fast-deep-equal": "^3.1.3",
+    "lan-tunnel": "^2.0.0",
+    "multicast-dns": "^7.2.2",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "esm": "^3.2.25"
+  }
 }

@@ -3,13 +3,15 @@ import {EventEmitter} from 'events'
 import './utils.js'
 import {Device} from './Device.js'
 import {app} from './server.js'
+import os from 'os'
 
 
 //stringlight
 //growlight
 //bulbstring
 
-const hubHostname = 'jarvis-hub'
+//const hubHostname = 'jarvis-hub'
+const hubHostname = os.hostname()
 const hostnamePrefix = 'jarvis-iot-'
 
 class Devices extends Map {
@@ -62,7 +64,8 @@ class Devices extends Map {
 		let aRecord = answers.find(a => a.type === 'A')
 		if (aRecord) {
 			let aData = this.parseMdnsARecord(aRecord)
-			if (aData.hostname === hubHostname) return
+			if (!this.isValidIotDevice(aData.hostname))
+				return console.error(`Unknown device ${aData.hostname} ${aData.ip}`)
             console.gray('~ aData', JSON.stringify(aData))
 			let device = this.getOrCreateFromA(aData)
 			device.restartHeartbeat()
@@ -78,13 +81,14 @@ class Devices extends Map {
 
 	parseMdnsARecord({data, name}) {
 		let ip       = data
-		let hostname = name.replace('.local', '')
-		let id
-		if (hostname.startsWith(hostnamePrefix))
-			id = hostname.slice(hostnamePrefix.length)
-		else
-			console.error(`Unknown hostname ${hostname} ${ip}`)
+		let hostname = name.replace('.local', '').replace('.lan', '')
+		let id       = hostname.slice(hostnamePrefix.length)
 		return {ip, id, hostname}
+	}
+
+	isValidIotDevice(hostname) {
+		return hostname.startsWith(hostnamePrefix)
+			&& hostname !== hubHostname
 	}
 
 	parseMdnsTxtRecord({data}) {

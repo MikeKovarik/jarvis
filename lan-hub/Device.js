@@ -2,7 +2,7 @@ import {EventEmitter} from 'events'
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {smarthome} from './smarthome-core.js'
-import {agentUserId, tunnelConfig} from '../shared/config.js'
+import config from './config.js'
 import * as utils from './utils.js'
 
 
@@ -210,7 +210,7 @@ export class Device extends EventEmitter {
 		console.gray(this.id, 'linkToHub()')
 		await this.callRpcMethod('linkToHub', {
 			host: utils.ip,
-			port: tunnelConfig.appPort,
+			port: config.appPort,
 		})
 	}
 
@@ -263,7 +263,7 @@ export class Device extends EventEmitter {
         console.gray(this.id, 'reportState()')
 		try {
 			let res = await smarthome.reportState({
-				agentUserId,
+				agentUserId: config.agentUserId,
 				requestId: Math.random().toString(),
 				payload: {
 					devices: {

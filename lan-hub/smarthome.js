@@ -1,6 +1,6 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import devices from './devices.js'
-import {agentUserId} from '../shared/config.js'
+import config from './config.js'
 import {smarthome} from './smarthome-core.js'
 
 
@@ -15,7 +15,7 @@ smarthome.onSync(async body => {
 	return {
 		requestId: body.requestId,
 		payload: {
-			agentUserId,
+			agentUserId: config.agentUserId,
 			devices: await handleSync(body)
 		}
 	}

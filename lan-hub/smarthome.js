@@ -1,6 +1,6 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import devices from './devices.js'
-import {agentUserId} from '../../shared/config.js'
+import {agentUserId} from '../shared/config.js'
 import {smarthome} from './smarthome-core.js'
 
 

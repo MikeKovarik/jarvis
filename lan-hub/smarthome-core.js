@@ -5,7 +5,7 @@ import {app} from './server.js'
 
 let jwt
 try {
-	let jwtPath = new URL('../../secrets/ghome-key.json', import.meta.url)
+	let jwtPath = new URL('../secrets/ghome-key.json', import.meta.url)
 	jwt = JSON.parse(fs.readFileSync(jwtPath).toString())
 } catch (e) {
 	console.warn('error reading service account key:', e)

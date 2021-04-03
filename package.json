@@ -7,7 +7,9 @@
     "cjs": true
   },
   "scripts": {
-    "proxy": "pm2 stop jarvis-proxy-tunnel && pm2 flush && pm2 start proxytunnel.cjs --name jarvis-proxy-tunnel && pm2 logs jarvis-proxy-tunnel"
+    "dev": "node lan-hub/index.js",
+    "app": "pm2 stop jarvis && pm2 flush && pm2 start lan-hub/index.js --name jarvis && pm2 logs jarvis",
+    "proxy": "pm2 stop jarvis-proxy-tunnel && pm2 flush && pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy-tunnel && pm2 logs jarvis-proxy-tunnel"
   },
   "dependencies": {
     "actions-on-google": "^2.13.0",

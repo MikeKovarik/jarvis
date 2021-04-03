@@ -1,13 +1,13 @@
 import express from 'express'
 import {exposeThroughProxy} from 'lan-tunnel'
 import bodyParser from 'body-parser'
-import {tunnelConfig} from '../../shared/config.js'
+import {tunnelConfig} from '../shared/config.js'
 
 
 export const app = express()
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })) 
+app.use(bodyParser.json({limit: '100mb'}));
+app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
 app.set('json spaces', 2)
 app.use(express.static('static'))
 

@@ -2,7 +2,7 @@ import {EventEmitter} from 'events'
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {smarthome} from './smarthome-core.js'
-import {agentUserId, tunnelConfig} from '../../shared/config.js'
+import {agentUserId, tunnelConfig} from '../shared/config.js'
 import * as utils from './utils.js'
 
 

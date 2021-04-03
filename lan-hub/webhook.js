@@ -11,9 +11,8 @@ const deployScript = 'restart-app'
 
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'
-const repoName      = 'MikeKovarik/jarvis'
+//const repoName      = 'MikeKovarik/jarvis'
 const repoDir       = path.join(fileURLToPath(import.meta.url), '../../')
-console.log('~ repoDir', repoDir)
 
 function run(command) {
 	console.gray(`running:`, command)

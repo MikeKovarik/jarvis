@@ -9,7 +9,7 @@
   "scripts": {
     "dev-app": "node lan-hub/index.js",
     "dev-proxy": "node internet-proxy/proxytunnel.cjs",
-    "app": "pm2 start lan-hub/index.js --name jarvis",
+    "app": "pm2 start lan-hub/index.js --name jarvis && pm2 logs jarvis",
     "proxy": "pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy && pm2 logs jarvis-proxy",
     "restart-app": "pm2 stop jarvis && pm2 flush && pm2 start lan-hub/index.js --name jarvis && pm2 logs jarvis",
     "restart-proxy": "pm2 stop jarvis-proxy && pm2 flush && pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy && pm2 logs jarvis-proxy"

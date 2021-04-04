@@ -104,7 +104,7 @@ let devices = new Devices
 export default devices
 
 // Receive updates sent from device
-app.post('/device-states-update', (req, res) => {
+app.post('/device-state-update', (req, res) => {
 	// It's likely IPv6 app with ::ffff: IPv4 subnet prefix 
 	var rawIp = req.header('x-forwarded-for') || req.connection.remoteAddress || req.ip
 	let ip = sanitizeIp6AsIp4(rawIp)
@@ -115,7 +115,7 @@ app.post('/device-states-update', (req, res) => {
 	let messageIsVerifiedFromDevice = true
 	if (!messageIsVerifiedFromDevice) return
 	let device = devices.getByIp(ip)
-	device.injectStates(req.body)
+	device.injectState(req.body)
 })
 
 function sanitizeIp6AsIp4(ip6) {

@@ -61,8 +61,7 @@ async function deploy() {
 	console.magenta(`DEPLOYING REPO`)
 	try {
 		await run('npm install')
-		await run(`npm run ${deployScript}`)
-		console.green('DEPLOY OK')
+		cp.spawn('npm', ['run', deployScript], {stdio: 'pipe'})
 	} catch(err) {
 		console.error(`Couldn't deploy repo`)
 		console.error(err)

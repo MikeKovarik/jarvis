@@ -13,8 +13,8 @@
     "start-proxy": "pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy && pm2 logs jarvis-proxy",
     "reboot": "pm2 stop jarvis && pm2 flush && pm2 start lan-hub/index.js --name jarvis && pm2 logs jarvis",
     "reboot-proxy": "pm2 stop jarvis-proxy && pm2 flush && pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy && pm2 logs jarvis-proxy",
-    "restart": "pm2 stop jarvis",
-    "restart-proxy": "pm2 stop jarvis-proxy"
+    "restart": "pm2 restart jarvis",
+    "restart-proxy": "pm2 restart jarvis-proxy"
   },
   "dependencies": {
     "actions-on-google": "^2.13.0",

@@ -40,6 +40,10 @@ app.post('/login', async (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('POST /login')
 	console.magenta(req.body)
+	if (req.body.client_secret !== config.secret) {
+		// TODO
+		throw `Incorrect Google app`
+	}
 	// Here, you should validate the user account.
 	// In this sample, we do not do that.
 	const responseUrl = decodeURIComponent(req.body.response_url)

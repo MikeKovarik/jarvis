@@ -22,6 +22,7 @@ class Devices extends Map {
 		if (!this.has(key)) {
 			this.emit('new', device)
 			device.on('ready', () => this.emit('ready', device))
+			device.on('fail', () => this.emit('fail', device))
 		}
 		super.set(key, device)
 	}
@@ -136,8 +137,12 @@ devices.on('new', device => {
 	console.green('new device discovered:', device.id, device.ip)
 })
 
-// LOGGING
 devices.on('ready', device => {
 	console.green('new device ready:', device.id, device.ip)
+	console.gray(JSON.stringify(device, null, 2))
+})
+
+devices.on('fail', device => {
+	console.error('device initialization failed:', device.id, device.ip)
 	console.gray(JSON.stringify(device, null, 2))
 })

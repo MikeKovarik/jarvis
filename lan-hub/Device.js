@@ -6,6 +6,8 @@ import config from './config.js'
 import * as utils from './utils.js'
 
 
+Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
+
 const defaultHeartbeatTimeout = 1000 * 60 * 60 * 12 // 12 hours
 
 function getKeys(ctx) {
@@ -17,6 +19,16 @@ function getKeys(ctx) {
 	set.delete('toJSON')
 	set.delete('valueOf')
 	return Array.from(set)
+}
+
+async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
+	try {
+		return await fn()
+	} catch(e) {
+		if (attempt > maxAttempts) throw e
+		await Promise.timeout(2 ** attempt * 1000)
+		return callWithExpBackoff(fn, attempt + 1)
+	}
 }
 
 export class Device extends EventEmitter {
@@ -44,7 +56,7 @@ export class Device extends EventEmitter {
 		this.id = id
 		this.ip = ip
 		this.hostname = hostname
-		this.ready = this.initialize()
+		this.initialize()
 
 		// no need to do anything about IP, GHome doesn't care about that.
 		this.on('ip-change', () => console.orange(this.id, 'ip changed to', this.ip))
@@ -53,23 +65,44 @@ export class Device extends EventEmitter {
 		this.on('offline', () => console.orange(this.id, 'is offline'))
 		this.on('states-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.states)))
 
+		// setup this instance with possibly new device data.
 		this.on('firmware-change', this.initialize)
+		// make sure the device knows how to reach this hub once it comes online
+		this.on('online', this.initialize)
+		// notify google about offline state
 		this.on('offline', this.reportState)
+		this.on('online', this.reportState)
 		this.on('states-change', this.reportState)
 	}
 
-	complete = false
+	initializing = false
+	initialized = false
 
-	initialize = async () => {
+	initialize = () => {
+		if (this.initializing) return
+		this.initializing = true
+		callWithExpBackoff(this.initBody)
+			.then(this.initSucceeded)
+			.catch(this.initFailed)
+	}
+
+	initBody = async () => {
 		// NOTE: whoami response contains states object. Injecting new states triggers states-change event
 		// and the event handler triggers reportState(). So it's not necessary here.
-		console.log('initialize 1')
 		await this.fetchWhoami()
-		console.log('initialize 2')
 		await this.linkToHub()
-		console.log('initialize 3')
-		this.complete = true
+	}
+
+	initSucceeded = () => {
+		this.initialized = true
+		this.initializing = false
 		this.emit('ready')
+	}
+
+	initFailed = () => {
+		this.initialized = false
+		this.initializing = false
+		this.emit('fail')
 	}
 
 	get online() {
@@ -98,7 +131,6 @@ export class Device extends EventEmitter {
 		if (txt.fw_id)             this.swDate               = parseMosDate(txt.fw_id)
 		if (txt.heartbeatInterval) this.#heartbeatInterval   = Number(txt.heartbeatInterval)
 		// TODO: check if 'fw_id' aka 'swDate' has changed and trigger restart if so.
-		if (this.#heartbeatInterval !== undefined) this.restartHeartbeat()
 	}
 
 	toGoogleDevice() {
@@ -150,7 +182,7 @@ export class Device extends EventEmitter {
 	}
 
 	restartHeartbeat() {
-		//console.gray(this.id, 'restartHeartbeat()')
+		console.gray(this.id, 'restartHeartbeat()')
 		clearTimeout(this.#heartbeatTimeout)
 		// Heartbeat millis sent by device is exact time. For it to expire, we're adding 10 seconds to that.
 		//this.#heartbeatTimeout = setInterval(() => this.online = false, this.#heartbeatInterval)
@@ -189,10 +221,10 @@ export class Device extends EventEmitter {
 				if (!isErrorMessage(json)) return json
 			} catch {}
 		} catch (err) {
-			console.red(this.id, 'RPC method', command, 'failed')
-			console.gray('input data', data)
-			console.gray('exception:', err)
+			console.error(this.id, 'RPC method', command, 'failed')
+			console.error(err.message)
 			this.online = false
+			throw err
 		}
 	}
 
@@ -220,7 +252,7 @@ export class Device extends EventEmitter {
 	async fetchWhoami() {
 		console.gray(this.id, 'fetchWhoami()')
 		let whoami = await this.callRpcMethod('whoami')
-		if (whoami)  this.injectWhoami(whoami)
+		if (whoami) this.injectWhoami(whoami)
 	}
 
 	// Contains only states. Can be called anytime after boot when we don't need to knouw about devices' basic info
@@ -260,7 +292,10 @@ export class Device extends EventEmitter {
 	// each of which triggers reportState. Not only is it redundant, but the first call could arrive
 	// with delay, causing old data to win over actual state.
 	reportState = async () => {
-        console.gray(this.id, 'reportState()')
+		if (this.initialized)
+	        console.gray(this.id, 'reporting state')
+		else
+	        console.gray(this.id, 'not reporting state, device not initialized')
 		try {
 			let res = await smarthome.reportState({
 				agentUserId: config.agentUserId,

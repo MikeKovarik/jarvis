@@ -246,6 +246,11 @@ export class Device extends EventEmitter {
 		})
 	}
 
+	async reboot() {
+		console.gray(this.id, 'reboot()')
+		await this.callRpcMethod('sys.reboot')
+	}
+
 	// Usually only called once, after discovering the device or on boot.
 	// Contains both whoami and states to save on calling two separate requests.
 	// After boot, we only ever want to know the states

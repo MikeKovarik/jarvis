@@ -6,8 +6,6 @@ import config from './config.js'
 import * as utils from './utils.js'
 
 
-// TODO: rename states to state
-
 Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
 
 const defaultHeartbeatTimeout = 1000 * 60 * 60 * 12 // 12 hours
@@ -35,7 +33,7 @@ async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
 
 export class Device extends EventEmitter {
 
-	states = {}
+	state = {}
 
 	// number of milliseconds, reported by device
 	#heartbeatInterval = undefined
@@ -65,7 +63,7 @@ export class Device extends EventEmitter {
 		this.on('firmware-change', () => console.orange(this.id, 'firmware changed'))
 		this.on('online', () => console.green(this.id, 'is online'))
 		this.on('offline', () => console.orange(this.id, 'is offline'))
-		this.on('states-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.states)))
+		this.on('state-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.state)))
 
 		// setup this instance with possibly new device data.
 		this.on('firmware-change', this.initialize)
@@ -74,7 +72,7 @@ export class Device extends EventEmitter {
 		// notify google about offline state
 		this.on('offline', this.reportState)
 		this.on('online', this.reportState)
-		this.on('states-change', this.reportState)
+		this.on('state-change', this.reportState)
 	}
 
 	initializing = false
@@ -89,7 +87,7 @@ export class Device extends EventEmitter {
 	}
 
 	initBody = async () => {
-		// NOTE: whoami response contains states object. Injecting new states triggers states-change event
+		// NOTE: whoami response contains states object. Injecting new states triggers state-change event
 		// and the event handler triggers reportState(). So it's not necessary here.
 		await this.fetchWhoami()
 		await this.linkToHub()
@@ -108,12 +106,12 @@ export class Device extends EventEmitter {
 	}
 
 	get online() {
-		return this.states.online ?? false
+		return this.state.online ?? false
 	}
 
 	set online(newVal = false) {
-		if (this.states.online === newVal) return
-		this.states.online = newVal
+		if (this.state.online === newVal) return
+		this.state.online = newVal
 		this.emit(newVal ? 'online' : 'offline')
 	}
 
@@ -235,9 +233,9 @@ export class Device extends EventEmitter {
 	// TODO: rename to executeCommand?
 	async execute({command, params}) {
 		console.gray(this.id, 'execute()', command, params)
-		let states = await this.callRpcMethod(command, params)
-		if (states) this.injectStates(states)
-		return this.states
+		let state = await this.callRpcMethod(command, params)
+		if (state) this.injectState(state)
+		return this.state
 	}
 
 	async linkToHub() {
@@ -258,10 +256,10 @@ export class Device extends EventEmitter {
 	}
 
 	// Contains only states. Can be called anytime after boot when we don't need to knouw about devices' basic info
-	async fetchStates() {
-		console.gray(this.id, 'fetchStates()')
-		let states = await this.callRpcMethod('states')
-		if (states) this.injectStates(states)
+	async fetchState() {
+		console.gray(this.id, 'fetchState()')
+		let state = await this.callRpcMethod('state')
+		if (state) this.injectState(state)
 	}
 
 	injectWhoami(whoami) {
@@ -273,15 +271,15 @@ export class Device extends EventEmitter {
 		else
 			this.traits     = whoami.traits.map(trait => `action.devices.traits.${trait}`)
 		this.attributes = whoami.attributes
-		this.injectStates(whoami.states)
+		this.injectState(whoami.state)
 	}
 
-	injectStates(newStates) {
+	injectState(newState) {
 		// preserve online status
-		let {online, ...oldStates} = this.states
-		if (!equal(newStates, oldStates)) {
-			this.states = {online, ...newStates}
-			this.emit('states-change', this.states)
+		let {online, ...oldState} = this.state
+		if (!equal(newState, oldState)) {
+			this.state = {online, ...newState}
+			this.emit('state-change', this.state)
 		}
 		// todo: compare data, trigger change event and only then fire reportState
 	}
@@ -305,7 +303,7 @@ export class Device extends EventEmitter {
 				payload: {
 					devices: {
 						states: {
-							[this.id]: this.states,
+							[this.id]: this.state,
 						},
 					},
 				},

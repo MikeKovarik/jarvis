@@ -19,8 +19,8 @@ RPC.addHandler('whoami', function() {
 	return whoami;
 });
 
-RPC.addHandler('states', function() {
-	return states;
+RPC.addHandler('state', function() {
+	return state;
 });
 
 function notifyHub() {
@@ -31,7 +31,7 @@ function notifyHub() {
 			onconnect: function(conn) {
 				Net.send(conn, createPostData());
 				Net.close(conn);
-				print('Notified hub of states uptate');
+				print('Notified hub of state uptate');
 			}
 		});
 	} else {
@@ -40,14 +40,14 @@ function notifyHub() {
 }
 
 function createPostData() {
-	let json = JSON.stringify(states);
-	return 'POST /device-states-update HTTP/1.1'
+	let json = JSON.stringify(state);
+	return 'POST /device-state-update HTTP/1.1'
 		+ '\n' + 'Host: ' + hubHost 
 		+ '\n' + 'content-type: application/json'
 		+ '\n' + 'content-length: ' + JSON.stringify(json.length)
 		+ '\n'
 		+ '\n' + json;
-	return JSON.stringify(states);
+	return JSON.stringify(state);
 }
 
 /*

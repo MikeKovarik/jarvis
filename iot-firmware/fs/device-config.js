@@ -7,7 +7,7 @@ let pins = {
 	in1: 0
 };
 
-let states = {
+let state = {
 	on: false,
 	brightness: 100,
 	color: {
@@ -18,7 +18,7 @@ let states = {
 let whoami = {
 	id: 'growlight',
 	type: 'action.devices.types.LIGHT',
-	name: 'String light',
+	name: 'Grow light',
 	traits: [
 		'action.devices.traits.OnOff',
 		'action.devices.traits.Brightness',
@@ -27,9 +27,19 @@ let whoami = {
 	attributes: {
 		colorModel: 'rgb'
 	},
-	states: states
+	state: state
 };
-
+/*
+let whoami = {
+	id: 'stringlight',
+	type: 'action.devices.types.LIGHT',
+	name: 'String light',
+	traits: [
+		'action.devices.traits.OnOff',
+	],
+	state: state
+};
+*/
 let wifi = {
 	ssid: 'Oskar',
 	pass: '000000000001'

@@ -3,11 +3,12 @@ load('device-config.js');
 
 let badRequestReponse = {error: -1, message: 'Bad request'};
 
-let commandNameStem = 'action.devices.commands.';
+let traitNameStem   = 'action.devices.traits.';
+
 let traits = {};
 for (let i = 0; i < whoami.traits.length; i++) {
 	let fullName = whoami.traits[i];
-	let shortName = fullName.slice(commandNameStem.length);
+	let shortName = fullName.slice(traitNameStem.length);
 	traits[shortName] = true
 }
 
@@ -19,7 +20,7 @@ let commands = {
 			return typeof(arg.on) === 'boolean'
 		},
 		handle: function(arg) {
-			states.on = arg.on;
+			state.on = arg.on;
 		}
 	},
 
@@ -30,7 +31,7 @@ let commands = {
 		},
 		handle: function(arg) {
 			// range 0 - 100
-			states.brightness = arg.brightness;
+			state.brightness = arg.brightness;
 		}
 	},
 
@@ -42,7 +43,7 @@ let commands = {
 		},
 		handle: function(arg) {
 			// single unsigned integer representing hex color.
-			states.color.spectrumRGB = arg.color.spectrumRGB;
+			state.color.spectrumRGB = arg.color.spectrumRGB;
 		}
 	}
 
@@ -52,7 +53,7 @@ function handleCommand(cmd, data) {
 	if (typeof(data) === 'object' && cmd.validate(data)) {
 		cmd.handle(data)
 		setPins();
-		return states;
+		return state;
 	} else {
 		return badRequestReponse;
 	}
@@ -100,7 +101,7 @@ if (traits.ColorSetting) {
 if (pins.in1 !== undefined) {
 	GPIO.set_button_handler(pins.in1, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 50, function(x) {
 		console.log('Button pressed')
-		states.on = !states.on;
+		state.on = !state.on;
 		setPins();
 		notifyHub();
 	}, true);
@@ -116,12 +117,12 @@ let pwmFreq = 100;
 function setPins() {
 	let duty = 0;
 	if (traits.Brightness) {
-		duty = states.on ? compensatePerceivedBrightness(states.brightness) / 100 : 0;
+		duty = state.on ? compensatePerceivedBrightness(state.brightness) / 100 : 0;
 	} else {
-		duty = states.on ? 1 : 0;
+		duty = state.on ? 1 : 0;
 	}
 	if (traits.ColorSetting) {
-		let rgb = hexNumToRgb(states.color.spectrumRGB);
+		let rgb = hexNumToRgb(state.color.spectrumRGB);
 		PWM.set(pins.out1, pwmFreq, duty * (rgb.r / 255));
 		PWM.set(pins.out2, pwmFreq, duty * (rgb.g / 255));
 		PWM.set(pins.out3, pwmFreq, duty * (rgb.b / 255));

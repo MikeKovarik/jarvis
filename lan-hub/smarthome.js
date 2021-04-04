@@ -56,7 +56,7 @@ async function handleQuery(payload) {
 		let device = devices.get(id)
 		if (device) {
 			response[id] = {
-				...device.states,
+				...device.state,
 				status: 'SUCCESS',
 			}
 		} else {
@@ -82,7 +82,6 @@ async function handleExecute(payload) {
 					await cmd.execution
 						.map(exe => device.execute(exe))
 						.promiseAll()
-					//await device.reportState()
 					return createExecuteCommandSuccess(device)
 				} else {
 					return createExecuteCommandOffline({id})
@@ -101,7 +100,7 @@ function createExecuteCommandSuccess(device) {
 	return {
 		ids: [device.id],
 		status: 'SUCCESS',
-		states: device.states
+		states: device.state
 	}
 }
 

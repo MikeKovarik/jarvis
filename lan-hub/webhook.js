@@ -1,8 +1,6 @@
 import {app} from './server.js'
 import util from 'util'
 import cp from 'child_process'
-import path from 'path'
-import {fileURLToPath} from 'url'
 
 
 const exec = util.promisify(cp.exec)

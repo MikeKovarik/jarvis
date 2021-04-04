@@ -14,10 +14,6 @@ filesystem:
   - fs
 
 config_schema:
-# SCHEMA DEFINITIONS
-#  - ["mqtt.server", ""]
-#  - ["mqtt.enable", true]
-
   - ["debug.level", 1]
   - ["dns_sd.enable", true]
   - ["dns_sd.adv_only", true]
@@ -37,7 +33,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/rpc-uart
   - origin: https://github.com/mongoose-os-libs/rpc-ws
   - origin: https://github.com/mongoose-os-libs/sntp # time
-  - origin: https://github.com/mongoose-os-libs/mqtt
+#  - origin: https://github.com/mongoose-os-libs/mqtt
 
   - origin: https://github.com/mongoose-os-libs/adc
   - origin: https://github.com/mongoose-os-libs/dns-sd
@@ -47,7 +43,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/pwm
   - origin: https://github.com/mongoose-os-libs/rpc-gcp
   - origin: https://github.com/mongoose-os-libs/rpc-loopback
-  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
+#  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
   - origin: https://github.com/mongoose-os-libs/rpc-service-gpio
   - origin: https://github.com/mongoose-os-libs/rpc-service-i2c
   - origin: https://github.com/mongoose-os-libs/rpc-service-ota

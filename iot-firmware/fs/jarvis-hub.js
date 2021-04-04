@@ -1,5 +1,3 @@
-load('api_mqtt.js');
-
 let canNotifyHub = false;
 let hubHost = '';
 let hubPort = 0;
@@ -49,41 +47,3 @@ function createPostData() {
 		+ '\n' + json;
 	return JSON.stringify(state);
 }
-
-/*
-let mqttConnect = ffi('bool mgos_mqtt_global_connect(void)');
-let mqttDisconnect = ffi('void mgos_mqtt_global_disconnect(void)');
-
-RPC.addHandler('setMqtt', function(data) {
-	print('setMqtt', JSON.stringify(data));
-	mqttDisconnect();
-	Cfg.set({
-		mqtt: {
-			//pass: 'TODO',
-			//user: 'TODO',
-			server: 'test.mosquitto.org',
-			enable: true
-		}
-	});
-	mqttConnect();
-	return {}
-});
-
-let mqttConnected = false;
-
-console.log('mqtt.server', Cfg.get('mqtt.server'));
-
-MQTT.setEventHandler(function(conn, ev, edata) {
-	if (ev !== 0) {
-		print('MQTT event handler: got', ev);
-	}
-	if (ev === MQTT.EV_CONNACK) {
-		print('MQTT CONNECTED!');
-		mqttConnected = true;
-	}
-	if (ev === MQTT.EV_CLOSE) {
-		print('MQTT CONNECTED!');
-		mqttConnected = false;
-	}
-}, null);
-*/

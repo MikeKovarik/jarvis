@@ -320,16 +320,6 @@ export class Device extends EventEmitter {
 		}
 	}
 
-	/*
-	mqttSend(key, value) {
-		let topic = `/devices/${this.id}/${key}`
-		console.log('PUBLISH', topic, value)
-		if (value === undefined) return
-		if (value === null) return
-		client.publish(topic, value.toString())
-	}
-	*/
-
 }
 
 function isErrorMessage(json) {

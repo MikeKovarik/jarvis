@@ -59,19 +59,12 @@ function handleCommand(cmd, data) {
 	}
 }
 
-function getMqttTopic(commandName) {
-	return '/devices/' + whoami.id + '/commands/' + commandName;
-}
-
 
 if (traits.OnOff) {
 	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
 	RPC.addHandler(commands.OnOff.fullName, function(data) {
 		return handleCommand(commands.OnOff, data)
 	});
-	MQTT.sub(getMqttTopic(commands.OnOff.fullName), function(conn, topic, val) {
-		handleCommand(commands.OnOff, JSON.parse(val));
-	}, null);
 }
 
 
@@ -79,9 +72,6 @@ if (traits.Brightness) {
 	RPC.addHandler(commands.BrightnessAbsolute.fullName, function(data) {
 		return handleCommand(commands.BrightnessAbsolute, data)
 	});
-	MQTT.sub(getMqttTopic(commands.BrightnessAbsolute.fullName), function(conn, topic, val) {
-		handleCommand(commands.BrightnessAbsolute, JSON.parse(val));
-	}, null);
 }
 
 
@@ -92,9 +82,6 @@ if (traits.ColorSetting) {
 	RPC.addHandler(commands.ColorAbsolute.fullName, function(data) {
 		return handleCommand(commands.ColorAbsolute, data)
 	});
-	MQTT.sub(getMqttTopic(commands.ColorAbsolute.fullName), function(conn, topic, val) {
-		handleCommand(commands.ColorAbsolute, JSON.parse(val));
-	}, null);
 }
 
 

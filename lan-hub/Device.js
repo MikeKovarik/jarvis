@@ -6,6 +6,8 @@ import config from './config.js'
 import * as utils from './utils.js'
 
 
+// TODO: rename states to state
+
 Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
 
 const defaultHeartbeatTimeout = 1000 * 60 * 60 * 12 // 12 hours

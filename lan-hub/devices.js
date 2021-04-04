@@ -1,9 +1,11 @@
 import Mdns from 'multicast-dns'
 import {EventEmitter} from 'events'
+import os from 'os'
 import './utils.js'
 import {Device} from './Device.js'
 import {app} from './server.js'
-import os from 'os'
+import {smarthome} from './smarthome-core.js'
+import config from './config.js'
 
 
 //stringlight
@@ -61,11 +63,11 @@ class Devices extends Map {
 	}
 
 	parseMdnsAnswers(answers) {
+		console.gray('--- MDNS', '-'.repeat(100))
 		let aRecord = answers.find(a => a.type === 'A')
 		if (aRecord) {
 			let aData = this.parseMdnsARecord(aRecord)
 			if (!this.isValidIotDevice(aData.hostname)) return
-			console.gray('--- MDNS', '-'.repeat(100))
             console.gray('~ aData', JSON.stringify(aData))
 			let device = this.getOrCreateFromA(aData)
 			device.restartHeartbeat()
@@ -101,7 +103,7 @@ class Devices extends Map {
 let devices = new Devices
 export default devices
 
-// Updates sent from device
+// Receive updates sent from device
 app.post('/device-states-update', (req, res) => {
 	// It's likely IPv6 app with ::ffff: IPv4 subnet prefix 
 	var rawIp = req.header('x-forwarded-for') || req.connection.remoteAddress || req.ip
@@ -123,13 +125,20 @@ function sanitizeIp6AsIp4(ip6) {
 		return ip6
 }
 
-// Exposed list of devices as JSON for debugging.
+// Expose list of devices as JSON for debugging.
 app.get('/devices', (req, res) => {
+	console.gray('GET /devices')
 	let array = Array.from(devices.values())
 	let json  = JSON.stringify(array)
 	let bytes = Buffer.byteLength(json)
 	res.header('Content-Length', bytes)
 	res.json(array)
+})
+
+// Expose list of devices as JSON for debugging.
+app.get('/request-sync', async (req, res) => {
+	console.gray('GET /request-sync')
+	res.json(await smarthome.requestSync(config.agentUserId))
 })
 
 // LOGGING

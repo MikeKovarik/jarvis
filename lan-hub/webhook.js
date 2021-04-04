@@ -11,12 +11,10 @@ const deployScript = 'restart-app'
 
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'
-//const repoName      = 'MikeKovarik/jarvis'
-const repoDir       = path.join(fileURLToPath(import.meta.url), '../../')
 
 function run(command) {
 	console.gray(`running:`, command)
-	return exec(command, {cwd: repoDir})
+	return exec(command)
 }
 
 app.post('/gh-webhook', async (req, res) => {

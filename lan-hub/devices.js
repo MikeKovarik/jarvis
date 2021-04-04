@@ -64,8 +64,7 @@ class Devices extends Map {
 		let aRecord = answers.find(a => a.type === 'A')
 		if (aRecord) {
 			let aData = this.parseMdnsARecord(aRecord)
-			if (!this.isValidIotDevice(aData.hostname))
-				return console.error(`Unknown device ${aData.hostname} ${aData.ip}`)
+			if (!this.isValidIotDevice(aData.hostname)) return
             console.gray('~ aData', JSON.stringify(aData))
 			let device = this.getOrCreateFromA(aData)
 			device.restartHeartbeat()

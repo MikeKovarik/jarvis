@@ -7,7 +7,7 @@ import {fileURLToPath} from 'url'
 
 const exec = util.promisify(cp.exec)
 
-const deployScript = 'restart-app'
+const deployScript = 'restart'
 
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'

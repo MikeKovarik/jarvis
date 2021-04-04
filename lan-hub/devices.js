@@ -60,11 +60,11 @@ class Devices extends Map {
 	}
 
 	parseMdnsAnswers(answers) {
-		console.gray('--- MDNS', '-'.repeat(100))
 		let aRecord = answers.find(a => a.type === 'A')
 		if (aRecord) {
 			let aData = this.parseMdnsARecord(aRecord)
 			if (!this.isValidIotDevice(aData.hostname)) return
+			console.gray('--- MDNS', '-'.repeat(100))
             console.gray('~ aData', JSON.stringify(aData))
 			let device = this.getOrCreateFromA(aData)
 			device.restartHeartbeat()

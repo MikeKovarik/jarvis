@@ -20,9 +20,9 @@ let whoami = {
 	type: 'action.devices.types.LIGHT',
 	name: 'String light',
 	traits: [
-		'action.devices.commands.OnOff',
-		'action.devices.commands.Brightness',
-		'action.devices.commands.ColorSetting'
+		'action.devices.traits.OnOff',
+		'action.devices.traits.Brightness',
+		'action.devices.traits.ColorSetting'
 	],
 	attributes: {
 		colorModel: 'rgb'

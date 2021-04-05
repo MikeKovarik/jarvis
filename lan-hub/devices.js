@@ -1,24 +1,72 @@
-import Mdns from 'multicast-dns'
 import {EventEmitter} from 'events'
 import os from 'os'
-import './utils.js'
+import dgram from 'dgram'
 import {Device} from './Device.js'
 import {app} from './server.js'
 import {smarthome} from './smarthome-core.js'
 import config from './config.js'
 
 
-//stringlight
-//growlight
-//bulbstring
-
-//const hubHostname = 'jarvis-hub'
 const hubHostname = os.hostname()
 const hostnamePrefix = 'jarvis-iot-'
+
+var UDP_BROADCAST_IP = '230.185.192.108'
+var UDP_BROADCAST_PORT = 1609
 
 class Devices extends Map {
 
 	emitter = new EventEmitter
+
+	constructor() {
+		super()
+		const {emitter} = this
+		this.emit           = emitter.emit.bind(emitter)
+		this.on             = emitter.on.bind(emitter)
+		this.once           = emitter.once.bind(emitter)
+		this.removeListener = emitter.removeListener.bind(emitter)
+		this.listenUdpBroadcasts()
+	}
+
+	listenUdpBroadcasts() {
+		let udpSocket = dgram.createSocket({type: 'udp4', reuseAddr: true})
+		udpSocket.on('listening', () => {
+			var address = udpSocket.address()
+			console.log(`Listening for UDP broadcasts on ${address.address}:${address.port}`)
+			udpSocket.setBroadcast(true)
+			udpSocket.setMulticastTTL(128) 
+			udpSocket.addMembership(UDP_BROADCAST_IP)
+		})
+		udpSocket.on('error', err => console.error('UDP broadcast listener error:', err.message))
+		udpSocket.on('message', this.onUdpMessage)
+		udpSocket.bind(UDP_BROADCAST_PORT)
+	}
+
+	onUdpMessage = (buffer, remote) => {
+		let ip = remote.address
+		let json = buffer.toString()
+		try {
+			let data = JSON.parse(json)
+			if (Device.isValidDevice(data))
+				this.onUdpDiscovery(ip, data)
+			else
+				console.error(`Invalid UDP device found ${ip}`, data)
+		} catch(err) {
+			console.error(`Invalid UDP message received ${ip}`, err, json)
+		}
+	}
+
+	onUdpDiscovery(ip, {id, bootTime, heartbeatInterval}) {
+		console.cyan(id, 'heartbeat received')
+		if (this.has(id)) {
+			let device = this.get(id)
+			device.checkIpChange(ip)
+			device.checkBootTime(bootTime)
+			device.restartHeartbeat()
+		} else {
+			let device = new Device(id, ip, heartbeatInterval)
+			this.set(id, device)
+		}
+	}
 
 	set(key, device) {
 		if (!this.has(key)) {
@@ -29,16 +77,6 @@ class Devices extends Map {
 		super.set(key, device)
 	}
 
-	getOrCreateFromA({id, ip, hostname}) {
-		if (this.has(id)) {
-			return this.get(id)
-		} else {
-			let device = new Device(id, ip, hostname)
-			this.set(id, device)
-			return device
-		}
-	}
-
 	getByIp(ip) {
 		return this.asArray().find(device => device.ip === ip)
 	}
@@ -47,55 +85,9 @@ class Devices extends Map {
 		return Array.from(this.values())
 	}
 
-	constructor() {
-		super()
-		const {emitter} = this
-		this.emit           = emitter.emit.bind(emitter)
-		this.on             = emitter.on.bind(emitter)
-		this.once           = emitter.once.bind(emitter)
-		this.removeListener = emitter.removeListener.bind(emitter)
-
-		this.mdns = Mdns()
-		this.mdns.on('response', res =>  {
-			let isJarvis = res.answers.some(a => a.name.includes('jarvis'))
-			if (isJarvis) this.parseMdnsAnswers(res.answers)
-		})
-	}
-
-	parseMdnsAnswers(answers) {
-		console.gray('--- MDNS', '-'.repeat(100))
-		let aRecord = answers.find(a => a.type === 'A')
-		if (aRecord) {
-			let aData = this.parseMdnsARecord(aRecord)
-			if (!this.isValidIotDevice(aData.hostname)) return
-            console.gray('~ aData', JSON.stringify(aData))
-			let device = this.getOrCreateFromA(aData)
-			device.restartHeartbeat()
-			device.checkIpChange(aData.ip)
-			let txtRecord = answers.find(a => a.type === 'TXT')
-			if (txtRecord) {
-				let txtData = this.parseMdnsTxtRecord(txtRecord)
-				device.injectMdnsTxtRecord(txtData)
-			}
-			//console.log(JSON.stringify(device, null, 2))
-		}
-	}
-
-	parseMdnsARecord({data, name}) {
-		let ip       = data
-		let hostname = name.replace('.local', '').replace('.lan', '')
-		let id       = hostname.slice(hostnamePrefix.length)
-		return {ip, id, hostname}
-	}
-
 	isValidIotDevice(hostname) {
 		return hostname.startsWith(hostnamePrefix)
 			&& hostname !== hubHostname
-	}
-
-	parseMdnsTxtRecord({data}) {
-		let entries = data.map(buffer => buffer.toString().split('='))
-		return Object.fromEntries(entries)
 	}
 
 }

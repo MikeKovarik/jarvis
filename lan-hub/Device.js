@@ -6,6 +6,8 @@ import config from './config.js'
 import * as utils from './utils.js'
 
 
+const hostnamePrefix = 'jarvis-iot-'
+
 Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
 
 const defaultHeartbeatTimeout = 1000 * 60 * 60 * 12 // 12 hours
@@ -36,7 +38,7 @@ export class Device extends EventEmitter {
 	state = {}
 
 	// number of milliseconds, reported by device
-	#heartbeatInterval = undefined
+	heartbeatInterval = undefined
 	// result of calling setTimeout with heartbeatInterval
 	#heartbeatTimeout = undefined
 
@@ -51,22 +53,28 @@ export class Device extends EventEmitter {
 
 	willReportState = true
 
-	constructor(id, ip, hostname) {
+	static isValidDevice(heartbeatData) {
+		return heartbeatData.id !== undefined
+			&& heartbeatData.heartbeatInterval !== undefined
+	}
+
+	constructor(id, ip, heartbeatInterval) {
 		super()
 		this.id = id
 		this.ip = ip
-		this.hostname = hostname
+		this.heartbeatInterval = heartbeatInterval
+		this.hostname = hostnamePrefix + id
 		this.initialize()
 
 		// no need to do anything about IP, GHome doesn't care about that.
 		this.on('ip-change', () => console.orange(this.id, 'ip changed to', this.ip))
-		this.on('firmware-change', () => console.orange(this.id, 'firmware changed'))
+		this.on('state-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.state)))
+		this.on('reboot', () => console.orange(this.id, 'rebooted'))
 		this.on('online', () => console.green(this.id, 'is online'))
 		this.on('offline', () => console.orange(this.id, 'is offline'))
-		this.on('state-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.state)))
 
 		// setup this instance with possibly new device data.
-		this.on('firmware-change', this.initialize)
+		this.on('reboot', this.initialize)
 		// make sure the device knows how to reach this hub once it comes online
 		this.on('online', this.initialize)
 		// notify google about offline state
@@ -81,28 +89,22 @@ export class Device extends EventEmitter {
 	initialize = () => {
 		if (this.initializing) return
 		this.initializing = true
-		callWithExpBackoff(this.initBody)
-			.then(this.initSucceeded)
-			.catch(this.initFailed)
+		callWithExpBackoff(this.initAction)
+			.then(() => this.initResult(true, 'ready'))
+			.catch(() => this.initResult(false, 'fail'))
 	}
 
-	initBody = async () => {
+	initAction = async () => {
 		// NOTE: whoami response contains states object. Injecting new states triggers state-change event
 		// and the event handler triggers reportState(). So it's not necessary here.
 		await this.fetchWhoami()
 		await this.linkToHub()
 	}
 
-	initSucceeded = () => {
-		this.initialized = true
+	initResult(status, event) {
+		this.initialized = status
 		this.initializing = false
-		this.emit('ready')
-	}
-
-	initFailed = () => {
-		this.initialized = false
-		this.initializing = false
-		this.emit('fail')
+		this.emit(event)
 	}
 
 	get online() {
@@ -117,22 +119,6 @@ export class Device extends EventEmitter {
 
 	// ----------------------------- INPUT & OUTPUT DATA FORMATTING
 
-	receivedMdnsTxt = false
-	#fw_version
-	#fw_id
-	injectMdnsTxtRecord(txt) {
-		this.receivedMdnsTxt = true
-		this.checkFirmwareIsUpToDate(txt)
-		if (txt.id)                this.id                   = txt.id
-		if (txt.arch)              this.deviceInfo.model     = txt.arch
-		if (txt.fw_version)        this.#fw_version          = txt.fw_version
-		if (txt.fw_version)        this.deviceInfo.swVersion = txt.fw_version
-		if (txt.fw_id)             this.#fw_id               = txt.fw_id
-		if (txt.fw_id)             this.swDate               = parseMosDate(txt.fw_id)
-		if (txt.heartbeatInterval) this.#heartbeatInterval   = Number(txt.heartbeatInterval)
-		// TODO: check if 'fw_id' aka 'swDate' has changed and trigger restart if so.
-	}
-
 	toGoogleDevice() {
 		return {
 			id:         this.id,
@@ -146,8 +132,6 @@ export class Device extends EventEmitter {
 			},
 			deviceInfo: this.deviceInfo,
 			willReportState: this.willReportState,
-			//otherDeviceIds:  this.otherDeviceIds,
-			//customData:      this.customData,
 		}
 	}
 
@@ -165,6 +149,18 @@ export class Device extends EventEmitter {
 
 	// ----------------------------- CHECKS & SERVICING
 
+	checkBootTime(newTime) {
+		if (this.bootTime !== newTime && this.bootTime !== undefined) {
+			// TODO FIRMWARE UPDATED
+			this.emit('reboot')
+		}
+		this.bootTime = newTime
+	}
+
+	get upTime() {
+		return Date.now() - this.bootTime
+	}
+
 	// returns true if IP changed
 	checkIpChange(ip) {
 		if (ip === undefined) return false
@@ -174,20 +170,15 @@ export class Device extends EventEmitter {
 		return true
 	}
 
-	// returns true if firmware version or date changed
-	checkFirmwareIsUpToDate({fw_id, fw_version}) {
-		if (this.receivedMdnsTxt) return false
-		return this.#fw_id !== fw_id
-			|| this.#fw_version !== fw_version
-	}
-
 	restartHeartbeat() {
-		console.gray(this.id, 'restartHeartbeat()')
+		//console.gray(this.id, 'restartHeartbeat()')
 		clearTimeout(this.#heartbeatTimeout)
-		// Heartbeat millis sent by device is exact time. For it to expire, we're adding 10 seconds to that.
-		//this.#heartbeatTimeout = setInterval(() => this.online = false, this.#heartbeatInterval)
-		let millis = this.#heartbeatInterval || defaultHeartbeatTimeout
-		this.#heartbeatTimeout = setInterval(() => this.online = false, millis)
+		// Adding 5 seconds for a good measure.
+		let millis = (this.heartbeatInterval || defaultHeartbeatTimeout) + 5000
+		this.#heartbeatTimeout = setTimeout(() => {
+			console.orange(this.id, 'heartbeat timed out')
+			this.online = false
+		}, millis)
 		this.online = true
 		this.emit('heartbeat', this.id)
 	}

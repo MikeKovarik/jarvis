@@ -48,5 +48,5 @@ let wifi = {
 let hostbase = 'jarvis-iot-';
 let hostname = hostbase + whoami.id;
 
-// Re-announce the device every hour.
-let heartbeatInterval = 1000 * 60 * 60;
+// Re-announce the device every minute.
+let heartbeatInterval = 1000 * 60;

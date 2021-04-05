@@ -170,10 +170,12 @@ export class Device extends EventEmitter {
 		return true
 	}
 
-	restartHeartbeat() {
+	restartHeartbeat(newInterval) {
 		//console.gray(this.id, 'restartHeartbeat()')
 		clearTimeout(this.#heartbeatTimeout)
 		// Adding 5 seconds for a good measure.
+		if (newInterval !== undefined && newInterval !== this.heartbeatInterval)
+			this.heartbeatInterval = newInterval
 		let millis = (this.heartbeatInterval || defaultHeartbeatTimeout) + 5000
 		this.#heartbeatTimeout = setTimeout(() => {
 			console.orange(this.id, 'heartbeat timed out')

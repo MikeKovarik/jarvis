@@ -61,7 +61,7 @@ class Devices extends Map {
 			let device = this.get(id)
 			device.checkIpChange(ip)
 			device.checkBootTime(bootTime)
-			device.restartHeartbeat()
+			device.restartHeartbeat(heartbeatInterval)
 		} else {
 			let device = new Device(id, ip, heartbeatInterval)
 			this.set(id, device)

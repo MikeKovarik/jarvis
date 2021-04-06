@@ -29,24 +29,3 @@ let whoami = {
 	},
 	state: state
 };
-/*
-let whoami = {
-	id: 'stringlight',
-	type: 'action.devices.types.LIGHT',
-	name: 'String light',
-	traits: [
-		'action.devices.traits.OnOff',
-	],
-	state: state
-};
-*/
-let wifi = {
-	ssid: 'Oskar',
-	pass: '000000000001'
-};
-
-let hostbase = 'jarvis-iot-';
-let hostname = hostbase + whoami.id;
-
-// Re-announce the device every minute.
-let heartbeatInterval = 1000 * 60;

@@ -1,4 +1,4 @@
-load('device-config.js');
+load('device.js');
 
 
 let badRequestReponse = {error: -1, message: 'Bad request'};
@@ -114,11 +114,7 @@ function setPins() {
 		PWM.set(pins.out2, pwmFreq, duty * (rgb.g / 255));
 		PWM.set(pins.out3, pwmFreq, duty * (rgb.b / 255));
 	} else {
-		if (duty === 1 || duty === 0) {
-			GPIO.write(pins.out1, duty);
-		} else {
-			PWM.set(pins.out1, pwmFreq, duty);
-		}
+		PWM.set(pins.out1, pwmFreq, duty);
 	}
 }
 

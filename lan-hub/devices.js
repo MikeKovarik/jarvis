@@ -46,7 +46,7 @@ class Devices extends Map {
 		let json = buffer.toString()
 		try {
 			let data = JSON.parse(json)
-			if (Device.isValidDevice(data))
+			if (Device.isValidHeartbeat(data))
 				this.onUdpDiscovery(ip, data)
 			else
 				console.error(`Invalid UDP device found ${ip}`, data)
@@ -55,17 +55,22 @@ class Devices extends Map {
 		}
 	}
 
-	onUdpDiscovery(ip, {id, bootTime, heartbeatInterval}) {
+	onUdpDiscovery(ip, {id, bootTime, heartbeatInterval, state}) {
 		console.cyan(id, 'heartbeat received')
+		let device
 		if (this.has(id)) {
-			let device = this.get(id)
+			device = this.get(id)
 			device.checkIpChange(ip)
-			device.checkBootTime(bootTime)
-			device.restartHeartbeat(heartbeatInterval)
+			if (bootTime !== undefined)
+				device.checkBootTime(bootTime)
+			if (heartbeatInterval !== undefined)
+				device.restartHeartbeat(heartbeatInterval)
 		} else {
-			let device = new Device(id, ip, heartbeatInterval)
+			device = new Device(id, ip, heartbeatInterval)
 			this.set(id, device)
 		}
+		if (state !== undefined)
+			device.injectState(state)
 	}
 
 	set(key, device) {
@@ -94,28 +99,6 @@ class Devices extends Map {
 
 let devices = new Devices
 export default devices
-
-// Receive updates sent from device
-app.post('/device-state-update', (req, res) => {
-	// It's likely IPv6 app with ::ffff: IPv4 subnet prefix 
-	var rawIp = req.header('x-forwarded-for') || req.connection.remoteAddress || req.ip
-	let ip = sanitizeIp6AsIp4(rawIp)
-	console.cyan(ip + ':', 'received on-device state change')
-	res.end()
-	if (Object.keys(req.body).length === 0) return
-	// TODO: Security would be nice: Some challenge token from device that can be verified here.
-	let messageIsVerifiedFromDevice = true
-	if (!messageIsVerifiedFromDevice) return
-	let device = devices.getByIp(ip)
-	device.injectState(req.body)
-})
-
-function sanitizeIp6AsIp4(ip6) {
-	if (ip6.startsWith('::ffff:') && ip6.includes('.'))
-		return ip6.slice(7)
-	else
-		return ip6
-}
 
 // Expose list of devices as JSON for debugging.
 app.get('/devices', (req, res) => {

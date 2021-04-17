@@ -53,11 +53,15 @@ export class Device extends EventEmitter {
 
 	willReportState = true
 
-	static isValidDevice(heartbeatData) {
-		return heartbeatData.id !== undefined
-			&& heartbeatData.heartbeatInterval !== undefined
+	static isValidHeartbeat(data) {
+		return data.id !== undefined
+			&& (data.heartbeatInterval !== undefined || data.state !== undefined)
 	}
-
+/*
+	static isValidHeartbeat({id, upTime, verification}) {
+		return id.charCodeAt(upTime % id.length) === verification
+	}
+*/
 	constructor(id, ip, heartbeatInterval) {
 		super()
 		this.id = id
@@ -98,7 +102,6 @@ export class Device extends EventEmitter {
 		// NOTE: whoami response contains states object. Injecting new states triggers state-change event
 		// and the event handler triggers reportState(). So it's not necessary here.
 		await this.fetchWhoami()
-		await this.linkToHub()
 	}
 
 	initResult(status, event) {
@@ -229,14 +232,6 @@ export class Device extends EventEmitter {
 		let state = await this.callRpcMethod(command, params)
 		if (state) this.injectState(state)
 		return this.state
-	}
-
-	async linkToHub() {
-		console.gray(this.id, 'linkToHub()')
-		await this.callRpcMethod('linkToHub', {
-			host: utils.ip,
-			port: config.appPort,
-		})
 	}
 
 	async reboot() {

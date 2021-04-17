@@ -90,7 +90,7 @@ if (pins.in1 !== undefined) {
 		console.log('Button pressed')
 		state.on = !state.on;
 		setPins();
-		notifyHub();
+		broadcastStatus();
 	}, true);
 }
 

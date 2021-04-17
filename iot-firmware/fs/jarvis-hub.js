@@ -1,17 +1,9 @@
-let canNotifyHub = false;
-let hubHost = '';
-let hubPort = 0;
+let broadcastIp = '230.185.192.108';
+let broadcastPort = 1609;
+let broadcastAddr = 'udp://' + broadcastIp + ':' + JSON.stringify(broadcastPort);
 
-RPC.addHandler('linkToHub', function(data) {
-	console.log('linkToHub', JSON.stringify(data));
-	canNotifyHub = true;
-	hubHost = data.host;
-	hubPort = data.port;
-	console.log('hubHost', hubHost);
-	console.log('hubPort', hubPort);
-	notifyHub();
-	return {}
-});
+let gotIp = false;
+let gotTime = false;
 
 RPC.addHandler('whoami', function() {
 	return whoami;
@@ -22,41 +14,20 @@ RPC.addHandler('state', function() {
 });
 
 // TODO: consider moving away from TCP-to-hub and to mutlticas UDP broadcasting.
-function notifyHub() {
-	if (canNotifyHub) {
-		console.log('Trying to notify hub');
-		Net.connect({
-			addr: 'tcp://' + hubHost + ':' + JSON.stringify(hubPort),
-			onconnect: function(conn) {
-				Net.send(conn, createPostData());
-				Net.close(conn);
-				console.log('Notified hub of state uptate');
+function broadcastStatus() {
+	console.log('broadcasting status');
+	Net.connect({
+		addr: broadcastAddr,
+		onconnect: function(conn) {
+			let data = {
+				id: whoami.id,
+				state: state
 			}
-		});
-	} else {
-		console.log('Cannot notify hub. Hub ip/hostname is not known');
-	}
+			Net.send(conn, JSON.stringify(data));
+			Net.close(conn);
+		}
+	});
 }
-
-function createPostData() {
-	let json = JSON.stringify(state);
-	return 'POST /device-state-update HTTP/1.1'
-		+ '\n' + 'Host: ' + hubHost 
-		+ '\n' + 'content-type: application/json'
-		+ '\n' + 'content-length: ' + JSON.stringify(json.length)
-		+ '\n'
-		+ '\n' + json;
-}
-
-// ------------ UDP BROADCAST ADVERTISEMENT -------------------------
-
-
-let broadcastIp = '230.185.192.108';
-let broadcastPort = 1609;
-let broadcastAddr = 'udp://' + broadcastIp + ':' + JSON.stringify(broadcastPort);
-
-let gotIp = false;
-let gotTime = false;
 
 function startBroadcasting() {
 	broadcastHeartbeat();
@@ -64,11 +35,10 @@ function startBroadcasting() {
 }
 
 function broadcastHeartbeat() {
-	console.log('sending heartbeat');
+	console.log('broadcasting heartbeat');
 	Net.connect({
 		addr: broadcastAddr,
 		onconnect: function(conn) {
-			//console.log('heartbeat socket connected');
 			let uptime = Sys.uptime();
 			let data = {
 				id: whoami.id,
@@ -79,12 +49,6 @@ function broadcastHeartbeat() {
 			Net.send(conn, JSON.stringify(data));
 			Net.close(conn);
 		},
-		//onclose: function(conn) {
-		//	console.log('heartbeat socket closed');
-		//},
-		//onerror: function(conn) {
-		//	console.log('heartbeat socket error');
-		//},
 	});
 }
 

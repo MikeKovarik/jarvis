@@ -87,6 +87,11 @@ export class Device extends EventEmitter {
 		this.on('state-change', this.reportState)
 	}
 
+	destroy() {
+		// TODO: remove listeners
+		this.clearHeartbeatTimer()
+	}
+
 	initializing = false
 	initialized = false
 
@@ -173,9 +178,12 @@ export class Device extends EventEmitter {
 		return true
 	}
 
-	restartHeartbeat(newInterval) {
-		//console.gray(this.id, 'restartHeartbeat()')
+	clearHeartbeatTimer() {
 		clearTimeout(this.#heartbeatTimeout)
+	}
+
+	restartHeartbeat(newInterval) {
+		this.clearHeartbeatTimer()
 		// Adding 5 seconds for a good measure.
 		if (newInterval !== undefined && newInterval !== this.heartbeatInterval)
 			this.heartbeatInterval = newInterval
@@ -237,6 +245,7 @@ export class Device extends EventEmitter {
 	async reboot() {
 		console.gray(this.id, 'reboot()')
 		await this.callRpcMethod('sys.reboot')
+		// http://192.168.175.171/rpc/sys.reboot
 	}
 
 	// Usually only called once, after discovering the device or on boot.

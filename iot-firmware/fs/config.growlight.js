@@ -1,3 +1,6 @@
+// Re-announce the device every minute.
+let heartbeatInterval = 1000 * 60;
+
 let pins = {
 	// LEDS
 	out1: 4,

@@ -1,3 +1,6 @@
+// Re-announce the device every minute.
+let heartbeatInterval = 1000 * 60;
+
 let pins = {
 	// LEDS
 	out1: 4, // ESP32 GPIO4 corresponds to number 4
@@ -11,9 +14,9 @@ let state = {
 };
 
 let whoami = {
-	id: 'growlight',
+	id: 'stringlight',
 	type: 'action.devices.types.LIGHT',
-	name: 'Grow light',
+	name: 'String light',
 	traits: [
 		'action.devices.traits.OnOff',
 		'action.devices.traits.Brightness',

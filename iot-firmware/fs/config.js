@@ -3,7 +3,7 @@ let heartbeatInterval = 1000 * 60;
 
 let pins = {
 	// LEDS
-	out1: 2, // ESP32 GPIO4 corresponds to number 4
+	out1: 4, // ESP32 GPIO4 corresponds to number 4
 	// Button
 	in1: 0
 };

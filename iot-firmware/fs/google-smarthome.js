@@ -1,4 +1,4 @@
-load('device.js');
+load('config.js');
 
 
 let badRequestReponse = {error: -1, message: 'Bad request'};

@@ -2,7 +2,7 @@ import {EventEmitter} from 'events'
 import os from 'os'
 import dgram from 'dgram'
 import {Device} from './Device.js'
-import {app} from './server.js'
+import {app, apiRouter} from './server.js'
 import {smarthome} from './smarthome-core.js'
 import config from './config.js'
 
@@ -73,13 +73,19 @@ class Devices extends Map {
 			device.injectState(state)
 	}
 
-	set(key, device) {
-		if (!this.has(key)) {
+	set(id, device) {
+		if (!this.has(id)) {
 			this.emit('new', device)
 			device.on('ready', () => this.emit('ready', device))
 			device.on('fail', () => this.emit('fail', device))
 		}
-		super.set(key, device)
+		super.set(id, device)
+	}
+
+	delete(id) {
+		let device = this.get(id)
+		if (device) device.destroy()
+		super.delete(id)
 	}
 
 	getByIp(ip) {
@@ -101,7 +107,7 @@ let devices = new Devices
 export default devices
 
 // Expose list of devices as JSON for debugging.
-app.get('/devices', (req, res) => {
+apiRouter.get('/devices', (req, res) => {
 	console.gray('GET /devices')
 	let array = Array.from(devices.values())
 	let json  = JSON.stringify(array)
@@ -111,7 +117,15 @@ app.get('/devices', (req, res) => {
 })
 
 // Expose list of devices as JSON for debugging.
-app.get('/request-sync', async (req, res) => {
+apiRouter.delete('/device/:id', (req, res) => {
+	console.gray('DELETE /device/id', req.params.id)
+	devices.delete(req.params.id)
+	res.status(200)
+	res.end()
+})
+
+// Expose list of devices as JSON for debugging.
+apiRouter.get('/ghome-sync', async (req, res) => {
 	console.gray('GET /request-sync')
 	res.json(await smarthome.requestSync(config.agentUserId))
 })

@@ -23,3 +23,6 @@ app.listen(config.appPort, () => {
 		...config
 	})
 })
+
+export const apiRouter = express.Router()
+app.use('/api', apiRouter)

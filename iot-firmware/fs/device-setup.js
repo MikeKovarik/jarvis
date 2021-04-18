@@ -1,6 +1,9 @@
 // https://github.com/mongoose-os-libs/mjs/pull/15
 let MGOS_EVENT_TIME_CHANGED = Event.SYS + 3;
 
+let hostbase = 'jarvis-iot-';
+let hostname = hostbase + whoami.id;
+
 let floor = ffi('double floor(double)');
 
 console.log('--------------------------------------------------');

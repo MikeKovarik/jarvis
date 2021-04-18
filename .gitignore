@@ -6,3 +6,4 @@
 /iot-firmware/build
 /node_modules
 /package-lock.json
+/iot-firmware/fs/wifi.js

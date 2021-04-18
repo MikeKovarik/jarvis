@@ -7,7 +7,7 @@ load('api_events.js');
 load('api_rpc.js');
 load('api_net.js');
 load('api_pwm.js');
-load('device.js');
+load('wifi.js');
 load('config.js');
 load('device-setup.js');
 load('jarvis-hub.js');

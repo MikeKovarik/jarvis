@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>card</title>
+
+	<link rel="stylesheet" type="text/css" href="./flexus-material.css">
+
+	<style>
+		table {
+			border-spacing: 0;
+		}
+		[selectable] {
+			user-select: all;
+		}
+	</style>
+
+</head>
+<body primary="blue">
+
+	<flexus-view>
+
+		<main>
+
+			<horizontal center style="margin-bottom: 12px;">
+				<button click.trigger="ghomeSync()" seamed>sync Google home</button>
+			</horizontal>
+
+			<grid spaced columns="3">
+
+				<card repeat.for="device of devices" seamed.bind="device.online !== true">
+					<div bold uppercase>${device.id}</div>
+					<table body2 muted nomargin>
+						<tr>
+							<td>type: </td>
+							<td selectable>${device.type}</td>
+						</tr>
+						<tr>
+							<td>id: </td>
+							<td selectable>${device.id}</td>
+						</tr>
+						<tr>
+							<td>hostname: </td>
+							<td selectable>${device.hostname}</td>
+						</tr>
+						<tr>
+							<td>ip: </td>
+							<td selectable>${device.ip}</td>
+						</tr>
+						<tr>
+							<td>arch: </td>
+							<td selectable>${device.arch}</td>
+						</tr>
+						<tr>
+							<td>name: </td>
+							<td selectable>${device.name}</td>
+						</tr>
+						<tr>
+							<td>online: </td>
+							<td selectable>${device.online}</td>
+						</tr>
+						<tr>
+							<td>up time: </td>
+							<td selectable>${device.upTime | time}</td>
+						</tr>
+						<tr>
+							<td>boot time: </td>
+							<td selectable>${device.bootTime | date}</td>
+						</tr>
+					</table>
+					<hr style="margin: 8px 0">
+					<strong uppercase body2 bold>traits</strong>
+					<p body2 muted repeat.for="trait of device.traits">${trait}</p>
+					<hr style="margin: 8px 0">
+					<strong uppercase body2 bold>state</strong>
+					<pre body2 muted nomargin>${device.state | json}</pre>
+					<hr style="margin: 8px 0">
+					<!--
+					<a href="http://${device.ip}/rpc/sys.reboot" button plain>reboot</a>
+					-->
+					<horizontal style="justify-content: space-between; margin-top: 12px">
+						<button click.trigger="reboot(device)" plain>reboot</button>
+						<button click.trigger="delete(device)" plain>delete</button>
+					</horizontal>
+				</card>
+
+			</grid>
+
+		</main>
+
+	</flexus-view>
+
+	<script type="importmap">
+	{
+		"imports": {
+			"aurelia-framework": "./aurelia.esm.min.js"
+		}
+	}
+	</script>
+
+	<script type="module">
+		import * as au from 'aurelia-framework'
+
+
+		class App {
+			devices = []
+			constructor() {
+				this.fetchData()
+			}
+			async fetchData() {
+				this.devices = await fetch(`/api/devices`).then(res => res.json())
+			}
+			reboot(device) {
+				fetch(`http://${device.ip}/rpc/sys.reboot`)
+			}
+			delete(device) {
+				fetch(`/api/device/${device.id}`, {method: 'DELETE'})
+			}
+			ghomeSync() {
+				fetch(`/ghome-sync`)
+			}
+		}
+
+		class JsonValueConverter {
+			toView(data, spaces = 2) {
+				if (isEmpty(data)) return
+				return JSON.stringify(data, null, spaces)
+			}
+		}
+
+		class TimeValueConverter {
+			toView(millis) {
+				if (isEmpty(millis)) return
+				let ms = millis % 1000
+				millis = (millis - ms) / 1000
+				let secs = millis % 60
+				millis = (millis - secs) / 60
+				let mins = millis % 60
+				let hrs = (millis - mins) / 60
+				return `${padd(hrs)}:${padd(mins)}:${padd(secs)}`
+			}
+		}
+
+		class DateValueConverter {
+			toView(millis) {
+				if (isEmpty(millis)) return
+				return (new Date(millis))
+					.toISOString()
+					.replace('T', ' ')
+					.replace(/\..*/g, '')
+			}
+		}
+
+		function isEmpty(arg) {
+			return arg === undefined
+				|| arg === null
+				|| arg === ''
+		}
+
+		function padd(arg) {
+			return arg.toString().padStart(2, '0')
+		}
+
+		class AttrClass {
+
+			static inject = [Element]
+
+			constructor(element) {
+				this.element = element
+			}
+
+			get visible() {
+				let {value} = this
+				return value === '' || value === true || value === 'true'
+			}
+
+			bind() {
+				this.valueChanged()
+			}
+
+			valueChanged() {
+				if (this.visible)
+					this.element?.setAttribute(this.name, '')
+				else
+					this.element?.removeAttribute(this.name)
+			}
+
+		}
+
+		export class SeamedCustomAttribute extends AttrClass {name = 'seamed'}
+
+		au.enhance({
+			root: App,
+			host: document.body,
+			resources: [
+				JsonValueConverter,
+				SeamedCustomAttribute,
+				TimeValueConverter,
+				DateValueConverter,
+			]
+		})
+	</script>
+
+</body>
+</html>

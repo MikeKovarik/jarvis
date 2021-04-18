@@ -22,16 +22,19 @@ function broadcastStatus() {
 			let data = {
 				id: whoami.id,
 				state: state
-			}
+			};
 			Net.send(conn, JSON.stringify(data));
 			Net.close(conn);
 		}
 	});
 }
 
-function startBroadcasting() {
+let heartbeatIntervalId = undefined;
+
+function startBroadcastingHeartbeat() {
 	broadcastHeartbeat();
-	setInterval(broadcastHeartbeat, heartbeatInterval);
+	if (heartbeatIntervalId !== undefined) clearInterval(heartbeatIntervalId);
+	heartbeatIntervalId = setInterval(broadcastHeartbeat, heartbeatInterval);
 }
 
 function broadcastHeartbeat() {
@@ -55,13 +58,13 @@ function broadcastHeartbeat() {
 Event.addHandler(Net.STATUS_GOT_IP, function(ev, evdata, ud) {
 	gotIp = true;
 	if (gotIp && gotTime) {
-		startBroadcasting();
+		startBroadcastingHeartbeat();
 	}
 }, null);
 
 Event.addHandler(MGOS_EVENT_TIME_CHANGED, function (ev, evdata, ud) {
 	gotTime = true;
 	if (gotIp && gotTime) {
-		startBroadcasting();
+		startBroadcastingHeartbeat();
 	}
 }, null);

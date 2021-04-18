@@ -4,6 +4,13 @@ let MGOS_EVENT_TIME_CHANGED = Event.SYS + 3;
 let hostbase = 'jarvis-iot-';
 let hostname = hostbase + whoami.id;
 
+whoami.mac          = ffi('char *get_mac_address()')();
+whoami.arch         = ffi('char *get_arch()')();
+whoami.fw_version   = ffi('char *get_fw_version()')();
+whoami.fw_timestamp = ffi('char *get_fw_timestamp()')();
+whoami.fw_id        = ffi('char *get_fw_id()')();
+//whoami.otaUpdate    = whoami.arch === 'esp32' || Cfg.get('board.btn1.pin') !== undefined;
+
 let floor = ffi('double floor(double)');
 
 console.log('--------------------------------------------------');
@@ -11,6 +18,14 @@ console.log('--------------------------------------------------');
 console.log('device.id             ', Cfg.get('device.id'));
 console.log('wifi.sta.dhcp_hostname', Cfg.get('wifi.sta.dhcp_hostname'));
 console.log('wifi.sta.ssid         ', Cfg.get('wifi.sta.ssid'));
+console.log('mac                   ', whoami.mac);
+console.log('arch                  ', whoami.arch);
+console.log('fw_version            ', whoami.fw_version);
+console.log('fw_timestamp          ', whoami.fw_timestamp);
+console.log('fw_id                 ', whoami.fw_id);
+//console.log('otaUpdate             ', whoami.otaUpdate);
+console.log('board.led1.pin        ', Cfg.get('board.led1.pin'));
+console.log('board.btn1.pin        ', Cfg.get('board.btn1.pin'));
 
 Event.addHandler(Net.STATUS_GOT_IP, function(ev, evdata, ud) {
 	console.log("GOT IP");

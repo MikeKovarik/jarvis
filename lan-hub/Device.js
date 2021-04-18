@@ -267,6 +267,7 @@ export class Device extends EventEmitter {
 	injectWhoami(whoami) {
 		this.type       = whoami.type
 		this.name       = whoami.name
+		this.arch       = whoami.arch
 		// TODO: remove this when FW supports full paths
 		if (whoami.traits && whoami.traits[0].startsWith('action.devices'))
 			this.traits     = whoami.traits

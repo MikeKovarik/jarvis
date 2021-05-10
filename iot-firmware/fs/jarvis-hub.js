@@ -1,4 +1,4 @@
-let broadcastIp = '230.185.192.108';
+let broadcastIp = '224.0.0.69';
 let broadcastPort = 1609;
 let broadcastAddr = 'udp://' + broadcastIp + ':' + JSON.stringify(broadcastPort);
 

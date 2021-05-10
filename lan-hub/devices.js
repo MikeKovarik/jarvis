@@ -10,7 +10,7 @@ import config from './config.js'
 const hubHostname = os.hostname()
 const hostnamePrefix = 'jarvis-iot-'
 
-var UDP_BROADCAST_IP = '230.185.192.108'
+var UDP_BROADCAST_IP = '224.0.0.69'
 var UDP_BROADCAST_PORT = 1609
 
 class Devices extends Map {

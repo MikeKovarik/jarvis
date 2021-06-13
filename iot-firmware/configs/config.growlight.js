@@ -20,8 +20,8 @@ let state = {
 
 let whoami = {
 	id: 'growlight',
-	type: 'action.devices.types.LIGHT',
 	name: 'Grow light',
+	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',
 		'action.devices.traits.Brightness',

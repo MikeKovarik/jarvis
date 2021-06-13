@@ -15,8 +15,8 @@ let state = {
 
 let whoami = {
 	id: 'stringlight',
-	type: 'action.devices.types.LIGHT',
 	name: 'String light',
+	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',
 		'action.devices.traits.Brightness',

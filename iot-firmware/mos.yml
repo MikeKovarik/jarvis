@@ -14,7 +14,7 @@ filesystem:
   - fs
 
 config_schema:
-  - ["debug.level", 1]
+  - ["debug.level", -1]
   - ["dns_sd.enable", true]
   - ["dns_sd.adv_only", true]
   - ["wifi.ap.enable", false]

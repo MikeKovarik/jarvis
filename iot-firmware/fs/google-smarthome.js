@@ -86,8 +86,9 @@ if (traits.ColorSetting) {
 
 
 if (pins.in1 !== undefined) {
+	GPIO.set_mode(pins.in1, GPIO.MODE_INPUT);
 	GPIO.set_button_handler(pins.in1, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 50, function(x) {
-		console.log('Button pressed')
+		console.log('Button pressed');
 		state.on = !state.on;
 		setPins();
 		broadcastStatus();
@@ -113,7 +114,7 @@ function setPins() {
 		PWM.set(pins.out1, pwmFreq, duty * (rgb.r / 255));
 		PWM.set(pins.out2, pwmFreq, duty * (rgb.g / 255));
 		PWM.set(pins.out3, pwmFreq, duty * (rgb.b / 255));
-	} else {
+	} else if (traits.OnOff) {
 		PWM.set(pins.out1, pwmFreq, duty);
 	}
 }

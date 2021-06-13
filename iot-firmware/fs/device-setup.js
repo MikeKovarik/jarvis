@@ -27,8 +27,23 @@ console.log('fw_id                 ', whoami.fw_id);
 console.log('board.led1.pin        ', Cfg.get('board.led1.pin'));
 console.log('board.btn1.pin        ', Cfg.get('board.btn1.pin'));
 
+Event.addHandler(Net.STATUS_DISCONNECTED, function(ev, evdata, ud) {
+	console.log('Net.STATUS_DISCONNECTED');
+}, null);
+
+Event.addHandler(Net.STATUS_CONNECTING, function(ev, evdata, ud) {
+	console.log('Net.STATUS_CONNECTING');
+}, null);
+
+Event.addHandler(Net.STATUS_CONNECTED, function(ev, evdata, ud) {
+	console.log('Net.STATUS_CONNECTED');
+}, null);
+
 Event.addHandler(Net.STATUS_GOT_IP, function(ev, evdata, ud) {
-	console.log("GOT IP");
+	RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function(resp, ud) {
+		console.log('Net.STATUS_GOT_IP', resp.wifi.sta_ip);
+		//console.log('Response:', JSON.stringify(resp));
+	}, null);
 }, null);
 
 Event.addHandler(MGOS_EVENT_TIME_CHANGED, function (ev, evdata, ud) {

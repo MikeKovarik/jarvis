@@ -124,7 +124,6 @@ apiRouter.delete('/device/:id', (req, res) => {
 	res.end()
 })
 
-// Expose list of devices as JSON for debugging.
 apiRouter.get('/ghome-sync', async (req, res) => {
 	console.gray('GET /request-sync')
 	res.json(await smarthome.requestSync(config.agentUserId))

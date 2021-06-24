@@ -41,12 +41,6 @@ app.post('/login', async (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('POST /login')
 	console.magenta(req.body)
-	if (req.body.client_secret !== config.secret) {
-		// TODO
-		throw `Incorrect Google app`
-	}
-	// Here, you should validate the user account.
-	// In this sample, we do not do that.
 	const responseUrl = decodeURIComponent(req.body.response_url)
 	console.gray('responseUrl', responseUrl)
 	return res.redirect(responseUrl)
@@ -64,18 +58,23 @@ app.get('/auth', async (req, res) => {
 	)
 	const redirectUrl = `/login?response_url=${encodeURIComponent(responseUrl)}`
 	console.gray('responseUrl', responseUrl)
+	console.gray('redirectUrl', redirectUrl)
 	return res.redirect(redirectUrl)
 })
 
 const HTTP_STATUS_OK = 200
 const tokenExpiration = 86400 // 60 * 60 * 24
-app.all('/token', async (req, res) => {
+app.post('/token', async (req, res) => {
 	console.magenta('--- AUTH', '-'.repeat(100))
+	const {body, query} = req
 	console.magenta(req.method, '/token')
 	console.magenta('query', req.query)
-	console.magenta('body ', req.body)
-	const grantType = req.query.grant_type || req.body.grant_type
+	console.magenta('body ', body)
+	if (body.client_secret !== config.secret || body.client_id !== config.client_id) {
+		throw `Incorrect Google app`
+	}
 	let token
+	const grantType = query.grant_type || body.grant_type
 	if (grantType === 'authorization_code') {
 		token = {
 			token_type: 'bearer',
@@ -91,5 +90,5 @@ app.all('/token', async (req, res) => {
 		}
 	}
 	console.gray('token', token)
-	res.status(HTTP_STATUS_OK).json(token)
+
 })

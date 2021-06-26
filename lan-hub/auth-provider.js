@@ -3,6 +3,9 @@ import {app} from './server.js'
 import config from './config.js'
 
 
+const HTTP_STATUS_OK = 200
+const tokenExpiration = 86400 // 60 * 60 * 24
+
 app.get('/login', (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('GET /login')
@@ -62,8 +65,6 @@ app.get('/auth', async (req, res) => {
 	return res.redirect(redirectUrl)
 })
 
-const HTTP_STATUS_OK = 200
-const tokenExpiration = 86400 // 60 * 60 * 24
 app.post('/token', async (req, res) => {
 	console.magenta('--- AUTH', '-'.repeat(100))
 	const {body, query} = req
@@ -90,5 +91,5 @@ app.post('/token', async (req, res) => {
 		}
 	}
 	console.gray('token', token)
-
+	res.status(HTTP_STATUS_OK).json(token)
 })

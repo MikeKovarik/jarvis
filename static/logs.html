@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>card</title>
+
+	<link rel="stylesheet" type="text/css" href="./flexus-material.css">
+
+	<style>
+		table {
+			border-spacing: 0;
+		}
+		[selectable] {
+			user-select: all;
+		}
+	</style>
+
+</head>
+<body primary="blue">
+
+	<flexus-view>
+
+		<main>
+
+			<horizontal center style="margin-bottom: 12px;">
+				<button click.trigger="ghomeSync()" seamed>clear</button>
+				TODO: trigger 'pm2 flush jarvis'
+			</horizontal>
+
+			TODO show
+
+			pi = username
+			jarvis = pm2 app name
+			/home/pi/.pm2/logs/jarvis-error.log
+			/home/pi/.pm2/logs/jarvis-out.log
+
+		</main>
+
+	</flexus-view>
+
+	<script type="importmap">
+	{
+		"imports": {
+			"aurelia-framework": "./aurelia.esm.min.js"
+		}
+	}
+	</script>
+
+	<script type="module">
+		import * as au from 'aurelia-framework'
+
+
+		class App {
+		}
+
+		au.enhance({
+			root: App,
+			host: document.body,
+			resources: [
+			]
+		})
+	</script>
+
+</body>
+</html>

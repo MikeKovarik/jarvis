@@ -5,8 +5,10 @@ let heartbeatInterval = 1000 * 60;
 let pins = {
 	// LEDS
 	out1: 4,
+	out2: 5,
+	out3: 14,
 	// Button
-	in1: 13
+	in1: 0 // ESP8266 flash button
 };
 
 let state = {
@@ -15,8 +17,8 @@ let state = {
 };
 
 let whoami = {
-	id: 'bulbstring',
-	name: 'Bulb String',
+	id: 'testlight',
+	name: 'Test String',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

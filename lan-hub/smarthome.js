@@ -87,7 +87,6 @@ async function handleExecute(payload) {
 					return createExecuteCommandOffline({id})
 				}
 			} catch (e) {
-				console.error('error returned by execution on store device document', e)
 				return createExecuteCommandError({id}, e)
 			}
 		}))

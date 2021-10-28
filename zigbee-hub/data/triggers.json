@@ -1,0 +1,10 @@
+[{
+	"source": ["big-button-1", "big-button-2"],
+	"key": ["arrow_left_click", "arrow_right_click"],
+	"trigger": []
+}, {
+	"source": ["big-button-3"],
+	"key": ["arrow_left_click", "arrow_right_click"],
+	"scenes": ["kitchen-bulbs", "kitchen-dim", "livingroom-cosy"],
+	"trigger": []
+}]

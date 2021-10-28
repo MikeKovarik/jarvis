@@ -1,0 +1,17 @@
+homeassistant: false
+permit_join: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://localhost
+serial:
+  port: \\.\COM3
+advanced:
+  homeassistant_legacy_entity_attributes: false
+  legacy_api: false
+  availability_timeout: 60
+device_options:
+  legacy: false
+frontend:
+  port: 8080
+devices: devices.yaml
+groups: groups.yaml

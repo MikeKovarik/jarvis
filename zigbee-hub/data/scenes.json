@@ -1,0 +1,59 @@
+{
+	"bedroom-main": {
+		"bulb-office": true,
+		"bulb-bed": false,
+		"readinglamp": false,
+		"bedlamp": 10
+	},
+	"bedroom-bulbs": {
+		"bulb-office": 100,
+		"bulb-bed": 100,
+		"readinglamp": false,
+		"bedlamp": false
+	},
+	"bedroom-all": {
+		"bulb-office": 100,
+		"bulb-bed": 100,
+		"readinglamp": 100,
+		"bedlamp": 100
+	},
+	"bedroom-lamps": {
+		"bulb-office": false,
+		"bulb-bed": false,
+		"readinglamp": 100,
+		"bedlamp": 100
+	},
+	"bedroom-reading": {
+		"bulb-office": false,
+		"bulb-bed": false,
+		"readinglamp": 100
+	},
+	"bedroom-cosy": {
+		"bulb-office": 10,
+		"bulb-bed": false,
+		"readinglamp": 100,
+		"bedlamp": 100
+	},
+	"bedroom-bedlamp": {
+		"bulb-office": 10,
+		"bulb-bed": false,
+		"readinglamp": 100,
+		"bedlamp": 100
+	},
+	"livingroom-cosy": {
+		"bulb-couch": 30,
+		"bulb-kitchen": false,
+		"bulbstring": 100,
+		"smallstring": 100,
+		"stringlight": 100,
+		"cagelight": 20
+	},
+	"kitchen-dim": {
+		"bulb-couch": 60,
+		"bulb-kitchen": 40
+	},
+	"kitchen-bulbs": {
+		"bulb-couch": 100,
+		"bulb-kitchen": 100
+	}
+}

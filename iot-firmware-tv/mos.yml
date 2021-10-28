@@ -64,3 +64,20 @@ libs:
 
 # OTHER FEATURES
 #  - origin: https://github.com/mongoose-os-libs/dht # humidity and temp sensors
+
+cdefs:
+  KAYSUN_AC: true
+  DANBY_DAC: true
+
+cflags:
+  - "-Wno-error"
+  - "-DKAYSUN_AC"
+  - "-DDANBY_DAC"
+cppflags:
+  - "-Wno-error"
+  - "-DKAYSUN_AC"
+  - "-DDANBY_DAC"
+cxxflags:
+  - "-Wno-error"
+  - "-DKAYSUN_AC"
+  - "-DDANBY_DAC"

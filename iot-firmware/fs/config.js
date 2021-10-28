@@ -3,7 +3,7 @@ let heartbeatInterval = 1000 * 60;
 
 let pins = {
 	// LEDS
-	out1: 3, // RX because ESP-01 has limited pins
+	out1: 4, // ESP32 GPIO4 corresponds to number 4
 	// Button
 	in1: 0
 };
@@ -14,8 +14,8 @@ let state = {
 };
 
 let whoami = {
-	id: 'terracebulbs1',
-	name: 'Terrace bulb string',
+	id: 'cagelight',
+	name: 'Cage light',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

@@ -1,59 +1,107 @@
 {
-	"bedroom-main": {
-		"bulb-office": true,
-		"bulb-bed": false,
-		"readinglamp": false,
-		"bedlamp": 10
+
+	"bedroom-on": {
+		"bulb-office": 100
 	},
-	"bedroom-bulbs": {
-		"bulb-office": 100,
-		"bulb-bed": 100,
-		"readinglamp": false,
-		"bedlamp": false
-	},
-	"bedroom-all": {
-		"bulb-office": 100,
-		"bulb-bed": 100,
-		"readinglamp": 100,
-		"bedlamp": 100
-	},
-	"bedroom-lamps": {
-		"bulb-office": false,
-		"bulb-bed": false,
-		"readinglamp": 100,
-		"bedlamp": 100
-	},
-	"bedroom-reading": {
-		"bulb-office": false,
-		"bulb-bed": false,
-		"readinglamp": 100
+	"bedroom-off": ["bedroom-bulbs-off"],
+
+	"bedroom-all-full": ["bedroom-bulbs-full", "bedroom-lamps-full"],
+	"bedroom-all-off":  ["bedroom-bulbs-off",  "bedroom-lamps-off"],
+
+	"bedroom-dim": {
+		"bulb-office": 60,
+		"bulb-bed": false
 	},
 	"bedroom-cosy": {
 		"bulb-office": 10,
 		"bulb-bed": false,
-		"readinglamp": 100,
-		"bedlamp": 100
+		"lamp-reading": true,
+		"lamp-bed": 100
 	},
-	"bedroom-bedlamp": {
-		"bulb-office": 10,
+
+	"bedroom-bulbs-only": ["bedroom-bulbs-full", "bedroom-lamps-off"],
+	"bedroom-bulbs-full": {
+		"bulb-office": 100,
+		"bulb-bed": 100
+	},
+	"bedroom-bulbs-off": {
+		"bulb-office": false,
+		"bulb-bed": false
+	},
+
+	"bedroom-lamps": {
+		"bulb-office": false,
 		"bulb-bed": false,
-		"readinglamp": 100,
-		"bedlamp": 100
+		"lamp-reading": true,
+		"lamp-bed": 100
 	},
-	"livingroom-cosy": {
+	"bedroom-lamps-full": {
+		"lamp-reading": true,
+		"lamp-bed": 100
+	},
+	"bedroom-lamps-off": {
+		"lamp-reading": false,
+		"lamp-bed": false
+	},
+
+	"bedroom-reading": ["bedroom-bulbs-off", {
+		"lamp-reading": true,
+		"lamp-bed": false
+	}],
+	"bedroom-lamp-bed": ["bedroom-bulbs-off", {
+		"lamp-reading": false,
+		"lamp-bed": 100
+	}],
+
+
+
+	"livingroom-on": {
+		"bulb-couch": 100,
+		"bulb-kitchen": 20
+	},
+	"livingroom-off": ["livingroom-bulbs-off"],
+
+	"livingroom-all-full": ["livingroom-bulbs-full", "livingroom-decorations-full"],
+	"livingroom-all-off":  ["livingroom-bulbs-off",  "livingroom-decorations-off"],
+
+	"livingroom-dim": {
+		"bulb-couch": 60,
+		"bulb-kitchen": 40
+	},
+	"livingroom-cosy": ["livingroom-decorations-default", {
 		"bulb-couch": 30,
-		"bulb-kitchen": false,
-		"bulbstring": 100,
+		"bulb-kitchen": false
+	}],
+
+	"livingroom-decorations-only": ["livingroom-bulbs-off", "livingroom-decorations-full"],
+	"livingroom-decorations-default": {
+		"bulbstring": 70,
 		"smallstring": 100,
 		"stringlight": 100,
 		"cagelight": 20
 	},
-	"kitchen-dim": {
-		"bulb-couch": 60,
-		"bulb-kitchen": 40
+	"livingroom-decorations-full": {
+		"bulbstring": 100,
+		"smallstring": 100,
+		"stringlight": 100,
+		"cagelight": 100
 	},
-	"kitchen-bulbs": {
+	"livingroom-decorations-off": {
+		"bulbstring": false,
+		"smallstring": false,
+		"stringlight": false,
+		"cagelight": false
+	},
+
+	"livingroom-bulbs-only": ["livingroom-bulbs-full", "livingroom-decorations-off"],
+	"livingroom-bulbs-full": {
 		"bulb-couch": 100,
 		"bulb-kitchen": 100
+	},
+	"livingroom-bulbs-off": {
+		"bulb-couch": false,
+		"bulb-kitchen": false
 	}
+
+
 }

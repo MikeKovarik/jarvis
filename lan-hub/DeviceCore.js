@@ -19,7 +19,10 @@ function getKeys(ctx) {
 
 export class GhomeDevice extends EventEmitter {
 
-	constructor(id, ip, heartbeatInterval) {
+	traits = []
+	attributes = {}
+
+	constructor() {
 		super()
 		// notify google about offline state
 		this.on('offline', this.reportState)
@@ -54,6 +57,26 @@ export class GhomeDevice extends EventEmitter {
 			const errorResponse = JSON.parse(e)
 			console.error(this.id, 'error reporting device states to homegraph:', errorResponse)
 		}
+	}
+
+	// ----------------------------- INPUT DATA FORMATTING
+
+	sanitizeGhState(arg) {
+		let ghState = {}
+		let type = typeof arg
+		if (type === 'number' && this.traits.includes(TRAITS.Brightness))
+			ghState.brightness = arg
+		else if (type === 'boolean' && this.traits.includes(TRAITS.OnOff))
+			ghState.on = arg
+		else if (type === 'object')
+			ghState = {...ghState, ...arg}
+		else
+			throw new Error(`Incorrect arg`, arg)
+		if (ghState.brightness === 0) {
+			ghState.state = false
+			delete ghState.brightness
+		}
+		return ghState
 	}
 
 	// ----------------------------- OUTPUT DATA FORMATTING

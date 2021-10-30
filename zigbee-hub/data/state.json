@@ -1,17 +1,17 @@
 {
     "1": {
-        "state": "OFF",
-        "brightness": 246,
+        "state": "ON",
+        "brightness": 25,
         "color_mode": "xy"
     },
     "2": {
-        "state": "OFF",
-        "brightness": 102,
+        "state": "ON",
+        "brightness": 254,
         "color_mode": "xy"
     },
     "3": {
-        "brightness": 246,
-        "state": "OFF",
+        "brightness": 25,
+        "state": "ON",
         "color_mode": "xy"
     },
     "0xb4e3f9fffebdf0a5": {
@@ -36,12 +36,12 @@
         "update": {
             "state": "idle"
         },
-        "state": "OFF",
+        "state": "ON",
         "color_mode": "xy"
     },
     "0x001788010b03d966": {
-        "state": "OFF",
-        "brightness": 246,
+        "state": "ON",
+        "brightness": 25,
         "update": {
             "state": "idle"
         },
@@ -50,12 +50,12 @@
     "0xb4e3f9fffe5234f8": {
         "battery": 60,
         "update": {
-            "state": "idle"
+            "state": "available"
         }
     },
     "0xb4e3f9fffe5bedd1": {
-        "state": "OFF",
-        "brightness": 102,
+        "state": "ON",
+        "brightness": 254,
         "update": {
             "state": "available"
         },

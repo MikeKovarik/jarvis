@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {GhomeDevice} from './DeviceCore.js'
+import {stateToActions} from '../zigbee-hub/src/ghome.mjs'
 
 
 const hostnamePrefix = 'jarvis-iot-'
@@ -184,7 +185,15 @@ export class Device extends GhomeDevice {
 		}
 	}
 
-	// ----------------------------- DIRECT HUB-TO-DEVICE COMMUNICATION APIS
+	// ------------------------- COMMAND EXECUTION / STATE APPLYING -------------------------
+
+	// shared method, accepts ghState
+	applyState(ghState) {
+		ghState = this.sanitizeGhState(ghState)
+		let actions = stateToActions(ghState, this.traits)
+		for (let action of actions)
+			this.execute(action)
+	}
 
 	// TODO: rename to executeCommand?
 	async execute({command, params}) {
@@ -193,6 +202,8 @@ export class Device extends GhomeDevice {
 		if (state) this.injectState(state)
 		return this.state
 	}
+
+	// ----------------------------- DIRECT HUB-TO-DEVICE COMMUNICATION APIS
 
 	async reboot() {
 		console.gray(this.id, 'reboot()')

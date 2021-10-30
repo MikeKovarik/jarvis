@@ -1,10 +1,23 @@
 [{
-	"source": ["big-button-1", "big-button-2"],
-	"key": ["arrow_left_click", "arrow_right_click"],
-	"trigger": []
+	"source": ["styrbar-1", "styrbar-2"],
+	"scenes": ["bedroom-bulbs-only", "bedroom-dim", "bedroom-cosy"],
+	"on": "bedroom-on",
+	"off": "bedroom-off",
+	"brightness_move_up": "bedroom-all-full",
+	"brightness_move_down": "bedroom-all-off"
 }, {
-	"source": ["big-button-3"],
-	"key": ["arrow_left_click", "arrow_right_click"],
-	"scenes": ["kitchen-bulbs", "kitchen-dim", "livingroom-cosy"],
-	"trigger": []
+	"source": ["styrbar-3"],
+	"scenes": ["livingroom-bulbs-only", "livingroom-dim", "livingroom-cosy"],
+	"on": "livingroom-on",
+	"off": "livingroom-off",
+	"brightness_move_up": "livingroom-all-full",
+	"brightness_move_down": "livingroom-all-off"
+}, {
+	"source": ["shortcut-1", "shortcut-2"],
+	"on": "bedroom-cosy",
+	"brightness_move_up": "bedroom-all-off"
+}, {
+	"source": "shortcut-3",
+	"on": "bedroom-reading",
+	"brightness_move_up": "bedroom-all-off"
 }]

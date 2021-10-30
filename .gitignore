@@ -5,6 +5,12 @@
 /secrets
 /iot-firmware/build
 /node_modules
+/**/node_modules
 /package-lock.json
 /iot-firmware/fs/wifi.js
 /experiments
+/zigbee-hub/data/log
+/iot-firmware-tv/build
+/zigbee-hub/data/state.json
+/zigbee-hub/data/database.db
+/zigbee-hub/data/coordinator_backup.json

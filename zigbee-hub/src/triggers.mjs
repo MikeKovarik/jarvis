@@ -1,49 +1,71 @@
-import fs from 'fs'
-import path from 'path'
-import {fileURLToPath} from 'url'
-import devices from './devices.mjs'
 import actions from './actions.mjs'
-import * as _scenes from './scenes.mjs'
+import * as scenes from './scenes.mjs'
+import {getAbsolutePath, readAndWatch} from './util.mjs'
 
-/*
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-let jsonPath = path.join(__dirname, '../data/triggers.json')
-handleTriggerFile(fs.readFileSync(jsonPath))
 
-function handleTriggerFile(buffer) {
-	let json = buffer.toString()
-	let data = JSON.parse(json)
-	console.log('data', data)
+let triggers = []
+let triggerTuples = []
+
+let jsonPath = getAbsolutePath(import.meta.url, '../data/triggers.json')
+
+const ACTION_LEFT = 'arrow_left_click'
+const ACTION_RIGHT = 'arrow_right_click'
+const ACTION_ON = 'on'
+const ACTION_OFF = 'off'
+
+const unregisterTuples = () => triggerTuples.forEach(tuple => actions.off(...tuple))
+const registerTuples   = () => triggerTuples.forEach(tuple => actions.on(...tuple))
+
+readAndWatch(jsonPath, buffer => {
+	unregisterTuples()
+	try {
+		triggers = JSON.parse(buffer.toString())
+	} catch {
+		console.error('error parsing', jsonPath)
+	}
+	triggerTuples = triggers.map(handleTrigger).flat()
+	registerTuples()
+	console.log('triggers updated')
+})
+
+
+function handleTrigger({source, scenes, ...triggers}) {
+	source = [source].flat()
+	if (scenes) {
+		return [
+			...handleSceneArray(source, scenes),
+			...handleSingleScene(source, triggers),
+		]
+	} else {
+		return handleSingleScene(source, triggers)
+	}
 }
 
-actions.on('arrow_left_click', 'big-button-3', () => console.log('BTN LEFT'))
-actions.on('arrow_right_click', 'big-button-3', () => console.log('BTN RIGHT'))
-*/
+function handleSingleScene(sources, triggers) {
+	const tuples = []
+	for (let [action, scene] of Object.entries(triggers))
+		for (let source of sources)
+			tuples.push([action, source, () => scenes.set(scene)])
+	return tuples
+}
 
-let foo = [{
-	"input": ["big-button-3"],
-	"scenes": ["kitchen-bulbs", "livingroom-cosy", "kitchen-dim"]
-}]
-
-for (let {input, scenes} of foo) {
-	const leftAction = 'arrow_left_click'
-	const rightAction = 'arrow_right_click'
-	const onAction = 'on'
-	const offAction = 'off'
+function handleSceneArray(sources, triggerScenes) {
+	const tuples = []
 	let index = -1
-	let {length} = scenes
-	for (let inputName of input) {
-		const resetIndex = () => index = -1
-		const updateIndex = increment => {
-			if (index === -1 && increment === -1)
-				index = length
-			index = (length + index + increment) % length
-			let sceneName = scenes[index]
-			_scenes.set(sceneName)
-		}
-		actions.on(leftAction,  inputName, () => updateIndex(-1))
-		actions.on(rightAction, inputName, () => updateIndex(+1))
-		actions.on(onAction,  inputName, resetIndex)
-		actions.on(offAction, inputName, resetIndex)
+	let {length} = triggerScenes
+	const resetIndex = () => index = -1
+	const updateIndex = increment => {
+		if (index === -1 && increment === -1)
+			index = length
+		index = (length + index + increment) % length
+		let sceneName = triggerScenes[index]
+		scenes.set(sceneName)
 	}
+	for (let source of sources) {
+		tuples.push([ACTION_ON,  source, resetIndex])
+		tuples.push([ACTION_OFF, source, resetIndex])
+		tuples.push([ACTION_LEFT,  source, () => updateIndex(-1)])
+		tuples.push([ACTION_RIGHT, source, () => updateIndex(+1)])
+	}
+	return tuples
 }

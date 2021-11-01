@@ -84,20 +84,20 @@ export class ZbDevice extends GhomeDevice {
 		this.subscribe()
 	}
 
-	subscribed = false
+	_subscribed = false
 
 	unsubscribe() {
-		if (!this.subscribed) return
+		if (!this._subscribed) return
 		topics.off(this.baseTopic, this.onData)
 		topics.off(this.availabilityTopic, this.onAvailability)
-		this.subscribed = false
+		this._subscribed = false
 	}
 
 	subscribe() {
-		if (this.subscribed) return
+		if (this._subscribed) return
 		topics.on(this.baseTopic, this.onData)
 		topics.on(this.availabilityTopic, this.onAvailability)
-		this.subscribed = true
+		this._subscribed = true
 	}
 
 	get friendlyName() {
@@ -175,6 +175,7 @@ export class Button extends ZbDevice {
 		console.log('exposedActions', pickExposedEnum(zbDevice, 'action'))
 	}
 */
+
 	onData(data) {
 		super.onData(data)
 		if (data.action === undefined) return
@@ -327,8 +328,7 @@ export class Light extends ZbDevice {
 	}
 
 	translateZbToGh(zbState) {
-		let {online} = this
-		return Object.assign({online}, ...Object.entries(zbState).map(this.zb2gh.__entry))
+		return Object.assign({online: this.online}, ...Object.entries(zbState).map(this.zb2gh.__entry))
 	}
 
 

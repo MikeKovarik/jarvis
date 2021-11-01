@@ -8,9 +8,14 @@
 /**/node_modules
 /package-lock.json
 /iot-firmware/fs/wifi.js
+/iot-firmware/fs/secret.js
 /experiments
 /zigbee-hub/data/log
 /iot-firmware-tv/build
 /zigbee-hub/data/state.json
 /zigbee-hub/data/database.db
 /zigbee-hub/data/coordinator_backup.json
+/iot-firmware - Copy
+/index-app
+/iot-firmware-mqtt
+/iot-firmware-legacy

@@ -138,7 +138,13 @@
 				millis = (millis - secs) / 60
 				let mins = millis % 60
 				let hrs = (millis - mins) / 60
-				return `${padd(hrs)}:${padd(mins)}:${padd(secs)}`
+				let dayString = ''
+				if (hrs / 24 > 1) {
+					let days = Math.floor(hrs / 24)
+					hrs -= days * 24
+					dayString = `${days} days `
+				}
+				return `${dayString}${padd(hrs)}:${padd(mins)}:${padd(secs)}`
 			}
 		}
 

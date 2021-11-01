@@ -207,9 +207,9 @@
 */
 
 
-import './src/devices.mjs'
-import './src/actions.mjs'
-import './src/topics.mjs'
-import './src/ZbDevice.mjs'
-import './src/triggers.mjs'
-import './src/lightfix.mjs'
+import './src/devices2.js'
+import './src/actions.js'
+import './src/topics.js'
+import './src/ZbDevice.js'
+import './src/triggers.js'
+import './src/lightfix.js'

@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {GhomeDevice} from './DeviceCore.js'
-import {stateToActions} from '../zigbee-hub/src/ghome.mjs'
+import {stateToActions} from '../src/ghome.js'
 
 
 const hostnamePrefix = 'jarvis-iot-'

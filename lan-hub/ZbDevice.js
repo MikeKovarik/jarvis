@@ -1,10 +1,10 @@
 import equal from 'fast-deep-equal'
-import devices from './devices.mjs'
-import actions from './actions.mjs'
-import topics, {bridgeRootTopic, renameResponse, mqttClient} from './topics.mjs'
+import devices from './devices2.js'
+import actions from './actions.js'
+import topics, {bridgeRootTopic, renameResponse, mqttClient} from './topics.js'
 import {GhomeDevice} from '../../lan-hub/DeviceCore.js'
-import {TYPES, TRAITS} from './ghome.mjs'
-import {clamp} from './util.mjs'
+import {TYPES, TRAITS} from './ghome.js'
+import {clamp} from './util.js'
 
 
 const debounceTimeouts = {}

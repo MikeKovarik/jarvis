@@ -1,6 +1,6 @@
 import mqtt from 'mqtt'
 import {EventEmitter} from 'events'
-import {ZbDevice} from './ZbDevice.mjs'
+import {ZbDevice} from './ZbDevice.js'
 
 
 const mqttPort = 1883

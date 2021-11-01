@@ -1,6 +1,6 @@
-import actions from './actions.mjs'
-import * as scenes from './scenes.mjs'
-import {getAbsolutePath, readAndWatch} from './util.mjs'
+import actions from './actions.js'
+import * as scenes from './scenes.js'
+import {getAbsolutePath, readAndWatch} from './util.js'
 
 
 let triggers = []

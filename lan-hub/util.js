@@ -3,7 +3,7 @@ import {readFile} from 'fs/promises'
 import path from 'path'
 import {fileURLToPath} from 'url'
 import chokidar from 'chokidar'
-import * as _scenes from './scenes.mjs'
+import * as _scenes from './scenes.js'
 
 
 export function getAbsolutePath(importMetaUrl, relativePath) {

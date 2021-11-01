@@ -1,5 +1,5 @@
-import devices from './devices.mjs'
-import {getAbsolutePath, readAndWatch} from './util.mjs'
+import devices from './devices2.js'
+import {getAbsolutePath, readAndWatch} from './util.js'
 
 
 const isString = arg => typeof arg === 'string'

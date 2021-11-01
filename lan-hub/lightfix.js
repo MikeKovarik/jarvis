@@ -1,7 +1,7 @@
-import devices from './devices.mjs'
-import actions from './actions.mjs'
-import topics, {bridgeDevices, bridgeGroups} from './topics.mjs'
-import {unique, Resolvable} from './util.mjs'
+import devices from './devices2.js'
+import actions from './actions.js'
+import topics, {bridgeDevices, bridgeGroups} from './topics.js'
+import {unique, Resolvable} from './util.js'
 
 
 const bindingMap = new Map

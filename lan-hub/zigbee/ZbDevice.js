@@ -1,11 +1,11 @@
 import equal from 'fast-deep-equal'
-import devices from './devices2.js'
-import actions from './actions.js'
-import topics, {bridgeRootTopic, renameResponse} from './zigbee/topics.js'
-import {GhomeDevice} from './DeviceCore.js'
-import {TYPES, TRAITS} from './ghome.js'
-import {clamp} from './util.js'
-import mqtt from './mqtt.js'
+import zbDevices from './devices.js'
+import actions from '../actions.js'
+import topics, {bridgeRootTopic, renameResponse} from './topics.js'
+import {GhomeDevice} from '../DeviceCore.js'
+import {TYPES, TRAITS} from '../ghome/const.js'
+import {clamp} from '../util/util.js'
+import mqtt from '../mqtt.js'
 
 
 const debounceTimeouts = {}
@@ -34,8 +34,8 @@ export class ZbDevice extends GhomeDevice {
 
 	static from(zbDevice) {
 		let {ieee_address} = zbDevice
-		if (devices.has(ieee_address)) {
-			let ghDevice = devices.get(ieee_address)
+		if (zbDevices.has(ieee_address)) {
+			let ghDevice = zbDevices.get(ieee_address)
 			ghDevice.injectZbData(zbDevice)
 			return ghDevice
 		} else {
@@ -64,7 +64,7 @@ export class ZbDevice extends GhomeDevice {
 		this.id = zbDevice.ieee_address
 		this.injectZbData(zbDevice)
 		topics.on(renameResponse, this.onGlobalRename)
-		devices.set(this.id, this)
+		zbDevices.set(this.id, this)
 		this.init?.(zbDevice)
 	}
 
@@ -315,7 +315,7 @@ export class Light extends ZbDevice {
 		_state: val => val === this._stateOnZb,
 		_color_temp: miredScaleToKelvin,
 		_color_xy: val => undefined, // todo
-		_color_hs: val => undefined, // todo https://www.zigbee2mqtt.io/devices/RB_285_C.html
+		_color_hs: val => undefined, // todo https://www.zigbee2mqtt.io/zbDevices/RB_285_C.html
 
 		brightness: val => ({brightness: this.zb2gh._brightness(val)}),
 		state:      val => ({on: this.zb2gh._state(val)}),

@@ -1,4 +1,4 @@
-import {objectSubset, objectIncludes, isNotUndefined} from './util.js'
+import {objectSubset, objectIncludes, isNotUndefined} from '../util/util.js'
 
 export const TYPES = {
 	SWITCH: 'action.devices.types.SWITCH',

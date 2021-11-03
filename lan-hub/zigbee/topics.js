@@ -1,6 +1,6 @@
-import {EventEmitter} from 'events'
-import {ZbDevice} from '../ZbDevice.js'
+import {ZbDevice} from './ZbDevice.js'
 import mqtt from '../mqtt.js'
+import {Topics} from '../shared/Topics.js'
 
 
 export const bridgeRootTopic = 'zigbee2mqtt'
@@ -9,37 +9,6 @@ export const bridgeDevices  = `${bridgeRootTopic}/bridge/devices`
 export const bridgeGroups   = `${bridgeRootTopic}/bridge/groups`
 export const renameResponse = `${bridgeRootTopic}/bridge/response/device/rename`
 
-
-class Topics extends EventEmitter {
-
-	on(...args) {
-		let [topic] = args
-		let listeners = this.listeners(topic)
-		if (listeners.length === 0) {
-			mqtt.subscribe(topic, err => {
-				if (err) console.error(`failed subscribing to ${topic}`)
-			})
-		}
-		if (args.length > 1) {
-			super.on(...args)
-		}
-	}
-
-	off(...args) {
-		if (args.length > 1) {
-			super.removeListener(...args)
-		}
-		let [topic] = args
-		let listeners = this.listeners(topic)
-		if (listeners.length === 0) {
-			let [topic] = args
-			mqtt.unsubscribe(topic, err => {
-				if (err) console.error(`failed subscribing to ${topic}`)
-			})
-		}
-	}
-
-}
 
 const topics = new Topics
 

@@ -1,7 +1,8 @@
 import os from 'os'
 import dns from 'dns'
 
-function getIp() {
+
+export function getIp() {
 	return new Promise((resolve, reject) => {
 		dns.lookup(os.hostname(), (err, result) => {
 			if (err) reject(err)
@@ -10,4 +11,5 @@ function getIp() {
 	})
 }
 
-getIp().then(console.log)
+export let ip
+getIp().then(data => ip = data)

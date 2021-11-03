@@ -1,8 +1,8 @@
 import {EventEmitter} from 'events'
+import './util/console.js'
 //import {smarthome} from './smarthome-core.js'
 import config from './config.js'
-import './utils.js'
-import {TRAITS} from './ghome.js'
+import {TRAITS} from './ghome/const.js'
 
 
 Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))

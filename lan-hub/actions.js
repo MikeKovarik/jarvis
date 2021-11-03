@@ -3,7 +3,7 @@ import {EventEmitter} from 'events'
 
 const getKey = (deviceName, actionName) => `${deviceName}|${actionName}`
 
-class Actions extends EventEmitter {
+export class Actions extends EventEmitter {
 
 	on(...args) {
 		if (args.length === 3) {
@@ -39,5 +39,4 @@ class Actions extends EventEmitter {
 
 }
 
-const actions = new Actions
-export default actions
+export default new Actions

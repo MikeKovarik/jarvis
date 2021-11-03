@@ -1,11 +1,11 @@
 import fs from 'fs'
 import aog from 'actions-on-google'
-import {app} from './server.js'
+import {app} from '../httpServer.js'
 
 
 let jwt
 try {
-	let jwtPath = new URL('../secrets/ghome-key.json', import.meta.url)
+	let jwtPath = new URL('../../secrets/ghome-key.json', import.meta.url)
 	jwt = JSON.parse(fs.readFileSync(jwtPath).toString())
 } catch (e) {
 	console.warn('error reading service account key:', e)

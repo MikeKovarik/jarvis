@@ -1,7 +1,7 @@
-import devices from '../devices2.js'
+import zbDevices from '../zigbee/devices.js'
 import actions from '../actions.js'
 import topics, {bridgeDevices, bridgeGroups} from './topics.js'
-import {unique, Resolvable} from '../util.js'
+import {unique, Resolvable} from '../util/util.js'
 
 
 const bindingMap = new Map
@@ -12,7 +12,7 @@ actions.on('brightness_stop', button => {
 		let lights = bindingMap.get(button.name) || []
 		for (let lightName of lights) {
 			console.log('FIXING', lightName, 'state')
-			devices.getByName(lightName)?.fetchState()
+			zbDevices.getByName(lightName)?.fetchState()
 		}
 	}
 })
@@ -59,7 +59,7 @@ async function handleLightFix(allDevices) {
 }
 
 function handleSingleTarget(targetId, sourceName) {
-	let targetDevice = devices.get(targetId)
+	let targetDevice = zbDevices.get(targetId)
 	let targetName = targetDevice.name
 	let items = bindingMap.get(sourceName) || []
 	items.push(targetName)

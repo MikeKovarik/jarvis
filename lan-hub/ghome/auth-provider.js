@@ -1,6 +1,6 @@
 import util from 'util'
-import {app} from './server.js'
-import config from './config.js'
+import {app} from '../httpServer.js'
+import config from '../config.js'
 
 
 const HTTP_STATUS_OK = 200

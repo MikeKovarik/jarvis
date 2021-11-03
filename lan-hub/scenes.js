@@ -1,5 +1,5 @@
-import devices from './devices2.js'
-import {getAbsolutePath, readAndWatch} from './util.js'
+import zbDevices from './zigbee/devices.js'
+import {getAbsolutePath, readAndWatch} from './util/util.js'
 
 
 const isString = arg => typeof arg === 'string'
@@ -28,7 +28,7 @@ export function set(sceneName) {
 	console.log('SET SCENE', sceneName, JSON.stringify(scene, null, 2))
 	if (scene) {
 		for (let [deviceName, state] of Object.entries(scene)) {
-			let device = devices.getByName(deviceName)
+			let device = zbDevices.getByName(deviceName)
 			device?.applyState(state)
 		}
 	}

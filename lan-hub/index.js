@@ -1,7 +1,7 @@
-import './auth-provider.js'
-import './smarthome.js'
+import './ghome/auth-provider.js'
+import './ghome/smarthome.js'
 //import './debugdata.js'
-import './webhook.js'
+import './githubWebhook.js'
 
 import util from 'util'
 import cp from 'child_process'

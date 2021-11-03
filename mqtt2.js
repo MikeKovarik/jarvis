@@ -1,4 +1,5 @@
 import mqtt from 'mqtt'
+import './lan-hub/util/console.js'
 
 
 const mqttHost = 'jarvis-hub.lan'

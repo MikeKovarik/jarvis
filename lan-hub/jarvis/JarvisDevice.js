@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
-import {GhomeDevice} from './DeviceCore.js'
+import {GhomeDevice} from '../DeviceCore.js'
 import {stateToActions} from '../src/ghome.js'
 
 

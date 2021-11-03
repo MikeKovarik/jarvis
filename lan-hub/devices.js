@@ -1,9 +1,9 @@
 import {EventEmitter} from 'events'
 import os from 'os'
 import dgram from 'dgram'
-import {Device} from './Device.js'
-import {app, apiRouter} from './server.js'
-import {smarthome} from './smarthome-core.js'
+import {Device} from './JarvisDevice.js'
+import {app, apiRouter} from './httpServer.js'
+import {smarthome} from './ghome/smarthome-core.js'
 import config from './config.js'
 
 

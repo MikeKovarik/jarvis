@@ -1,7 +1,8 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
-import devices from './devices.js'
-import config from './config.js'
+import devices from '../devices.js'
+import config from '../config.js'
 import {smarthome} from './smarthome-core.js'
+import '../util/proto.js'
 
 
 export {smarthome}
@@ -10,35 +11,32 @@ export let connected = false
 
 //smarthome.requestSync()
 
-smarthome.onSync(async body => {
-	connected = true
-	return {
-		requestId: body.requestId,
-		payload: {
-			agentUserId: config.agentUserId,
-			devices: await handleSync(body)
+const smarthomeHandler = payloadCreator => {
+	return async body => {
+		connected = true
+		return {
+			requestId: body.requestId,
+			payload: payloadCreator(body)
 		}
 	}
-})
+}
 
-smarthome.onQuery(async body => {
-	connected = true
-	return {
-		requestId: body.requestId,
-		payload: {
-			devices: await handleQuery(body.inputs[0].payload),
-		},
-	}
-})
+smarthome.onSync(smarthomeHandler(async body => ({
+	agentUserId: config.agentUserId,
+	devices: await handleSync(body)
+})))
 
-smarthome.onExecute(async body => {
-	connected = true
-	return {
-		requestId: body.requestId,
-		payload: {
-			commands: await handleExecute(body.inputs[0].payload)
-		},
-	}
+smarthome.onQuery(async body => ({
+	devices: await handleQuery(body.inputs[0].payload),
+}))
+
+smarthome.onExecute(async body => ({
+	commands: await handleExecute(body.inputs[0].payload)
+}))
+
+smarthome.onDisconnect(async body => {
+	connected = false
+	return {}
 })
 
 function handleSync(body) {
@@ -78,7 +76,7 @@ async function handleExecute(payload) {
 		.map(cmd => cmd.devices.map(async ({id}) => {
 			let device = devices.get(id)
 			try {
-				if (device) {
+				if (device?.online) {
 					await cmd.execution
 						.map(exe => device.execute(exe))
 						.promiseAll()
@@ -103,61 +101,44 @@ function createExecuteCommandSuccess(device) {
 	}
 }
 
-function createExecuteCommandOffline(device) {
+function createExecuteCommandError(device, errorCode, additional = {}) {
 	return {
 		ids: [device.id],
 		status: 'ERROR',
-		errorCode: 'deviceOffline',
+		errorCode,
+		...additional
 	}
+}
+
+function createExecuteCommandOffline(device) {
+	return createExecuteCommandError(device, 'deviceOffline')
 }
 
 function createExecuteCommandError(device, e) {
 	if (e.message === 'pinNeeded') {
-		return {
-			ids: [device.id],
-			status: 'ERROR',
-			errorCode: 'challengeNeeded',
+		return createExecuteCommandError(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'pinNeeded',
 			}
-		}
+		})
 	} else if (e.message === 'challengeFailedPinNeeded') {
-		return {
-			ids: [device.id],
-			status: 'ERROR',
-			errorCode: 'challengeNeeded',
+		return createExecuteCommandError(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'challengeFailedPinNeeded',
 			},
-		}
+		})
 	} else if (e.message === 'ackNeeded') {
-		return {
-			ids: [device.id],
-			status: 'ERROR',
-			errorCode: 'challengeNeeded',
+		return createExecuteCommandError(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'ackNeeded',
 			},
-		}
+		})
 	} else if (e.message === 'PENDING') {
 		return {
 			ids: [device.id],
 			status: 'PENDING',
 		}
 	} else {
-		return {
-			ids: [device.id],
-			status: 'ERROR',
-			errorCode: e.message,
-		}
+		return createExecuteCommandError(device, e.message)
 	}
-}
-
-smarthome.onDisconnect(async body => {
-	connected = false
-	return {}
-})
-
-Array.prototype.promiseAll = function() {
-	return Promise.all(this)
 }

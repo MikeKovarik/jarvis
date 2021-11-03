@@ -9,11 +9,11 @@
 	"bedroom-all-off":  ["bedroom-bulbs-off",  "bedroom-lamps-off"],
 
 	"bedroom-dim": {
-		"bulb-office": 60,
+		"bulb-office": 40,
 		"bulb-bed": false
 	},
 	"bedroom-cosy": {
-		"bulb-office": 10,
+		"bulb-office": false,
 		"bulb-bed": false,
 		"lamp-reading": true,
 		"lamp-bed": 100

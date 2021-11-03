@@ -41,7 +41,7 @@ smarthome.onDisconnect(async body => {
 
 function handleSync(body) {
 	console.gray('--- SMARTHOME: SYNC', '-'.repeat(100))
-	return devices.asArray().map(device => device.toGoogleDevice())
+	return devices.array.map(device => device.toGoogleDevice())
 }
 
 async function handleQuery(payload) {

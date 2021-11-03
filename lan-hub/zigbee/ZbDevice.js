@@ -1,11 +1,10 @@
-import equal from 'fast-deep-equal'
 import zbDevices from './devices.js'
 import actions from '../actions.js'
-import topics, {bridgeRootTopic, renameResponse} from './topics.js'
+import {bridgeRootTopic, renameResponse} from './topics.js'
 import {GhomeDevice} from '../DeviceCore.js'
 import {TYPES, TRAITS} from '../ghome/const.js'
 import {clamp} from '../util/util.js'
-import mqtt from '../mqtt.js'
+import {mqtt, topics} from '../mqtt.js'
 
 
 const debounceTimeouts = {}
@@ -19,7 +18,6 @@ const exposesAction = device => device.definition?.exposes?.some(ex => ex.name =
 const notExposesAction = device => !exposesAction(device)
 
 const pickExposedArray = (device, name) => device.definition?.exposes.find(ex => ex[name]) || {}
-const pickExposedEnum = (device, name) => device.definition?.exposes.find(ex => ex.name === name)?.values ?? []
 
 export class ZbDevice extends GhomeDevice {
 
@@ -36,7 +34,7 @@ export class ZbDevice extends GhomeDevice {
 		let {ieee_address} = zbDevice
 		if (zbDevices.has(ieee_address)) {
 			let ghDevice = zbDevices.get(ieee_address)
-			ghDevice.injectZbData(zbDevice)
+			ghDevice.injectWhoami(zbDevice)
 			return ghDevice
 		} else {
 			let Ctor = this.getCtor(zbDevice)
@@ -47,11 +45,6 @@ export class ZbDevice extends GhomeDevice {
 	constructor(zbDevice) {
 		super()
 
-		//console.log('---------------------------------------')
-		//console.log(JSON.stringify(zbDevice, null, 2))
-
-		//this.on('state-change', () => console.log(this.name, this.state))
-
 		this.deviceInfo = {
 			manufacturer: zbDevice.manufacturer,
 			model:        zbDevice.model_id,
@@ -59,16 +52,14 @@ export class ZbDevice extends GhomeDevice {
 			swVersion:    zbDevice.software_build_id
 		}
 
-		this.onData = this.onData.bind(this)
-
 		this.id = zbDevice.ieee_address
-		this.injectZbData(zbDevice)
+		this.injectWhoami(zbDevice)
 		topics.on(renameResponse, this.onGlobalRename)
 		zbDevices.set(this.id, this)
 		this.init?.(zbDevice)
 	}
 
-	injectZbData(zbDevice) {
+	injectWhoami(zbDevice) {
 		//this.name = zbDevice.friendly_name
 		if (this.name !== zbDevice.friendly_name)
 			this.onRename(zbDevice.friendly_name)
@@ -85,71 +76,37 @@ export class ZbDevice extends GhomeDevice {
 		this.subscribe()
 	}
 
-	_subscribed = false
-
-	unsubscribe() {
-		if (!this._subscribed) return
-		topics.off(this.baseTopic, this.onData)
-		topics.off(this.availabilityTopic, this.onAvailability)
-		this._subscribed = false
-	}
-
-	subscribe() {
-		if (this._subscribed) return
-		topics.on(this.baseTopic, this.onData)
-		topics.on(this.availabilityTopic, this.onAvailability)
-		this._subscribed = true
-	}
+	// ----------------------------- MQTT TOPICS
 
 	get friendlyName() {
 		return this.name
 	}
 
-	get baseTopic() {
+	get deviceTopic() {
 		return `${bridgeRootTopic}/${this.friendlyName}`
 	}
 
 	get availabilityTopic() {
-		return `${this.baseTopic}/availability`
+		return `${this.deviceTopic}/availability`
 	}
 
 	get getTopic() {
-		return `${this.baseTopic}/get`
+		return `${this.deviceTopic}/get`
 	}
 
 	get setTopic() {
-		return `${this.baseTopic}/set`
-	}
-
-	onData(val) {
-		let {linkquality, update, action, ...data} = val
-		let newState = {...this.zbState, ...data}
-		if (equal(this.zbState, newState)) return
-		this.onState(newState)
-	}
-
-	onState(newState) {
-		this.zbState = newState
-		this.emit('state-change', this.state)
-	}
-
-	online = false
-
-	onAvailability = val => {
-		let newVal = val === 'online'
-		if (this.online !== newVal) {
-			this.online = newVal
-			this.emit('online', this.online)
-			this.emit('state-change', this.state)
-		}
-	}
-
-	toString() {
-		const {id, name, type, traits} = this
-		return {id, name, type, traits}
+		return `${this.deviceTopic}/set`
 	}
 
 	// ------------------- COMMUNICATION WITH DEVICE -----------------------
+
+	stateProps = new Set
+
+	fetchState(props = this.stateProps) {
+		let entries = Array.from(props).map(prop => [prop, ''])
+		let query = Object.fromEntries(entries)
+		this.getQuery(query)
+	}
 
 	getQuery(query) {
         //console.log('~ getQuery', query)
@@ -168,14 +125,6 @@ export class ZbDevice extends GhomeDevice {
 export class Button extends ZbDevice {
 
 	willReportState = false
-/*
-	init(zbDevice) {
-		console.log('--------')
-		console.log('ieee_address ', zbDevice.ieee_address)
-		console.log('friendly_name', zbDevice.friendly_name)
-		console.log('exposedActions', pickExposedEnum(zbDevice, 'action'))
-	}
-*/
 
 	onData(data) {
 		super.onData(data)
@@ -199,32 +148,18 @@ export class Light extends ZbDevice {
 
 	willReportState = true
 
-	constructor(zbDevice) {
-		super(zbDevice)
-		this.onData = this.onData.bind(this)
-	}
-
 	init(zbDevice) {
 		this.fetchState()
 	}
 
-	injectZbData(zbDevice) {
-		super.injectZbData(zbDevice)
+	injectWhoami(zbDevice) {
+		super.injectWhoami(zbDevice)
 
-/*
-		console.log('----------------------------------')
-		console.log('description  ', zbDevice.definition.description)
-		console.log('friendly_name', zbDevice.friendly_name)
-		console.log('ieee_address ', zbDevice.ieee_address)
-		console.log('model_id     ', zbDevice.model_id)
-        console.log('type', type)
-        console.log('features', features)
-*/
 		let {type, features} = pickExposedArray(zbDevice, 'features')
 
 		switch (type) {
 			case 'switch':
-				this.type = TYPES.SWITCH
+				this.type = TYPES.SWITCH // smart plug
 				break
 			case 'light':
 				this.type = TYPES.LIGHT
@@ -236,6 +171,7 @@ export class Light extends ZbDevice {
 		let state = features.find(f => f.name === 'state')
 		if (state && state.type ===  'binary') {
 			this.traits.push(TRAITS.OnOff)
+			this.stateProps.add('state')
 			this._stateOffZb = state.value_off
 			this._stateOnZb  = state.value_on
 		}
@@ -243,6 +179,7 @@ export class Light extends ZbDevice {
 		let brightness = features.find(f => f.name === 'brightness')
 		if (brightness) {
 			this.traits.push(TRAITS.Brightness)
+			this.stateProps.add('brightness')
 			this._brightnessMaxZb = brightness.value_max
 			this._brightnessMinZb = brightness.value_min
 		}
@@ -252,23 +189,14 @@ export class Light extends ZbDevice {
 	_brightnessMinGh = 0
 	_brightnessMaxGh = 100
 
-	fetchState() {
-		let query = {}
-		if (this.traits.includes(TRAITS.OnOff))
-			query.state = ''
-		if (this.traits.includes(TRAITS.Brightness))
-			query.brightness = ''
-		this.getQuery(query)
-	}
-
-	get state() {
-		return this.translateZbToGh(this.zbState || {})
+	translateStateToGh(state) {
+		return this.translateZbToGh(state)
 	}
 
 	// ------------------------- COMMAND EXECUTION / STATE APPLYING -------------------------
 
 	// shared method, accepts ghState
-	applyState(ghState) {
+	executeState(ghState) {
 		ghState = this.sanitizeGhState(ghState)
 		let zbState = this.translateGhToZb(ghState)
 		this.setQuery(zbState)
@@ -277,14 +205,16 @@ export class Light extends ZbDevice {
 	// TODO: rename to executeCommand?
 	async execute({command, params}) {
 		console.gray(this.id, 'execute()', command, params)
-		this.applyState(params)
+		this.executeState(params)
 	}
 
 	// ------------------- COMMUNICATION WITH DEVICE -----------------------
 
 	setQuery(query) {
-		query.transition = 1
-		super.setQuery(query)
+		super.setQuery({
+			transition: 1, // fade animations
+			...query
+		})
 	}
 
 	// ------------------- GHOME-ZIGBEE STATE FORMAT CONVERTION -----------------------
@@ -329,7 +259,7 @@ export class Light extends ZbDevice {
 	}
 
 	translateZbToGh(zbState) {
-		return Object.assign({online: this.online}, ...Object.entries(zbState).map(this.zb2gh.__entry))
+		return Object.assign({}, ...Object.entries(zbState).map(this.zb2gh.__entry))
 	}
 
 
@@ -337,8 +267,8 @@ export class Light extends ZbDevice {
 
 export class Sensor extends ZbDevice {
 
-	injectZbData(zbDevice) {
-		super.injectZbData(zbDevice)
+	injectWhoami(zbDevice) {
+		super.injectWhoami(zbDevice)
 		/*
 		this.traits.push(TRAIT_TEMP)
 		this.attributesavailableThermostatModes = ['off']

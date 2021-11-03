@@ -7,12 +7,6 @@ import {smarthome} from '../ghome/smarthome-core.js'
 import config from '../config.js'
 
 
-const hubHostname = os.hostname()
-const hostnamePrefix = 'jarvis-iot-'
-
-var UDP_BROADCAST_IP = '224.0.0.69'
-var UDP_BROADCAST_PORT = 1609
-
 class Devices extends Map {
 
 	emitter = new EventEmitter
@@ -24,49 +18,16 @@ class Devices extends Map {
 		this.on             = emitter.on.bind(emitter)
 		this.once           = emitter.once.bind(emitter)
 		this.removeListener = emitter.removeListener.bind(emitter)
-		this.listenUdpBroadcasts()
 	}
 
-	listenUdpBroadcasts() {
-		let udpSocket = dgram.createSocket({type: 'udp4', reuseAddr: true})
-		udpSocket.on('listening', () => {
-			var address = udpSocket.address()
-			console.log(`Listening for UDP broadcasts on ${address.address}:${address.port}`)
-			udpSocket.setBroadcast(true)
-			udpSocket.setMulticastTTL(128) 
-			udpSocket.addMembership(UDP_BROADCAST_IP)
-		})
-		udpSocket.on('error', err => console.error('UDP broadcast listener error:', err.message))
-		udpSocket.on('message', this.onUdpMessage)
-		udpSocket.bind(UDP_BROADCAST_PORT)
-	}
-
-	onUdpMessage = (buffer, remote) => {
-		let ip = remote.address
-		let json = buffer.toString()
-		try {
-			let data = JSON.parse(json)
-			if (Device.isValidHeartbeat(data))
-				this.onUdpDiscovery(ip, data)
-			else
-				console.error(`Invalid UDP device found ${ip}`, data)
-		} catch(err) {
-			console.error(`Invalid UDP message received ${ip}`, err, json)
-		}
-	}
-
-	onUdpDiscovery(ip, {id, bootTime, heartbeatInterval, state}) {
-		console.cyan(id, 'heartbeat received')
+	onUdpDiscovery({id, bootTime, state}) {
 		let device
 		if (this.has(id)) {
 			device = this.get(id)
-			device.checkIpChange(ip)
 			if (bootTime !== undefined)
 				device.checkBootTime(bootTime)
-			if (heartbeatInterval !== undefined)
-				device.restartHeartbeat(heartbeatInterval)
 		} else {
-			device = new Device(id, ip, heartbeatInterval)
+			device = new Device(id)
 			this.set(id, device)
 		}
 		if (state !== undefined)
@@ -89,16 +50,15 @@ class Devices extends Map {
 	}
 
 	getByIp(ip) {
-		return this.asArray().find(device => device.ip === ip)
+		return this.array.find(device => device.ip === ip)
 	}
 
-	asArray() {
+	getByName(name) {
+		return this.array.find(device => device.name === name)
+	}
+
+	get array() {
 		return Array.from(this.values())
-	}
-
-	isValidIotDevice(hostname) {
-		return hostname.startsWith(hostnamePrefix)
-			&& hostname !== hubHostname
 	}
 
 }

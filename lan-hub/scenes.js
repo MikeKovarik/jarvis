@@ -29,7 +29,7 @@ export function set(sceneName) {
 	if (scene) {
 		for (let [deviceName, state] of Object.entries(scene)) {
 			let device = zbDevices.getByName(deviceName)
-			device?.applyState(state)
+			device?.executeState(state)
 		}
 	}
 }

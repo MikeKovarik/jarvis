@@ -1,3 +1,3 @@
-export const rootTopic = 'zigbee2mqtt'
-export const devicesTopic  = `${rootTopic}/hub/devices`
-export const addDeviceTopic  = `${rootTopic}/hub/devices/add`
+export const rootTopic           = `jarvis`
+export const devicesTopic        = `${rootTopic}/hub/devices`
+export const announceDeviceTopic = `${rootTopic}/hub/devices/announce`

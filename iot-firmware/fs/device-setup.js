@@ -11,11 +11,11 @@ whoami.fw_timestamp = ffi('char *get_fw_timestamp()')();
 whoami.fw_id        = ffi('char *get_fw_id()')();
 //whoami.otaUpdate    = whoami.arch === 'esp32' || Cfg.get('board.btn1.pin') !== undefined;
 
-mqtt.rootTopic = 'jarvis';
-mqtt.announceDeviceTopic = 'jarvis/hub/devices/announce'
-mqtt.deviceTopic = mqtt.rootTopic + '/' + whoami.id;
-mqtt.getTopic = mqtt.deviceTopic + '/get';
-mqtt.availabilityTopic = mqtt.deviceTopic + '/availability';
+mqtt.rootTopic           = 'jarvis';
+mqtt.announceDeviceTopic = mqtt.rootTopic + '/hub/devices/announce';
+mqtt.deviceTopic         = mqtt.rootTopic + '/' + whoami.id;
+mqtt.getTopic            = mqtt.deviceTopic + '/get';
+mqtt.availabilityTopic   = mqtt.deviceTopic + '/availability';
 
 let hostbase = 'jarvis-iot-';
 let hostname = hostbase + whoami.name;

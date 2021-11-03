@@ -2,13 +2,11 @@ import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {GhomeDevice} from '../DeviceCore.js'
 import {stateToActions} from '../ghome/const.js'
+import '../util/proto.js'
+import {rootTopic} from './topics.js'
 
 
 const hostnamePrefix = 'jarvis-iot-'
-
-Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
-
-const defaultHeartbeatTimeout = 1000 * 60 * 60 * 12 // 12 hours
 
 async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
 	try {
@@ -24,11 +22,6 @@ export class Device extends GhomeDevice {
 
 	state = {}
 
-	// number of milliseconds, reported by device
-	heartbeatInterval = undefined
-	// result of calling setTimeout with heartbeatInterval
-	#heartbeatTimeout = undefined
-
 	// needed for Google Home
 	// https://developers.google.com/assistant/smarthome/reference/local/interfaces/smarthome.intentflow.deviceinfo
 	deviceInfo = {
@@ -40,30 +33,11 @@ export class Device extends GhomeDevice {
 
 	willReportState = true
 
-	static isValidHeartbeat(data) {
-		return data.id !== undefined
-			&& (data.heartbeatInterval !== undefined || data.state !== undefined)
-	}
-/*
-	static isValidHeartbeat({id, upTime, verification}) {
-		return id.charCodeAt(upTime % id.length) === verification
-	}
-*/
-	constructor(id, ip, heartbeatInterval) {
+	constructor(id) {
 		super()
 		this.id = id
-		this.ip = ip
-		this.heartbeatInterval = heartbeatInterval
 		this.hostname = hostnamePrefix + id
 		this.initialize()
-
-		// no need to do anything about IP, GHome doesn't care about that.
-		this.on('ip-change', () => console.orange(this.id, 'ip changed to', this.ip))
-		this.on('state-change', () => console.cyan(this.id, 'state changed', JSON.stringify(this.state)))
-		this.on('reboot', () => console.orange(this.id, 'rebooted'))
-		this.on('online', () => console.green(this.id, 'is online'))
-		this.on('offline', () => console.orange(this.id, 'is offline'))
-
 		// setup this instance with possibly new device data.
 		this.on('reboot', this.initialize)
 		// make sure the device knows how to reach this hub once it comes online
@@ -72,7 +46,6 @@ export class Device extends GhomeDevice {
 
 	destroy() {
 		// TODO: remove listeners
-		this.clearHeartbeatTimer()
 	}
 
 	initializing = false
@@ -98,16 +71,6 @@ export class Device extends GhomeDevice {
 		this.emit(event)
 	}
 
-	get online() {
-		return this.state.online ?? false
-	}
-
-	set online(newVal = false) {
-		if (this.state.online === newVal) return
-		this.state.online = newVal
-		this.emit(newVal ? 'online' : 'offline')
-	}
-
 	// ----------------------------- CHECKS & SERVICING
 
 	checkBootTime(newTime) {
@@ -122,38 +85,50 @@ export class Device extends GhomeDevice {
 		return Date.now() - this.bootTime
 	}
 
-	// returns true if IP changed
-	checkIpChange(ip) {
-		if (ip === undefined) return false
-		if (ip === this.ip) return false
-		this.ip = ip
-		this.emit('ip-change', ip)
-		return true
+	// ----------------------------- 
+
+	onData(newState) {
+		if (equal(this.state, newState)) return
+		this.state = newState
+		this.emit('state-change', this.state)
 	}
 
-	clearHeartbeatTimer() {
-		clearTimeout(this.#heartbeatTimeout)
+	// ------------------------- COMMAND EXECUTION / STATE APPLYING -------------------------
+
+	// shared method, accepts ghState
+	executeState(ghState) {
+		ghState = this.sanitizeGhState(ghState)
+		let actions = stateToActions(ghState, this.traits)
+		for (let action of actions)
+			this.execute(action)
 	}
 
-	restartHeartbeat(newInterval) {
-		this.clearHeartbeatTimer()
-		// Adding 5 seconds for a good measure.
-		if (newInterval !== undefined && newInterval !== this.heartbeatInterval)
-			this.heartbeatInterval = newInterval
-		let millis = (this.heartbeatInterval || defaultHeartbeatTimeout) + 5000
-		this.#heartbeatTimeout = setTimeout(() => {
-			console.orange(this.id, 'heartbeat timed out')
-			this.online = false
-		}, millis)
-		this.online = true
-		this.emit('heartbeat', this.id)
+	// TODO: rename to executeCommand?
+	async execute({command, params}) {
+		console.gray(this.id, 'execute()', command, params)
+		let state = await this.callRpcMethod(command, params)
+		if (state) this.injectState(state)
+		return this.state
+	}
+
+	// ----------------------------- MQTT TOPICS
+
+	get deviceTopic() {
+		return `${rootTopic}/${this.id}`
+	}
+
+	get availabilityTopic() {
+		return `${deviceTopic}/availability`
+	}
+
+	get getTopic() {
+		return `${deviceTopic}/get`
 	}
 
 	// ----------------------------- 
 
 	getUrl(path) {
-		let host = this.ip || `${this.hostname}.lan`
-		return `http://${host}${path}`
+		return `http://${this.hostname}.lan${path}`
 	}
 
 	getRpcUrl(method) {
@@ -172,7 +147,6 @@ export class Device extends GhomeDevice {
 		}
 		try {
 			let res = await fetch(url, options)
-			this.restartHeartbeat()
 			try {
 				let json = await res.json()
 				if (!isErrorMessage(json)) return json
@@ -183,24 +157,6 @@ export class Device extends GhomeDevice {
 			this.online = false
 			throw err
 		}
-	}
-
-	// ------------------------- COMMAND EXECUTION / STATE APPLYING -------------------------
-
-	// shared method, accepts ghState
-	applyState(ghState) {
-		ghState = this.sanitizeGhState(ghState)
-		let actions = stateToActions(ghState, this.traits)
-		for (let action of actions)
-			this.execute(action)
-	}
-
-	// TODO: rename to executeCommand?
-	async execute({command, params}) {
-		console.gray(this.id, 'execute()', command, params)
-		let state = await this.callRpcMethod(command, params)
-		if (state) this.injectState(state)
-		return this.state
 	}
 
 	// ----------------------------- DIRECT HUB-TO-DEVICE COMMUNICATION APIS
@@ -231,23 +187,8 @@ export class Device extends GhomeDevice {
 		this.type       = whoami.type
 		this.name       = whoami.name
 		this.arch       = whoami.arch
-		// TODO: remove this when FW supports full paths
-		if (whoami.traits && whoami.traits[0].startsWith('action.devices'))
-			this.traits     = whoami.traits
-		else
-			this.traits     = whoami.traits.map(trait => `action.devices.traits.${trait}`)
+		this.traits     = whoami.traits
 		this.attributes = whoami.attributes
-		this.injectState(whoami.state)
-	}
-
-	injectState(newState) {
-		// preserve online status
-		let {online, ...oldState} = this.state
-		if (!equal(newState, oldState)) {
-			this.state = {online, ...newState}
-			this.emit('state-change', this.state)
-		}
-		// todo: compare data, trigger change event and only then fire reportState
 	}
 
 }

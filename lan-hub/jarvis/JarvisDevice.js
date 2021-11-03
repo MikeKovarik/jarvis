@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
 import {GhomeDevice} from '../DeviceCore.js'
-import {stateToActions} from '../src/ghome.js'
+import {stateToActions} from '../ghome/const.js'
 
 
 const hostnamePrefix = 'jarvis-iot-'

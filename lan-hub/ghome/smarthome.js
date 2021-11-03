@@ -1,5 +1,5 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
-import devices from '../devices.js'
+import devices from '../jarvis/devices.js'
 import config from '../config.js'
 import {smarthome} from './smarthome-core.js'
 import '../util/proto.js'
@@ -101,7 +101,7 @@ function createExecuteCommandSuccess(device) {
 	}
 }
 
-function createExecuteCommandError(device, errorCode, additional = {}) {
+function createExecuteCommandErrorBase(device, errorCode, additional = {}) {
 	return {
 		ids: [device.id],
 		status: 'ERROR',
@@ -111,24 +111,24 @@ function createExecuteCommandError(device, errorCode, additional = {}) {
 }
 
 function createExecuteCommandOffline(device) {
-	return createExecuteCommandError(device, 'deviceOffline')
+	return createExecuteCommandErrorBase(device, 'deviceOffline')
 }
 
 function createExecuteCommandError(device, e) {
 	if (e.message === 'pinNeeded') {
-		return createExecuteCommandError(device, 'challengeNeeded', {
+		return createExecuteCommandErrorBase(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'pinNeeded',
 			}
 		})
 	} else if (e.message === 'challengeFailedPinNeeded') {
-		return createExecuteCommandError(device, 'challengeNeeded', {
+		return createExecuteCommandErrorBase(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'challengeFailedPinNeeded',
 			},
 		})
 	} else if (e.message === 'ackNeeded') {
-		return createExecuteCommandError(device, 'challengeNeeded', {
+		return createExecuteCommandErrorBase(device, 'challengeNeeded', {
 			challengeNeeded: {
 				type: 'ackNeeded',
 			},
@@ -139,6 +139,6 @@ function createExecuteCommandError(device, e) {
 			status: 'PENDING',
 		}
 	} else {
-		return createExecuteCommandError(device, e.message)
+		return createExecuteCommandErrorBase(device, e.message)
 	}
 }

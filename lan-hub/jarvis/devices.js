@@ -2,9 +2,9 @@ import {EventEmitter} from 'events'
 import os from 'os'
 import dgram from 'dgram'
 import {Device} from './JarvisDevice.js'
-import {app, apiRouter} from './httpServer.js'
-import {smarthome} from './ghome/smarthome-core.js'
-import config from './config.js'
+import {app, apiRouter} from '../httpServer.js'
+import {smarthome} from '../ghome/smarthome-core.js'
+import config from '../config.js'
 
 
 const hubHostname = os.hostname()

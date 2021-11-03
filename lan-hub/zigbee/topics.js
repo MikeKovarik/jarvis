@@ -1,18 +1,13 @@
-import mqtt from 'mqtt'
 import {EventEmitter} from 'events'
-import {ZbDevice} from './ZbDevice.js'
+import {ZbDevice} from '../ZbDevice.js'
+import mqtt from '../mqtt.js'
 
-
-const mqttPort = 1883
-export const mqttClient  = mqtt.connect(`mqtt://localhost:${mqttPort}`)
 
 export const bridgeRootTopic = 'zigbee2mqtt'
 export const bridgeEvent    = `${bridgeRootTopic}/bridge/event`
 export const bridgeDevices  = `${bridgeRootTopic}/bridge/devices`
 export const bridgeGroups   = `${bridgeRootTopic}/bridge/groups`
 export const renameResponse = `${bridgeRootTopic}/bridge/response/device/rename`
-// 'default_bind_group'
-
 
 
 class Topics extends EventEmitter {
@@ -21,7 +16,7 @@ class Topics extends EventEmitter {
 		let [topic] = args
 		let listeners = this.listeners(topic)
 		if (listeners.length === 0) {
-			mqttClient.subscribe(topic, err => {
+			mqtt.subscribe(topic, err => {
 				if (err) console.error(`failed subscribing to ${topic}`)
 			})
 		}
@@ -38,7 +33,7 @@ class Topics extends EventEmitter {
 		let listeners = this.listeners(topic)
 		if (listeners.length === 0) {
 			let [topic] = args
-			mqttClient.unsubscribe(topic, err => {
+			mqtt.unsubscribe(topic, err => {
 				if (err) console.error(`failed subscribing to ${topic}`)
 			})
 		}
@@ -49,7 +44,7 @@ class Topics extends EventEmitter {
 const topics = new Topics
 
 
-mqttClient.on('connect', function () {
+mqtt.on('connect', function () {
 	console.log('on mqtt connect')
 	const eventList = [
 		bridgeEvent,
@@ -62,7 +57,7 @@ mqttClient.on('connect', function () {
 	}
 })
 
-mqttClient.on('message', (topic, message) => {
+mqtt.on('message', (topic, message) => {
 	let data
 	try {
 		data = JSON.parse(message.toString())

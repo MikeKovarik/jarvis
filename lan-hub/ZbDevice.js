@@ -1,10 +1,11 @@
 import equal from 'fast-deep-equal'
 import devices from './devices2.js'
 import actions from './actions.js'
-import topics, {bridgeRootTopic, renameResponse, mqttClient} from './topics.js'
-import {GhomeDevice} from '../../lan-hub/DeviceCore.js'
+import topics, {bridgeRootTopic, renameResponse} from './zigbee/topics.js'
+import {GhomeDevice} from './DeviceCore.js'
 import {TYPES, TRAITS} from './ghome.js'
 import {clamp} from './util.js'
+import mqtt from './mqtt.js'
 
 
 const debounceTimeouts = {}
@@ -152,12 +153,12 @@ export class ZbDevice extends GhomeDevice {
 
 	getQuery(query) {
         //console.log('~ getQuery', query)
-		mqttClient.publish(this.getTopic, JSON.stringify(query))
+		mqtt.publish(this.getTopic, JSON.stringify(query))
 	}
 
 	setQuery(query) {
         //console.log('~ setQuery', query)
-		mqttClient.publish(this.setTopic, JSON.stringify(query))
+		mqtt.publish(this.setTopic, JSON.stringify(query))
 	}
 
 }

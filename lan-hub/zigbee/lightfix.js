@@ -1,7 +1,7 @@
-import devices from './devices2.js'
-import actions from './actions.js'
+import devices from '../devices2.js'
+import actions from '../actions.js'
 import topics, {bridgeDevices, bridgeGroups} from './topics.js'
-import {unique, Resolvable} from './util.js'
+import {unique, Resolvable} from '../util.js'
 
 
 const bindingMap = new Map

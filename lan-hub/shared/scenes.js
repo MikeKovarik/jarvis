@@ -1,12 +1,12 @@
-import zbDevices from './zigbee/devices.js'
-import {getAbsolutePath, readAndWatchJson} from './util/util.js'
+import zbDevices from '../zigbee/devices.js'
+import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
 const isString = arg => typeof arg === 'string'
 
 export let scenes = new Map
 
-let jsonPath = getAbsolutePath(import.meta.url, '../data/scenes.json')
+let jsonPath = getAbsolutePath(import.meta.url, '../../data/scenes.json')
 
 readAndWatchJson(jsonPath, raw => {
 	mapReplace(scenes, Object.entries(raw))

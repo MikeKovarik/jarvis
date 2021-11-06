@@ -1,12 +1,12 @@
 import actions from './actions.js'
 import * as scenes from './scenes.js'
-import {getAbsolutePath, readAndWatchJson} from './util/util.js'
+import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
 let triggers = []
 let triggerTuples = []
 
-let jsonPath = getAbsolutePath(import.meta.url, '../data/triggers.json')
+let jsonPath = getAbsolutePath(import.meta.url, '../../data/triggers.json')
 
 const ACTION_LEFT = 'arrow_left_click'
 const ACTION_RIGHT = 'arrow_right_click'

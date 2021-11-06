@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
-import {GhomeDevice} from '../DeviceCore.js'
+import {GhomeDevice} from '../shared/DeviceCore.js'
 import {stateToActions} from '../ghome/const.js'
 import '../util/proto.js'
 import {rootTopic} from './topics.js'

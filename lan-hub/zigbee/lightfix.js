@@ -1,8 +1,8 @@
 import zbDevices from '../zigbee/devices.js'
-import actions from '../actions.js'
+import actions from '../shared/actions.js'
 import {bridgeDevices, bridgeGroups} from './topics.js'
 import {unique, Resolvable} from '../util/util.js'
-import {topics} from '../mqtt.js'
+import {topics} from '../shared/mqtt.js'
 
 
 const bindingMap = new Map

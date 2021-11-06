@@ -1,10 +1,10 @@
 import zbDevices from './devices.js'
-import actions from '../actions.js'
+import actions from '../shared/actions.js'
 import {bridgeRootTopic, renameResponse} from './topics.js'
-import {GhomeDevice} from '../DeviceCore.js'
+import {GhomeDevice} from '../shared/DeviceCore.js'
 import {TYPES, TRAITS} from '../ghome/const.js'
 import {clamp} from '../util/util.js'
-import {mqtt, topics} from '../mqtt.js'
+import {mqtt, topics} from '../shared/mqtt.js'
 
 
 const debounceTimeouts = {}

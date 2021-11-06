@@ -1,7 +1,7 @@
 import equal from 'fast-deep-equal'
 import {EventEmitter} from 'events'
 import './util/console.js'
-//import {smarthome} from './smarthome-core.js'
+//import smarthome from './smarthome.js'
 import config from './config.js'
 import {TRAITS} from './ghome/const.js'
 import {topics} from './mqtt.js'

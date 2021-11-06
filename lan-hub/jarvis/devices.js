@@ -1,10 +1,5 @@
 import {EventEmitter} from 'events'
-import os from 'os'
-import dgram from 'dgram'
 import {Device} from './JarvisDevice.js'
-import {app, apiRouter} from '../httpServer.js'
-import {smarthome} from '../ghome/smarthome-core.js'
-import config from '../config.js'
 
 
 class Devices extends Map {
@@ -65,29 +60,6 @@ class Devices extends Map {
 
 let devices = new Devices
 export default devices
-
-// Expose list of devices as JSON for debugging.
-apiRouter.get('/devices', (req, res) => {
-	console.gray('GET /devices')
-	let array = Array.from(devices.values())
-	let json  = JSON.stringify(array)
-	let bytes = Buffer.byteLength(json)
-	res.header('Content-Length', bytes)
-	res.json(array)
-})
-
-// Expose list of devices as JSON for debugging.
-apiRouter.delete('/device/:id', (req, res) => {
-	console.gray('DELETE /device/id', req.params.id)
-	devices.delete(req.params.id)
-	res.status(200)
-	res.end()
-})
-
-apiRouter.get('/ghome-sync', async (req, res) => {
-	console.gray('GET /request-sync')
-	res.json(await smarthome.requestSync(config.agentUserId))
-})
 
 // LOGGING
 devices.on('new', device => {

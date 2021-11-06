@@ -1,6 +1,6 @@
 import actions from './actions.js'
 import * as scenes from './scenes.js'
-import {getAbsolutePath, readAndWatch} from './util/util.js'
+import {getAbsolutePath, readAndWatchJson} from './util/util.js'
 
 
 let triggers = []
@@ -16,13 +16,8 @@ const ACTION_OFF = 'off'
 const unregisterTuples = () => triggerTuples.forEach(tuple => actions.off(...tuple))
 const registerTuples   = () => triggerTuples.forEach(tuple => actions.on(...tuple))
 
-readAndWatch(jsonPath, buffer => {
+readAndWatchJson(jsonPath, triggers => {
 	unregisterTuples()
-	try {
-		triggers = JSON.parse(buffer.toString())
-	} catch {
-		console.error('error parsing', jsonPath)
-	}
 	triggerTuples = triggers.map(handleTrigger).flat()
 	registerTuples()
 	console.log('triggers updated')

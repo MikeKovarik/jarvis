@@ -1,3 +1,13 @@
+import './util/console.js'
+import './zigbee/devices.js'
+import './actions.js'
+import './zigbee/topics.js'
+import './zigbee/ZbDevice.js'
+import './triggers.js'
+import './zigbee/lightfix.js'
+import './zigbeeCore.js'
+
+
 import {ZbDevice} from './zigbee/ZbDevice.js'
 import {bridgeEvent, bridgeDevices} from './zigbee/topics.js'
 import {topics} from './mqtt.js'

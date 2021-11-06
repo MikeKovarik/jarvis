@@ -3,7 +3,7 @@ import {fileURLToPath} from 'url'
 import express from 'express'
 import {exposeThroughProxy} from 'lan-tunnel'
 import bodyParser from 'body-parser'
-import config from './config.js'
+import config from '../config.js'
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

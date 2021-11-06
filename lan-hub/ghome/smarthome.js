@@ -1,11 +1,20 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import devices from '../jarvis/devices.js'
 import config from '../config.js'
-import {smarthome} from './smarthome-core.js'
+import aog from 'actions-on-google'
+import {app} from '../http/server.js'
+import {getAbsolutePath, readJson} from '../util/util.js'
 import '../util/proto.js'
 
 
-export {smarthome}
+const jwtPath = getAbsolutePath(import.meta.url, '../../secrets/ghome-key.json')
+const jwt = readJson(jwtPath)
+const smarthome = aog.smarthome({jwt})
+
+export default smarthome
+
+app.post('/smarthome', smarthome)
+
 
 export let connected = false
 

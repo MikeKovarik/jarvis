@@ -1,5 +1,5 @@
 import util from 'util'
-import {app} from '../httpServer.js'
+import {app} from '../http/server.js'
 import config from '../config.js'
 
 

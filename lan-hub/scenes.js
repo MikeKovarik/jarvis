@@ -1,5 +1,5 @@
 import zbDevices from './zigbee/devices.js'
-import {getAbsolutePath, readAndWatch} from './util/util.js'
+import {getAbsolutePath, readAndWatchJson} from './util/util.js'
 
 
 const isString = arg => typeof arg === 'string'
@@ -8,8 +8,7 @@ export let scenes = new Map
 
 let jsonPath = getAbsolutePath(import.meta.url, '../data/scenes.json')
 
-readAndWatch(jsonPath, buffer => {
-	let raw = JSON.parse(buffer.toString())
+readAndWatchJson(jsonPath, raw => {
 	mapReplace(scenes, Object.entries(raw))
 	const resolveScene = s => isString(s) ? (scenes.get(s) || {}) : s
 	for (let [key, settings] of scenes) {

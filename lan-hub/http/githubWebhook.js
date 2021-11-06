@@ -1,4 +1,4 @@
-import {app} from './httpServer.js'
+import {app} from './server.js'
 import util from 'util'
 import cp from 'child_process'
 

@@ -12,10 +12,29 @@ export function getAbsolutePath(importMetaUrl, relativePath) {
 	return path.join(dirName, relativePath)
 }
 
-export function readAndWatch(filePath, handler) {
+export function readJson(filePath, cb) {
+	let handler = jsonParserFactory(filePath, cb)
+	return handler(readFileSync(filePath))
+}
+
+export function readAndWatchJson(filePath, cb) {
+	let handler = jsonParserFactory(filePath, cb)
 	let watcher = chokidar.watch(filePath, { persistent: true })
-	handler(readFileSync(filePath))
 	watcher.on('change', async () => handler(await readFile(filePath)))
+	return handler(readFileSync(filePath))
+}
+
+function jsonParserFactory(filePath, cb) {
+	return buffer => {
+		let json
+		try {
+			json = JSON.parse(buffer.toString())
+		} catch {
+			console.error('error parsing', filePath)
+		}
+		if (cb && json) cb(json)
+		return json
+	}
 }
 
 export const clamp = (val, min, max) => Math.min(Math.max(val, min), max)

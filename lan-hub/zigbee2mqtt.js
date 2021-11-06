@@ -1,4 +1,4 @@
-import './config-env.js'
+import './config.js'
 import Controller from 'zigbee2mqtt/dist/controller.js'
 
 

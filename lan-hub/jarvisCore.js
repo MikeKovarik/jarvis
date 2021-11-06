@@ -1,10 +1,4 @@
-import './ghome/auth-provider.js'
+import './ghome/auth.js'
 import './ghome/smarthome.js'
 import './http/githubWebhook.js'
-
-import util from 'util'
-import cp from 'child_process'
-
-const exec = util.promisify(cp.exec)
-// log last commit id
-exec('git log -1 --format=%h').then(out => console.log('last commit:', out.stdout))
+import './util/gitLog.js'

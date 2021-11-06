@@ -22,3 +22,7 @@
 /app1
 data/groups.yaml
 data/devices.yaml
+/data/ghome-key.json
+/data/config.json
+/data/ssl.cert
+/data/ssl.key

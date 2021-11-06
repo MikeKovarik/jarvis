@@ -7,7 +7,7 @@ import {getAbsolutePath, readJson} from '../util/util.js'
 import '../util/proto.js'
 
 
-const jwtPath = getAbsolutePath(import.meta.url, '../../secrets/ghome-key.json')
+const jwtPath = getAbsolutePath(import.meta.url, '../../data/ghome-key.json')
 const jwt = readJson(jwtPath)
 const smarthome = aog.smarthome({jwt})
 

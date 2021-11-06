@@ -1,7 +1,7 @@
 import {getAbsolutePath, readJson} from './util/util.js'
 
 
-const configPath = getAbsolutePath(import.meta.url, '../secrets/config.json')
+const configPath = getAbsolutePath(import.meta.url, '../data/config.json')
 const dataPath   = getAbsolutePath(import.meta.url, '../data')
 
 process.env.ZIGBEE2MQTT_DATA = dataPath

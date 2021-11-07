@@ -1,95 +1,93 @@
+
+import request from 'request'
+import path from 'path'
+import fs from 'fs-extra'
 import util from 'util'
 import cp from 'child_process'
 import {app} from '../http/server.js'
+import {getAbsolutePath} from '../util/util.js'
 
+
+/*
+mos build --platform esp32
+curl -v -F file=@build/fw.zip http://jarvis-iot-testlight.lan/update
+*/
 
 const exec = util.promisify(cp.exec)
 
-const HTTP_STATUS_OK = 200
-
-/*
-app.post('/ota', (req, res) => {
-    console.log('--- POST ---')
-    console.log(req.header("accept"));
-    console.log(req.header("expect"));
-    console.log('req.query', req.query)
-    console.log('req.body', req.body)
-	//res.status(HTTP_STATUS_OK).send('OK')
-	//res.status(100).send()
-  // was this a conditional request?
-  if (req.checkContinue === true) {
-    req.checkContinue = false;
-    // send 100 Continue response
-    res.writeContinue();
-    
-    // client will now send us the request body
-  }
-	res.writeContinue()
-
-	var chunks = []
-	req.once('readable', () => {
-		var chunk
-		while ((chunk = req.read()) !== null) {
-			chunks.push(chunk)
-		}
-		console.log('chunks', chunks)
-		req.on('chunk', () => {
-			console.log('chunk')
-		})
-		req.on('end', () => {
-			console.log('end')
-		})
-	})
-
+app.get('/ota/:deviceName', (req, res) => {
+	const {deviceName} = req.params
+	console.log('OTA', deviceName)
+	let uploader = new OtaUploader(deviceName)
+	uploader.run()
 })
-*/
 
+class OtaUploader {
 
-var express = require('express');    //Express Web Server 
-var busboy = require('connect-busboy'); //middleware for form/file upload
-var path = require('path');     //used for file path
-var fs = require('fs-extra');       //File System - for file manipulation
+	constructor(deviceName) {
+		this.deviceName = deviceName
+		this.url = `http://${deviceName}.lan/update`
+		this.fwBuildName = 'fw.zip'
+		this.sourceFwDir = getAbsolutePath(import.meta.url, '../iot-firmware/')
+		this.tempFwDir = getAbsolutePath(import.meta.url, '../iot-firmware-temp/')
+		this.fwPath = path.join(this.tempFwDir, '/build/', this.fwBuildName)
+        console.log('~ this.sourceFwDir', this.sourceFwDir)
+        console.log('~ this.tempFwDir  ', this.tempFwDir)
+        console.log('~ this.fwPath     ', this.fwPath)
+	}
 
-var app = express();
-app.use(busboy());
-app.use(express.static(path.join(__dirname, 'public')));
+	async run() {
+		await this.cloneFiles()
+		//await this.compile()
+		//await this.upload()
+	}
 
-/* ========================================================== 
-Create a Route (/upload) to handle the Form submission 
-(handle POST requests to /upload)
-Express v4  Route definition
-============================================================ */
-app.post('/ota', (req, res) => {
+	async cloneFiles() {
+		console.log('copying files')
+		await fs.ensureDir(this.tempFwDir)
+		await fs.emptyDir(this.tempFwDir)
+		//await fs.copy(this.sourceFwDir, this.tempFwDir)
+		console.log('copied files')
+	}
 
-	var fstream;
-	req.pipe(req.busboy);
-	req.busboy.on('file', function (fieldname, file, filename) {
-		console.log("Uploading: " + filename);
+	async compile() {
+		console.log('compiling')
+		//await exec('mos build --platform esp32', {cwd: this.tempFwDir})
+		console.log('compiled')
+	}
 
-		//Path where image will be uploaded
-		fstream = fs.createWriteStream(__dirname + '/img/' + filename);
-		file.pipe(fstream);
-		fstream.on('close', function () {    
-			console.log("Upload Finished of " + filename);              
-			res.redirect('back');           //where to go next
-		});
-	});
-});
+	upload() {
+		const {url, fwBuildName} = this
+		let fileStream = fs.createReadStream(this.fwPath)
+		return new Promise((resolve, reject) => {
+			console.log('uploading')
+			var formData = {
+				name: 'file',
+				file: {
+					value: fileStream,
+					options: {
+						filename: fwBuildName,
+						contentType: 'application/octet-stream'
+					}
+				}
+			}
+			request.post({url, formData}, (err, res, body) => {
+				if (err) {
+					console.log('failed uploading')
+					reject(err)
+				} else {
+					console.log('uploaded')
+					resolve(body)
+				}
+			})
+		})
+	}
 
-
-
-
-
-
-
-
-
-
-async function runOta(deviceName) {
-    console.log('~ runOta', deviceName)
-	// log last commit id
-	await exec('mos build --platform esp32')
 }
+
+
+new OtaUploader('jarvis-iot-testlight').run()
+
 /*
 mos build --platform esp32
 curl -v -F file=@build/fw.zip http://jarvis-iot-testlight.lan/update

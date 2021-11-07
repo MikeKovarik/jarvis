@@ -1,7 +1,7 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
+import aog from 'actions-on-google'
 import devices from '../jarvis/devices.js'
 import config from '../config.js'
-import aog from 'actions-on-google'
 import {app} from '../http/server.js'
 import {getAbsolutePath, readJson} from '../util/util.js'
 import '../util/proto.js'
@@ -87,7 +87,7 @@ async function handleExecute(payload) {
 			try {
 				if (device?.online) {
 					await cmd.execution
-						.map(exe => device.execute(exe))
+						.map(exe => device.executeCommand(exe))
 						.promiseAll()
 					return createExecuteCommandSuccess(device)
 				} else {

@@ -82,3 +82,14 @@ export class Resolvable extends Promise {
     }
 
 }
+
+// is this still needed?
+export async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
+	try {
+		return await fn()
+	} catch(e) {
+		if (attempt > maxAttempts) throw e
+		await Promise.timeout(2 ** attempt * 1000)
+		return callWithExpBackoff(fn, attempt + 1)
+	}
+}

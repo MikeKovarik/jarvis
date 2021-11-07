@@ -18,10 +18,12 @@ app.use(express.static(path.join(__dirname, '../static')))
 app.listen(config.appPort, () => {
 	console.log(`Listening on port ${config.appPort}`)
 	// wait for the http server to start
-	exposeThroughProxy({
-		log: true,
-		...config
-	})
+	if (config.tunnel !== false) {
+		exposeThroughProxy({
+			log: true,
+			...config
+		})
+	}
 })
 
 export const apiRouter = express.Router()

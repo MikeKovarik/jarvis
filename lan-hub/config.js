@@ -8,4 +8,7 @@ process.env.ZIGBEE2MQTT_DATA = dataPath
 
 export const config = readJson(configPath)
 
+config.ghome  = false
+config.tunnel = false
+
 export default config

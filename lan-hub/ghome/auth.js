@@ -6,7 +6,9 @@ import config from '../config.js'
 const HTTP_STATUS_OK = 200
 const tokenExpiration = 86400 // 60 * 60 * 24
 
-app.get('/login', (req, res) => {
+const ghomeRouter = app // TODO
+
+ghomeRouter.get('/login', (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('GET /login')
 	console.magenta('req.query.response_url', req.query.response_url)
@@ -40,7 +42,7 @@ app.get('/login', (req, res) => {
 	`)
 })
 
-app.post('/login', async (req, res) => {
+ghomeRouter.post('/login', async (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('POST /login')
 	console.magenta(req.body)
@@ -49,7 +51,7 @@ app.post('/login', async (req, res) => {
 	return res.redirect(responseUrl)
 })
 
-app.get('/auth', async (req, res) => {
+ghomeRouter.get('/auth', async (req, res) => {
 	console.gray('--- AUTH', '-'.repeat(100))
 	console.magenta('GET /auth')
 	console.magenta(req.body)
@@ -65,7 +67,7 @@ app.get('/auth', async (req, res) => {
 	return res.redirect(redirectUrl)
 })
 
-app.post('/token', async (req, res) => {
+ghomeRouter.post('/token', async (req, res) => {
 	console.magenta('--- AUTH', '-'.repeat(100))
 	const {body, query} = req
 	console.magenta(req.method, '/token')

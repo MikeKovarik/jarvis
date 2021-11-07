@@ -22,6 +22,18 @@ function getKeys(ctx) {
 
 export class GhomeDevice extends EventEmitter {
 
+	// Google Home required data
+	// https://developers.google.com/assistant/smarthome/reference/local/interfaces/smarthome.intentflow.deviceinfo
+
+	willReportState = false
+
+	deviceInfo = {
+		manufacturer: 'unknown',
+		model:        'unknown',
+		hwVersion:    '1.0.0',
+		swVersion:    '1.0.0',
+	}
+
 	traits = []
 	attributes = {}
 
@@ -49,17 +61,19 @@ export class GhomeDevice extends EventEmitter {
 	_subscribed = false
 
 	unsubscribe() {
-		if (!this._subscribed) return
+		if (!this._subscribed) return false
+		this._subscribed = false
 		topics.off(this.deviceTopic, this.onData)
 		topics.off(this.availabilityTopic, this.onAvailability)
-		this._subscribed = false
+		return true
 	}
 
 	subscribe() {
-		if (this._subscribed) return
+		if (this._subscribed) return false
+		this._subscribed = true
 		topics.on(this.deviceTopic, this.onData)
 		topics.on(this.availabilityTopic, this.onAvailability)
-		this._subscribed = true
+		return true
 	}
 
 	// STATE -----------------------------
@@ -120,10 +134,7 @@ export class GhomeDevice extends EventEmitter {
 	// with delay, causing old data to win over actual state.
 	reportState = async () => {
 	    console.gray(this.id, this.name, this.#state)
-		if (this.initialized)
-	        console.gray(this.id, this.name, 'reporting state')
-		else
-	        return console.gray(this.id, this.name, 'not reporting state, device not initialized')
+		if (config.ghome === false) return
 		try {
 			let res = await smarthome.reportState({
 				agentUserId: config.agentUserId,

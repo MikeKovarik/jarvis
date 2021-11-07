@@ -2,15 +2,22 @@ import _mqtt from 'mqtt'
 import {EventEmitter} from 'events'
 
 
-const port = 1883
-export const mqtt = _mqtt.connect(`mqtt://localhost:${port}`)
+//const mqttHost = 'localhost'
+const mqttHost = 'jarvis-hub.lan'
+const mqttPort = 1883
+export const mqtt = _mqtt.connect(`mqtt://${mqttHost}:${mqttPort}`)
 
 class Topics extends EventEmitter {
+
+	#emitQueue = []
+
 
 	constructor() {
 		super()
 		mqtt.on('message', this.#onMessage)
 		mqtt.on('connect', this.#onConnect)
+		mqtt.on('disconnect', () => console.log('MQTT disconnected'))
+		mqtt.on('error', (...args) => console.error('MQTT error', ...args))
 	}
 
 	#onMessage = (topic, message) => {
@@ -24,12 +31,25 @@ class Topics extends EventEmitter {
 	}
 
 	#onConnect = () => {
+		console.log('MQTT connected')
 		this.eventNames().map(topic => mqtt.subscribe(topic))
+		for (let [topic, message] of this.#emitQueue) {
+			mqtt.publish(topic, message)
+		}
+		this.#emitQueue.length = 0
 	}
 
-	emit(...args) {
-		console.log('TODO: emit to MQTT')
-		super.emit(...args)
+	emit(topic, message) {
+		if (typeof message === 'object')
+			message = JSON.stringify(message)
+		if (mqtt.connected)
+			mqtt.publish(topic, message)
+		else
+			this.#emitQueue.push([topic, message])
+	}
+
+	publish(...args) {
+		this.emit(...args)
 	}
 
 	on(...args) {

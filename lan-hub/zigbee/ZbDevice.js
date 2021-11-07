@@ -1,7 +1,7 @@
 import zbDevices from './devices.js'
 import actions from '../shared/actions.js'
-import {bridgeRootTopic, renameResponse} from './topics.js'
-import {GhomeDevice} from '../shared/DeviceCore.js'
+import * as zbTopics from './topics.js'
+import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {TYPES, TRAITS} from '../ghome/const.js'
 import {clamp} from '../util/util.js'
 import {mqtt, topics} from '../shared/mqtt.js'
@@ -21,48 +21,51 @@ const pickExposedArray = (device, name) => device.definition?.exposes.find(ex =>
 
 export class ZbDevice extends GhomeDevice {
 
-	static isButton = exposesAction
-	static isLight = notExposesAction
-	static getCtor(zbDevice) {
-		if (this.isButton(zbDevice))
+	static getIdFromWhoami = whoami => whoami.ieee_address
+
+	static getCtor(whoami) {
+		if (Button.matches(whoami))
 			return Button
-		else if (this.isLight(zbDevice))
+		else if (Light.matches(whoami))
 			return Light
+		else if (Sensor.matches(whoami))
+			return Sensor
+		else
+			return ZbDevice
 	}
 
-	static from(zbDevice) {
-		let {ieee_address} = zbDevice
-		if (zbDevices.has(ieee_address)) {
-			let ghDevice = zbDevices.get(ieee_address)
-			ghDevice.injectWhoami(zbDevice)
-			return ghDevice
-		} else {
-			let Ctor = this.getCtor(zbDevice)
-			return new Ctor(zbDevice)
-		}
+	static from(whoami) {
+		let Ctor = new getCtor(whoami)
+		return Ctor(whoami)
 	}
 
-	constructor(zbDevice) {
+	constructor(whoami) {
 		super()
 
-		this.deviceInfo = {
-			manufacturer: zbDevice.manufacturer,
-			model:        zbDevice.model_id,
-			hwVersion:    '1.0.0',
-			swVersion:    zbDevice.software_build_id
-		}
+		this.deviceInfo.manufacturer = whoami.manufacturer,
+		this.deviceInfo.model        = whoami.model_id,
+		this.deviceInfo.swVersion    = whoami.software_build_id
 
-		this.id = zbDevice.ieee_address
-		this.injectWhoami(zbDevice)
-		topics.on(renameResponse, this.onGlobalRename)
-		zbDevices.set(this.id, this)
-		this.init?.(zbDevice)
+		this.id = whoami.ieee_address
+		this.injectWhoami(whoami)
 	}
 
-	injectWhoami(zbDevice) {
-		//this.name = zbDevice.friendly_name
-		if (this.name !== zbDevice.friendly_name)
-			this.onRename(zbDevice.friendly_name)
+	unsubscribe() {
+		if (super.unsubscribe()) {
+			topics.off(zbTopics.renameResponse, this.onGlobalRename)
+		}
+	}
+
+	subscribe() {
+		if (super.subscribe()) {
+			topics.on(zbTopics.renameResponse, this.onGlobalRename)
+		}
+	}
+
+	injectWhoami(whoami) {
+		//this.name = whoami.friendly_name
+		if (this.name !== whoami.friendly_name)
+			this.onRename(whoami.friendly_name)
 	}
 
 	onGlobalRename = ({data: {from, to}}) => {
@@ -83,7 +86,7 @@ export class ZbDevice extends GhomeDevice {
 	}
 
 	get deviceTopic() {
-		return `${bridgeRootTopic}/${this.friendlyName}`
+		return `${zbTopics.root}/${this.friendlyName}`
 	}
 
 	get availabilityTopic() {
@@ -110,12 +113,12 @@ export class ZbDevice extends GhomeDevice {
 
 	getQuery(query) {
         //console.log('~ getQuery', query)
-		mqtt.publish(this.getTopic, JSON.stringify(query))
+		mqtt.emit(this.getTopic, query)
 	}
 
 	setQuery(query) {
         //console.log('~ setQuery', query)
-		mqtt.publish(this.setTopic, JSON.stringify(query))
+		mqtt.emit(this.setTopic, query)
 	}
 
 }
@@ -125,6 +128,8 @@ export class ZbDevice extends GhomeDevice {
 export class Button extends ZbDevice {
 
 	willReportState = false
+
+	static matches = exposesAction
 
 	onData(data) {
 		super.onData(data)
@@ -148,14 +153,17 @@ export class Light extends ZbDevice {
 
 	willReportState = true
 
-	init(zbDevice) {
+	static matches = notExposesAction
+
+	constructor(whoami) {
+		super(whoami)
 		this.fetchState()
 	}
 
-	injectWhoami(zbDevice) {
-		super.injectWhoami(zbDevice)
+	injectWhoami(whoami) {
+		super.injectWhoami(whoami)
 
-		let {type, features} = pickExposedArray(zbDevice, 'features')
+		let {type, features} = pickExposedArray(whoami, 'features')
 
 		switch (type) {
 			case 'switch':
@@ -203,8 +211,8 @@ export class Light extends ZbDevice {
 	}
 
 	// TODO: rename to executeCommand?
-	async execute({command, params}) {
-		console.gray(this.id, 'execute()', command, params)
+	async executeCommand({command, params}) {
+		console.gray(this.id, 'executeCommand()', command, params)
 		this.executeState(params)
 	}
 
@@ -267,8 +275,10 @@ export class Light extends ZbDevice {
 
 export class Sensor extends ZbDevice {
 
-	injectWhoami(zbDevice) {
-		super.injectWhoami(zbDevice)
+	static matches = whoami => false
+
+	injectWhoami(whoami) {
+		super.injectWhoami(whoami)
 		/*
 		this.traits.push(TRAIT_TEMP)
 		this.attributesavailableThermostatModes = ['off']

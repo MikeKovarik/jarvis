@@ -1,6 +1,6 @@
 import zbDevices from '../zigbee/devices.js'
 import actions from '../shared/actions.js'
-import {bridgeDevices, bridgeGroups} from './topics.js'
+import {devicesTopic, bridgeGroups} from './topics.js'
 import {unique, Resolvable} from '../util/util.js'
 import {topics} from '../shared/mqtt.js'
 
@@ -31,7 +31,7 @@ topics.on(bridgeGroups, data => {
 })
 
 // get through bindings and store button->light bindings in bindingMap
-topics.on(bridgeDevices, allDevices => {
+topics.on(devicesTopic, allDevices => {
 	if (!devicesReady.resolved) devicesReady.resolve()
 	handleLightFix(allDevices)
 })

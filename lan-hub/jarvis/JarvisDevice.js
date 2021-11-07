@@ -1,74 +1,43 @@
 import fetch from 'node-fetch'
 import equal from 'fast-deep-equal'
-import {GhomeDevice} from '../shared/DeviceCore.js'
+import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {stateToActions} from '../ghome/const.js'
 import '../util/proto.js'
-import {rootTopic} from './topics.js'
+import * as jTopics from './topics.js'
 
 
-const hostnamePrefix = 'jarvis-iot-'
-
-async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
-	try {
-		return await fn()
-	} catch(e) {
-		if (attempt > maxAttempts) throw e
-		await Promise.timeout(2 ** attempt * 1000)
-		return callWithExpBackoff(fn, attempt + 1)
-	}
-}
+const HOSTNAME_PREFIX = 'jarvis-iot-'
 
 export class Device extends GhomeDevice {
 
-	state = {}
-
-	// needed for Google Home
-	// https://developers.google.com/assistant/smarthome/reference/local/interfaces/smarthome.intentflow.deviceinfo
-	deviceInfo = {
-		manufacturer: 'Mike',
-		model:        '',
-		hwVersion:    '1.0.0',
-		swVersion:    '1.0.0',
-	}
-
 	willReportState = true
 
-	constructor(id) {
+	static getIdFromWhoami = whoami => whoami.id
+
+	constructor(whoami) {
+		console.log('------------------------------')
+		console.log('new device', whoami)
 		super()
-		this.id = id
-		this.hostname = hostnamePrefix + id
-		this.initialize()
-		// setup this instance with possibly new device data.
-		this.on('reboot', this.initialize)
-		// make sure the device knows how to reach this hub once it comes online
-		this.on('online', this.initialize)
+
+		this.deviceInfo.manufacturer = 'Mike Kovarik'
+
+		this.id = whoami.id
+		this.hostname = HOSTNAME_PREFIX + this.id
+		this.injectWhoami(whoami)
 	}
 
-	destroy() {
-		// TODO: remove listeners
+	unsubscribe() {
+		if (super.unsubscribe()) {
+			topics.off(this.uptimeTopic, this.injectWhoami)
+			topics.off(this.ipTopic, this.injectWhoami)
+		}
 	}
 
-	initializing = false
-	initialized = false
-
-	initialize = () => {
-		if (this.initializing) return
-		this.initializing = true
-		callWithExpBackoff(this.initAction)
-			.then(() => this.initResult(true, 'ready'))
-			.catch(() => this.initResult(false, 'fail'))
-	}
-
-	initAction = async () => {
-		// NOTE: whoami response contains states object. Injecting new states triggers state-change event
-		// and the event handler triggers reportState(). So it's not necessary here.
-		await this.fetchWhoami()
-	}
-
-	initResult(status, event) {
-		this.initialized = status
-		this.initializing = false
-		this.emit(event)
+	subscribe() {
+		if (super.subscribe()) {
+			topics.on(this.uptimeTopic, this.injectWhoami)
+			topics.on(this.ipTopic, this.injectWhoami)
+		}
 	}
 
 	// ----------------------------- CHECKS & SERVICING
@@ -100,29 +69,38 @@ export class Device extends GhomeDevice {
 		ghState = this.sanitizeGhState(ghState)
 		let actions = stateToActions(ghState, this.traits)
 		for (let action of actions)
-			this.execute(action)
+			this.executeCommand(action)
 	}
 
 	// TODO: rename to executeCommand?
-	async execute({command, params}) {
-		console.gray(this.id, 'execute()', command, params)
+	async executeCommand({command, params}) {
+		console.gray(this.id, 'executeCommand()', command, params)
+		// command always returns new state
 		let state = await this.callRpcMethod(command, params)
-		if (state) this.injectState(state)
+		this.injectState(state)
 		return this.state
 	}
 
 	// ----------------------------- MQTT TOPICS
 
 	get deviceTopic() {
-		return `${rootTopic}/${this.id}`
+		return `${jTopics.root}/${this.id}`
 	}
 
 	get availabilityTopic() {
-		return `${deviceTopic}/availability`
+		return `${this.deviceTopic}/availability`
 	}
 
 	get getTopic() {
-		return `${deviceTopic}/get`
+		return `${this.deviceTopic}/get`
+	}
+
+	get uptimeTopic() {
+		return `${this.deviceTopic}/uptime`
+	}
+
+	get ipTopic() {
+		return `${this.deviceTopic}/ip`
 	}
 
 	// ----------------------------- 
@@ -183,12 +161,17 @@ export class Device extends GhomeDevice {
 		if (state) this.injectState(state)
 	}
 
-	injectWhoami(whoami) {
+	injectWhoami = whoami => {
+		// required by google home
 		this.type       = whoami.type
 		this.name       = whoami.name
 		this.arch       = whoami.arch
 		this.traits     = whoami.traits
 		this.attributes = whoami.attributes
+		// other, internal jarvis props
+		this.checkBootTime(whoami.bootTime)
+		this.ip         = whoami.ip
+		//this.hostname = hostname
 	}
 
 }

@@ -1,5 +1,5 @@
-export const bridgeRootTopic = 'zigbee2mqtt'
-export const bridgeEvent    = `${bridgeRootTopic}/bridge/event`
-export const bridgeDevices  = `${bridgeRootTopic}/bridge/devices`
-export const bridgeGroups   = `${bridgeRootTopic}/bridge/groups`
-export const renameResponse = `${bridgeRootTopic}/bridge/response/device/rename`
+export const root           = 'zigbee2mqtt'
+export const bridgeEvent    = `${root}/bridge/event`
+export const devices        = `${root}/bridge/devices`
+export const groups         = `${root}/bridge/groups`
+export const renameResponse = `${root}/bridge/response/device/rename`

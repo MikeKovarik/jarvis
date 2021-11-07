@@ -12,9 +12,8 @@ const exec = util.promisify(cp.exec)
 
 app.get('/ota/:deviceName', (req, res) => {
 	const {deviceName} = req.params
-	this.log('OTA', deviceName)
-	let uploader = new OtaUploader(deviceName)
-	uploader.run()
+	let ota = new OtaUploader(deviceName)
+	ota.run()
 	res.status(200).send('updating')
 })
 
@@ -25,10 +24,10 @@ class OtaUploader {
 		this.url = `http://${HOSTNAME_PREFIX}${deviceName}.lan/update`
 		this.fwBuildName = 'fw.zip'
 		this.sourceFwDir = getAbsolutePath(import.meta.url, '../../iot-firmware/')
-		this.tempFwDir   = getAbsolutePath(import.meta.url,   '../../iot-firmware-temp/')
+		this.tempFwDir   = getAbsolutePath(import.meta.url,   `../../iot-firmware-temp-${deviceName}/`)
 		this.tempBuildDir     = path.join(this.tempFwDir, '/build/')
 		this.fwPath           = path.join(this.tempBuildDir, this.fwBuildName)
-		this.sourceConfigPath = path.join(this.sourceFwDir, `/configs/config.${this.deviceName}.js`)
+		this.sourceConfigPath = path.join(this.sourceFwDir, `/configs/config.${deviceName}.js`)
 		this.tempConfigPath   = path.join(this.tempFwDir, `/fs/config.js`)
         console.log('sourceFwDir     ', this.sourceFwDir)
         console.log('tempFwDir       ', this.tempFwDir)
@@ -43,9 +42,17 @@ class OtaUploader {
 	}
 
 	async run() {
-		await this.clone()
-		await this.compile()
-		await this.upload()
+		try {
+			this.log('STARTED')
+			await this.clone()
+			await this.compile()
+			await this.upload()
+		} catch(err) {
+			this.log('FAILED')
+			console.error(err)
+		} finally {
+			await this.cleanup()
+		}
 		this.log('DONE')
 	}
 
@@ -60,6 +67,11 @@ class OtaUploader {
 		await fs.copy(this.sourceConfigPath, this.tempConfigPath)
 	}
 
+	async cleanup() {
+		this.log('cleaning up')
+		await fs.remove(this.tempFwDir)
+	}
+
 	async compile() {
 		this.log('compiling')
 		let platform = 'esp32'
@@ -69,9 +81,9 @@ class OtaUploader {
 	}
 
 	upload() {
-		const {url, fwBuildName} = this
-		let fileStream = fs.createReadStream(this.fwPath)
 		return new Promise((resolve, reject) => {
+			const {url, fwBuildName} = this
+			let fileStream = fs.createReadStream(this.fwPath)
 			this.log('uploading')
 			var formData = {
 				name: 'file',
@@ -84,13 +96,10 @@ class OtaUploader {
 				}
 			}
 			request.post({url, formData}, (err, res, body) => {
-				if (err) {
-					this.log('failed uploading')
+				if (err)
 					reject(err)
-				} else {
-					this.log('uploaded')
+				else
 					resolve(body)
-				}
 			})
 		})
 	}

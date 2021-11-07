@@ -5,6 +5,8 @@ import {fileURLToPath} from 'url'
 import chokidar from 'chokidar'
 
 
+export const HOSTNAME_PREFIX = 'jarvis-iot-'
+
 export function getAbsolutePath(importMetaUrl, relativePath) {
 	let filePath = fileURLToPath(importMetaUrl)
 	let dirName = path.dirname(filePath)

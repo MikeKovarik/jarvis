@@ -4,9 +4,8 @@ import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {stateToActions} from '../ghome/const.js'
 import '../util/proto.js'
 import * as jTopics from './topics.js'
+import {HOSTNAME_PREFIX} from '../util/util.js'
 
-
-const HOSTNAME_PREFIX = 'jarvis-iot-'
 
 export class Device extends GhomeDevice {
 

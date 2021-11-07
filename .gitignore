@@ -26,3 +26,4 @@ data/devices.yaml
 /data/config.json
 /data/ssl.cert
 /data/ssl.key
+/iot-firmware-temp

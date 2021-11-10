@@ -14,21 +14,21 @@ apiRouter.get('/devices', (req, res) => {
 	res.json(array)
 })
 
-apiRouter.get('/device/:deviceName', (req, res) => {
+apiRouter.get('/devices/:deviceName', (req, res) => {
 	console.gray('GET /device')
 	const {deviceName} = req.params
 	let device = devices.getByName(deviceName)
 	res.json(device.toGoogleDevice())
 })
 
-apiRouter.get('/device/:deviceName/state', (req, res) => {
+apiRouter.get('/devices/:deviceName/state', (req, res) => {
 	console.gray('GET /device')
 	const {deviceName} = req.params
 	let device = devices.getByName(deviceName)
 	res.json(device.state)
 })
 
-apiRouter.delete('/device/:deviceName', (req, res) => {
+apiRouter.delete('/devices/:deviceName', (req, res) => {
 	console.gray('DELETE /device')
 	const {deviceName} = req.params
 	devices.deleteByName(deviceName)
@@ -36,16 +36,18 @@ apiRouter.delete('/device/:deviceName', (req, res) => {
 	res.json({})
 })
 
-apiRouter.get('/device/:deviceName/ota', (req, res) => {
+apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 	const {deviceName} = req.params
 	let device = devices.getByName(deviceName)
-	if (device instanceof JarvisDevice) {
+	//if (device instanceof JarvisDevice) {
 		let ota = new OtaUploader(deviceName)
 		ota.run()
 		res.status(200).send('updating')
+	/*
 	} else {
 		res.status(500).send('not a jarvis device')
 	}
+	*/
 })
 
 apiRouter.get('/ghome-sync', async (req, res) => {

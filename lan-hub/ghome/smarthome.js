@@ -1,6 +1,6 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import aog from 'actions-on-google'
-import allDevices from '../shared/devices.js'
+import devices from '../shared/devices.js'
 import config from '../config.js'
 import {app} from '../http/server.js'
 import {getAbsolutePath, readJson} from '../util/util.js'
@@ -50,7 +50,7 @@ smarthome.onDisconnect(async body => {
 
 function handleSync() {
 	console.gray('--- SMARTHOME: SYNC', '-'.repeat(100))
-	return allDevices
+	return devices
 		.filter(device => device.willReportState)
 		.map(device => device.toGoogleDevice())
 }

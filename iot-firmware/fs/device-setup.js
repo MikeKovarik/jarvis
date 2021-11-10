@@ -14,7 +14,6 @@ whoami.arch         = ffi('char *get_arch()')();
 whoami.fw_version   = ffi('char *get_fw_version()')();
 whoami.fw_timestamp = ffi('char *get_fw_timestamp()')();
 whoami.fw_id        = ffi('char *get_fw_id()')();
-//whoami.otaUpdate    = whoami.arch === 'esp32' || Cfg.get('board.btn1.pin') !== undefined;
 
 mqtt.rootTopic            = 'jarvis';
 mqtt.devicesAnnounceTopic = mqtt.rootTopic + '/hub/devices/announce';
@@ -47,15 +46,28 @@ console.log('board.btn1.pin        ', Cfg.get('board.btn1.pin'));
 
 let needsReboot = false;
 
-if (Cfg.get('wifi.sta.ssid') !== wifi.ssid) {
+// reset ID on boards previously flashed with old FW
+let defaultId = whoami.arch + '_' + whoami.mac.slice(-6);
+if (Cfg.get('device.id') !== defaultId) {
+	needsReboot = true;
+	Cfg.set({
+		device: {id: defaultId}
+	});
+}
+
+if (
+	(Cfg.get('wifi.sta.ssid') !== wifi.ssid) ||
+	(Cfg.get('wifi.sta.pass') !== wifi.pass) ||
+	(Cfg.get('wifi.sta.dhcp_hostname') !== hostname)
+) {
 	console.log('Changing WIFI settings')
 	needsReboot = true;
 	Cfg.set({
 		wifi: {
 			sta: {
-				dhcp_hostname: hostname,
 				ssid: wifi.ssid,
-				pass: wifi.pass
+				pass: wifi.pass,
+				dhcp_hostname: hostname
 			}
 		}
 	});

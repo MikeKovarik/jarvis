@@ -7,8 +7,6 @@ import {TRAITS} from '../ghome/const.js'
 import {topics} from './mqtt.js'
 
 
-Promise.timeout = ms => new Promise((res) => setTimeout(res, ms))
-
 function getKeys(ctx) {
 	let set = new Set([
 		...Object.keys(ctx),
@@ -39,9 +37,9 @@ export class GhomeDevice extends EventEmitter {
 
 	constructor() {
 		super()
-		this.on('reboot', () => console.orange(this.id, this.name, 'rebooted'))
-		this.on('online', () => console.green(this.id, this.name, 'is online'))
-		this.on('offline', () => console.orange(this.id, this.name, 'is offline'))
+		this.on('reboot', () => console.orange(this.name, 'rebooted'))
+		this.on('online', () => console.green(this.name, 'is online'))
+		this.on('offline', () => console.orange(this.name, 'is offline'))
 		// notify google about offline state
 		this.on('offline', this.reportState)
 		this.on('online', this.reportState)
@@ -81,7 +79,7 @@ export class GhomeDevice extends EventEmitter {
 	#state = {}
 
 	onData(val) {
-		let {linkquality, update, action, ...state} = val
+		let {linkquality, update, action, action_rate, ...state} = val
 		let newState = {...this.#state, ...state}
 		this.injectState(newState)
 	}
@@ -133,7 +131,7 @@ export class GhomeDevice extends EventEmitter {
 	// each of which triggers reportState. Not only is it redundant, but the first call could arrive
 	// with delay, causing old data to win over actual state.
 	reportState = async () => {
-	    console.gray(this.id, this.name, this.#state)
+	    console.gray(this.name, 'reporting:', this.#state)
 		if (config.ghome === false) return
 		try {
 			let res = await smarthome.reportState({
@@ -150,7 +148,7 @@ export class GhomeDevice extends EventEmitter {
 			return JSON.parse(res)
 		} catch (e) {
 			const errorResponse = JSON.parse(e)
-			console.error(this.id, this.name, 'error reporting device states to homegraph:', errorResponse)
+			console.error(this.name, 'error reporting device states to homegraph:', errorResponse)
 		}
 	}
 

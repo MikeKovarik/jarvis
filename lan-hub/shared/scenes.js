@@ -1,4 +1,4 @@
-import zbDevices from '../zigbee/devices.js'
+import allDevices from '../shared/devices.js'
 import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
@@ -24,10 +24,10 @@ readAndWatchJson(jsonPath, raw => {
 
 export function set(sceneName) {
 	let scene = scenes.get(sceneName)
-	console.log('SET SCENE', sceneName, JSON.stringify(scene, null, 2))
+	console.log('set scene', sceneName/*, JSON.stringify(scene, null, 2)*/)
 	if (scene) {
 		for (let [deviceName, state] of Object.entries(scene)) {
-			let device = zbDevices.getByName(deviceName)
+			let device = allDevices.getByName(deviceName)
 			device?.executeState(state)
 		}
 	}

@@ -12,8 +12,7 @@ let state = {
 };
 
 let whoami = {
-	id: 'terracebulbs2',
-	name: 'Terrace bulb string',
+	name: 'terrace-big-lights',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

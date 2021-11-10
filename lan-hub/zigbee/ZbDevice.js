@@ -1,10 +1,9 @@
-import zbDevices from './devices.js'
 import actions from '../shared/actions.js'
 import * as zbTopics from './topics.js'
 import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {TYPES, TRAITS} from '../ghome/const.js'
 import {clamp} from '../util/util.js'
-import {mqtt, topics} from '../shared/mqtt.js'
+import {topics} from '../shared/mqtt.js'
 
 
 const debounceTimeouts = {}
@@ -35,8 +34,8 @@ export class ZbDevice extends GhomeDevice {
 	}
 
 	static from(whoami) {
-		let Ctor = new getCtor(whoami)
-		return Ctor(whoami)
+		let Ctor = this.getCtor(whoami)
+		return new Ctor(whoami)
 	}
 
 	constructor(whoami) {
@@ -112,13 +111,12 @@ export class ZbDevice extends GhomeDevice {
 	}
 
 	getQuery(query) {
-        //console.log('~ getQuery', query)
-		mqtt.emit(this.getTopic, query)
+		topics.emit(this.getTopic, query)
 	}
 
 	setQuery(query) {
-        //console.log('~ setQuery', query)
-		mqtt.emit(this.setTopic, query)
+        //console.gray('set', this.name, query)
+		topics.emit(this.setTopic, query)
 	}
 
 }
@@ -206,13 +204,13 @@ export class Light extends ZbDevice {
 	// shared method, accepts ghState
 	executeState(ghState) {
 		ghState = this.sanitizeGhState(ghState)
+		console.gray(this.name, 'execute', ghState)
 		let zbState = this.translateGhToZb(ghState)
 		this.setQuery(zbState)
 	}
 
 	// TODO: rename to executeCommand?
 	async executeCommand({command, params}) {
-		console.gray(this.id, 'executeCommand()', command, params)
 		this.executeState(params)
 	}
 

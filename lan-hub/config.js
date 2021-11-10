@@ -1,14 +1,13 @@
-import {getAbsolutePath, readJson} from './util/util.js'
+import {getAbsolutePath, readJson, readYaml} from './util/util.js'
 
 
-const configPath = getAbsolutePath(import.meta.url, '../data/config.json')
-const dataPath   = getAbsolutePath(import.meta.url, '../data')
+const dataPath      = getAbsolutePath(import.meta.url, '../data')
+const configPath    = getAbsolutePath(import.meta.url, '../data/config.json')
+const z2mConfigPath = getAbsolutePath(import.meta.url, '../data/configuration.yaml')
 
 process.env.ZIGBEE2MQTT_DATA = dataPath
 
 export const config = readJson(configPath)
-
-config.ghome  = false
-config.tunnel = false
+config.z2m = readYaml(z2mConfigPath)
 
 export default config

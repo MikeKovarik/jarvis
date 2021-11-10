@@ -1,10 +1,10 @@
-import {DevicesBase} from '../shared/DevicesBase.js'
+import {DedicatedDevicesBase} from '../shared/DedicatedDevicesBase.js'
 import {Device as JarvisDevice} from './JarvisDevice.js'
 import {topics} from '../shared/mqtt.js'
 import * as jTopics from './topics.js'
 
 
-class Devices extends DevicesBase {
+class Devices extends DedicatedDevicesBase {
 
 	static Device = JarvisDevice
 

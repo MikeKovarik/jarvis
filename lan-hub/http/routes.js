@@ -1,13 +1,51 @@
-import './ghome/smarthome.js'
+import '../ghome/smarthome.js'
+import {OtaUploader} from '../jarvis/ota.js'
+import {Device as JarvisDevice} from '../jarvis/JarvisDevice.js'
+import devices from '../shared/devices.js'
+import {apiRouter} from './server.js'
 
 // Expose list of devices as JSON for debugging.
 apiRouter.get('/devices', (req, res) => {
 	console.gray('GET /devices')
-	let array = Array.from(devices.values())
+	let array = devices.array
 	let json  = JSON.stringify(array)
 	let bytes = Buffer.byteLength(json)
 	res.header('Content-Length', bytes)
 	res.json(array)
+})
+
+apiRouter.get('/device/:deviceName', (req, res) => {
+	console.gray('GET /device')
+	const {deviceName} = req.params
+	let device = devices.getByName(deviceName)
+	res.json(device.toGoogleDevice())
+})
+
+apiRouter.get('/device/:deviceName/state', (req, res) => {
+	console.gray('GET /device')
+	const {deviceName} = req.params
+	let device = devices.getByName(deviceName)
+	res.json(device.state)
+})
+
+apiRouter.delete('/device/:deviceName', (req, res) => {
+	console.gray('DELETE /device')
+	const {deviceName} = req.params
+	devices.deleteByName(deviceName)
+	// TODO
+	res.json({})
+})
+
+apiRouter.get('/device/:deviceName/ota', (req, res) => {
+	const {deviceName} = req.params
+	let device = devices.getByName(deviceName)
+	if (device instanceof JarvisDevice) {
+		let ota = new OtaUploader(deviceName)
+		ota.run()
+		res.status(200).send('updating')
+	} else {
+		res.status(500).send('not a jarvis device')
+	}
 })
 
 apiRouter.get('/ghome-sync', async (req, res) => {

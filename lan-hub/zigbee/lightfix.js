@@ -1,6 +1,6 @@
 import zbDevices from '../zigbee/devices.js'
 import actions from '../shared/actions.js'
-import {devicesTopic, bridgeGroups} from './topics.js'
+import * as zbTopics from './topics.js'
 import {unique, Resolvable} from '../util/util.js'
 import {topics} from '../shared/mqtt.js'
 
@@ -23,7 +23,7 @@ let devicesReady = new Resolvable
 
 let groups = new Map
 
-topics.on(bridgeGroups, data => {
+topics.on(zbTopics.groups, data => {
 	groups.clear()
 	for (let group of data)
 		groups.set(group.id, group)
@@ -31,16 +31,18 @@ topics.on(bridgeGroups, data => {
 })
 
 // get through bindings and store button->light bindings in bindingMap
-topics.on(devicesTopic, allDevices => {
+topics.on(zbTopics.devices, allDevices => {
 	if (!devicesReady.resolved) devicesReady.resolve()
 	handleLightFix(allDevices)
 })
 
+const COORDINATOR = 'Coordinator'
+
 async function handleLightFix(allDevices) {
 	await groupsReady
 	bindingMap.clear()
-	let justDevices = allDevices.filter(device => device.type !== 'Coordinator')
-	let coordinator = allDevices.find(device => device.type === 'Coordinator')
+	let justDevices = allDevices.filter(device => device.type !== COORDINATOR)
+	let coordinator = allDevices.find(device => device.type === COORDINATOR)
 	let coordinatorId = coordinator.ieee_address
 	for (let source of justDevices) {
 		let sourceName = source.friendly_name

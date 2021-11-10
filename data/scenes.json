@@ -1,5 +1,14 @@
 {
 
+	"debug-on": {
+		"bulb-kitchen": true,
+		"testlight": true
+	},
+	"debug-hold": {
+		"bulb-kitchen": false,
+		"testlight": false
+	},
+
 	"bedroom-on": {
 		"bulb-office": 100
 	},
@@ -12,12 +21,10 @@
 		"bulb-office": 40,
 		"bulb-bed": false
 	},
-	"bedroom-cosy": {
-		"bulb-office": false,
-		"bulb-bed": false,
+	"bedroom-cosy": ["bedroom-bulbs-off", {
 		"lamp-reading": true,
 		"lamp-bed": 100
-	},
+	}],
 
 	"bedroom-bulbs-only": ["bedroom-bulbs-full", "bedroom-lamps-off"],
 	"bedroom-bulbs-full": {
@@ -101,7 +108,19 @@
 	"livingroom-bulbs-off": {
 		"bulb-couch": false,
 		"bulb-kitchen": false
-	}
+	},
 
+	"terrace-on": {
+		"terrace-big-lights": true,
+		"terrace-small-lights": true
+	},
+	"terrace-off": {
+		"terrace-big-lights": false,
+		"terrace-small-lights": false
+	},
+	"terrace-cosy": {
+		"terrace-big-lights": 50,
+		"terrace-small-lights": 100
+	}
 
 }

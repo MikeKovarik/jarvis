@@ -4,20 +4,13 @@ import path from 'path'
 import fs from 'fs-extra'
 import util from 'util'
 import cp from 'child_process'
-import {app} from '../http/server.js'
 import {HOSTNAME_PREFIX, getAbsolutePath} from '../util/util.js'
 
 
 const exec = util.promisify(cp.exec)
 
-app.get('/ota/:deviceName', (req, res) => {
-	const {deviceName} = req.params
-	let ota = new OtaUploader(deviceName)
-	ota.run()
-	res.status(200).send('updating')
-})
 
-class OtaUploader {
+export class OtaUploader {
 
 	constructor(deviceName) {
 		this.deviceName = deviceName

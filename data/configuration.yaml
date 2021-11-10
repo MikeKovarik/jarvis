@@ -2,13 +2,13 @@ homeassistant: false
 permit_join: true
 mqtt:
   base_topic: zigbee2mqtt
-  server: mqtt://localhost
+  server: mqtt://jarvis-hub.lan
 serial:
-  port: \\.\COM3
+  port: /dev/ttyUSB0
+#  port: \\.\COM3
 advanced:
   homeassistant_legacy_entity_attributes: false
   legacy_api: false
-  availability_timeout: 60
 device_options:
   legacy: false
 frontend:

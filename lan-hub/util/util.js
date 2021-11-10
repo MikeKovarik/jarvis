@@ -3,7 +3,8 @@ import {readFile} from 'fs/promises'
 import path from 'path'
 import {fileURLToPath} from 'url'
 import chokidar from 'chokidar'
-
+import YAML from 'yaml'
+import '../util/proto.js'
 
 export const HOSTNAME_PREFIX = 'jarvis-iot-'
 
@@ -13,23 +14,32 @@ export function getAbsolutePath(importMetaUrl, relativePath) {
 	return path.join(dirName, relativePath)
 }
 
+export function readYaml(filePath, cb) {
+	let handler = handlerFactory(filePath, cb, YAML)
+	return handler(readFileSync(filePath))
+}
+
 export function readJson(filePath, cb) {
-	let handler = jsonParserFactory(filePath, cb)
+	let handler = handlerFactory(filePath, cb, JSON)
 	return handler(readFileSync(filePath))
 }
 
 export function readAndWatchJson(filePath, cb) {
-	let handler = jsonParserFactory(filePath, cb)
+	let handler = handlerFactory(filePath, cb, JSON)
 	let watcher = chokidar.watch(filePath, { persistent: true })
-	watcher.on('change', async () => handler(await readFile(filePath)))
+	watcher.on('change', async () => {
+		// need to wait for file to save properly
+		await Promise.timeout(100)
+		handler(await readFile(filePath))
+	})
 	return handler(readFileSync(filePath))
 }
 
-function jsonParserFactory(filePath, cb) {
+function handlerFactory(filePath, cb, parser = JSON) {
 	return buffer => {
 		let json
 		try {
-			json = JSON.parse(buffer.toString())
+			json = parser.parse(buffer.toString())
 		} catch {
 			console.error('error parsing', filePath)
 		}

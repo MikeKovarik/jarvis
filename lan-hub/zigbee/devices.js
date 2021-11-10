@@ -1,10 +1,10 @@
-import {DevicesBase} from '../shared/DevicesBase.js'
+import {DedicatedDevicesBase} from '../shared/DedicatedDevicesBase.js'
 import {ZbDevice} from './ZbDevice.js'
 import {topics} from '../shared/mqtt.js'
 import * as zbTopics from './topics.js'
 
 
-class Devices extends DevicesBase {
+class Devices extends DedicatedDevicesBase {
 
 	static Device = ZbDevice
 

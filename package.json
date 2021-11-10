@@ -7,6 +7,7 @@
     "cjs": true
   },
   "scripts": {
+    "z2m": "node lan-hub/zigbee2mqtt.js",
     "dev": "node lan-hub/index.js",
     "dev-proxy": "node internet-proxy/proxytunnel.cjs",
     "start": "pm2 start lan-hub/index.js --name jarvis --time && pm2 logs jarvis",
@@ -28,6 +29,7 @@
     "multicast-dns": "^7.2.2",
     "node-fetch": "^2.6.1",
     "request": "^2.88.2",
+    "yaml": "^1.10.2",
     "zigbee2mqtt": "^1.21.2"
   },
   "devDependencies": {

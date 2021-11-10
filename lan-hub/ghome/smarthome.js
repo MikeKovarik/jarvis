@@ -1,6 +1,6 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import aog from 'actions-on-google'
-import devices from '../jarvis/devices.js'
+import allDevices from '../shared/devices.js'
 import config from '../config.js'
 import {app} from '../http/server.js'
 import {getAbsolutePath, readJson} from '../util/util.js'
@@ -48,9 +48,11 @@ smarthome.onDisconnect(async body => {
 	return {}
 })
 
-function handleSync(body) {
+function handleSync() {
 	console.gray('--- SMARTHOME: SYNC', '-'.repeat(100))
-	return devices.array.map(device => device.toGoogleDevice())
+	return allDevices
+		.filter(device => device.willReportState)
+		.map(device => device.toGoogleDevice())
 }
 
 async function handleQuery(payload) {

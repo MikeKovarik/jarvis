@@ -1,3 +1,4 @@
+// ESP-32
 let pins = {
 	// LEDS
 	out1: 4, // ESP32 GPIO4 corresponds to number 4

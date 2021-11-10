@@ -13,11 +13,15 @@
 	"brightness_move_up": "livingroom-all-full",
 	"brightness_move_down": "livingroom-all-off"
 }, {
-	"source": ["shortcut-1", "shortcut-2"],
-	"on": "bedroom-cosy",
-	"brightness_move_up": "bedroom-all-off"
+	"source": ["switch-1", "switch-2"],
+	"on": "terrace-on",
+	"off": "terrace-off"
 }, {
-	"source": "shortcut-3",
-	"on": "bedroom-reading",
+	"source": "shortcut-1",
+	"on": "debug-on",
+	"brightness_move_up": "debug-hold"
+}, {
+	"source": ["shortcut-2", "shortcut-3"],
+	"on": "bedroom-cosy",
 	"brightness_move_up": "bedroom-all-off"
 }]

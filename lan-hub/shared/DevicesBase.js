@@ -15,10 +15,10 @@ export class DevicesBase extends Map {
 	}
 
 	set(id, device) {
-		if (!this.has(id)) {
-			this.emit('new', device)
-		}
+		let has = this.has(id)
 		super.set(id, device)
+		if (!has)
+			this.emit('new', device)
 	}
 
 	delete(id) {
@@ -32,6 +32,8 @@ export class DevicesBase extends Map {
 	}
 
 	getByName = name => this.array.find(d => d.name === name)
+	deleteByName = name => {} // todo
+	hasByName = name => {} // todo
 
 	_onDevice = whoami => {
 		let {Device} = this.constructor

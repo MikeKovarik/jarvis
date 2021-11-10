@@ -12,8 +12,7 @@ let state = {
 };
 
 let whoami = {
-	id: 'smallstring',
-	name: 'Small String',
+	name: 'smallstring',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

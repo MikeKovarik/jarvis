@@ -3,7 +3,6 @@ import * as scenes from './scenes.js'
 import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
-let triggers = []
 let triggerTuples = []
 
 let jsonPath = getAbsolutePath(import.meta.url, '../../data/triggers.json')

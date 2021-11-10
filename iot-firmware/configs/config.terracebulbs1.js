@@ -1,9 +1,9 @@
 // ESP-32
 let pins = {
 	// LEDS
-	out1: 4, // ESP32 GPIO4 corresponds to number 4
+	out1: 4,
 	// Button
-	in1: 0
+	in1: 13
 };
 
 let state = {
@@ -12,7 +12,7 @@ let state = {
 };
 
 let whoami = {
-	name: 'stringlight1',
+	name: 'terrace-small-lights',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

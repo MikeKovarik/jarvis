@@ -14,8 +14,8 @@ export class Device extends GhomeDevice {
 	static getIdFromWhoami = whoami => whoami.id
 
 	constructor(whoami) {
-		console.log('------------------------------')
-		console.log('new device', whoami)
+		//console.log('------------------------------')
+		//console.log('new device', whoami)
 		super()
 
 		this.deviceInfo.manufacturer = 'Mike Kovarik'
@@ -23,6 +23,7 @@ export class Device extends GhomeDevice {
 		this.id = whoami.id
 		this.hostname = HOSTNAME_PREFIX + this.id
 		this.injectWhoami(whoami)
+		this.injectState(whoami.state)
 	}
 
 	unsubscribe() {
@@ -53,14 +54,6 @@ export class Device extends GhomeDevice {
 		return Date.now() - this.bootTime
 	}
 
-	// ----------------------------- 
-
-	onData(newState) {
-		if (equal(this.state, newState)) return
-		this.state = newState
-		this.emit('state-change', this.state)
-	}
-
 	// ------------------------- COMMAND EXECUTION / STATE APPLYING -------------------------
 
 	// shared method, accepts ghState
@@ -73,7 +66,7 @@ export class Device extends GhomeDevice {
 
 	// TODO: rename to executeCommand?
 	async executeCommand({command, params}) {
-		console.gray(this.id, 'executeCommand()', command, params)
+		console.gray(this.name, 'execute', params)
 		// command always returns new state
 		let state = await this.callRpcMethod(command, params)
 		this.injectState(state)
@@ -105,7 +98,10 @@ export class Device extends GhomeDevice {
 	// ----------------------------- 
 
 	getUrl(path) {
-		return `http://${this.hostname}.lan${path}`
+		if (this.ip)
+			return `http://${this.ip}${path}`
+		else
+			return `http://${this.hostname}.lan${path}`
 	}
 
 	getRpcUrl(method) {
@@ -130,6 +126,7 @@ export class Device extends GhomeDevice {
 			} catch {}
 		} catch (err) {
 			console.error(this.id, 'RPC method', command, 'failed')
+			delete err.stack
 			console.error(err.message)
 			this.online = false
 			throw err
@@ -139,7 +136,7 @@ export class Device extends GhomeDevice {
 	// ----------------------------- DIRECT HUB-TO-DEVICE COMMUNICATION APIS
 
 	async reboot() {
-		console.gray(this.id, 'reboot()')
+		console.gray(this.name, 'reboot()')
 		await this.callRpcMethod('sys.reboot')
 		// http://192.168.175.171/rpc/sys.reboot
 	}
@@ -148,14 +145,14 @@ export class Device extends GhomeDevice {
 	// Contains both whoami and states to save on calling two separate requests.
 	// After boot, we only ever want to know the states
 	async fetchWhoami() {
-		console.gray(this.id, 'fetchWhoami()')
+		console.gray(this.name, 'fetchWhoami()')
 		let whoami = await this.callRpcMethod('whoami')
 		if (whoami) this.injectWhoami(whoami)
 	}
 
 	// Contains only states. Can be called anytime after boot when we don't need to knouw about devices' basic info
 	async fetchState() {
-		console.gray(this.id, 'fetchState()')
+		console.gray(this.name, 'fetchState()')
 		let state = await this.callRpcMethod('state')
 		if (state) this.injectState(state)
 	}

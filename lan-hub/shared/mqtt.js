@@ -1,11 +1,9 @@
 import _mqtt from 'mqtt'
 import {EventEmitter} from 'events'
+import config from '../config.js'
 
 
-//const mqttHost = 'localhost'
-const mqttHost = 'jarvis-hub.lan'
-const mqttPort = 1883
-export const mqtt = _mqtt.connect(`mqtt://${mqttHost}:${mqttPort}`)
+export const mqtt = _mqtt.connect(config.z2m.mqtt.server)
 
 class Topics extends EventEmitter {
 

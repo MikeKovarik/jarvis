@@ -81,7 +81,10 @@
 					-->
 					<horizontal style="justify-content: space-between; margin-top: 12px">
 						<button click.trigger="reboot(device)" plain>reboot</button>
+						<button click.trigger="flash(device)" plain>flash</button>
+						<!--
 						<button click.trigger="delete(device)" plain>delete</button>
+						-->
 					</horizontal>
 				</card>
 
@@ -114,8 +117,11 @@
 			reboot(device) {
 				fetch(`http://${device.ip}/rpc/sys.reboot`)
 			}
-			delete(device) {
-				fetch(`/api/device/${device.id}`, {method: 'DELETE'})
+			//delete(device) {
+			//	fetch(`/api/device/${device.id}`, {method: 'DELETE'})
+			//}
+			flash(device) {
+				fetch(`/api/device/${device.id}/ota`)
 			}
 			ghomeSync() {
 				fetch(`/api/ghome-sync`)

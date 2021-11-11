@@ -63,14 +63,16 @@ function handleCommand(cmd, data) {
 if (traits.OnOff) {
 	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
 	RPC.addHandler(commands.OnOff.fullName, function(data) {
-		return handleCommand(commands.OnOff, data)
+		//console.log('command: OnOff');
+		return handleCommand(commands.OnOff, data);
 	});
 }
 
 
 if (traits.Brightness) {
 	RPC.addHandler(commands.BrightnessAbsolute.fullName, function(data) {
-		return handleCommand(commands.BrightnessAbsolute, data)
+		//console.log('command: BrightnessAbsolute');
+		return handleCommand(commands.BrightnessAbsolute, data);
 	});
 }
 
@@ -80,7 +82,8 @@ if (traits.ColorSetting) {
 	GPIO.set_mode(pins.out2, GPIO.MODE_OUTPUT);
 	GPIO.set_mode(pins.out3, GPIO.MODE_OUTPUT);
 	RPC.addHandler(commands.ColorAbsolute.fullName, function(data) {
-		return handleCommand(commands.ColorAbsolute, data)
+		//console.log('command: ColorAbsolute');
+		return handleCommand(commands.ColorAbsolute, data);
 	});
 }
 

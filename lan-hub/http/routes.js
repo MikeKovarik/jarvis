@@ -3,6 +3,7 @@ import {OtaUploader} from '../jarvis/ota.js'
 //import {Device as JarvisDevice} from '../jarvis/JarvisDevice.js'
 import devices from '../shared/devices.js'
 import {apiRouter} from './server.js'
+import config from '../config.js'
 
 // Expose list of devices as JSON for debugging.
 apiRouter.get('/devices', (req, res) => {

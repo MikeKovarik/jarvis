@@ -1,6 +1,6 @@
-import '../ghome/smarthome.js'
+import smarthome from '../ghome/smarthome.js'
 import {OtaUploader} from '../jarvis/ota.js'
-import {Device as JarvisDevice} from '../jarvis/JarvisDevice.js'
+//import {Device as JarvisDevice} from '../jarvis/JarvisDevice.js'
 import devices from '../shared/devices.js'
 import {apiRouter} from './server.js'
 

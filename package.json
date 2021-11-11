@@ -28,8 +28,7 @@
     "mqtt": "^4.2.8",
     "node-fetch": "^2.6.1",
     "request": "^2.88.2",
-    "yaml": "^1.10.2",
-    "zigbee2mqtt": "^1.21.2"
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "esm": "^3.2.25"

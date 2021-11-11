@@ -1,5 +1,6 @@
 import './config.js'
-import Controller from 'zigbee2mqtt/dist/controller.js'
+import Controller from '/opt/zigbee2mqtt/dist/controller.js'
+//import Controller from 'zigbee2mqtt/dist/controller.js'
 
 
 let controller

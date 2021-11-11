@@ -4,7 +4,7 @@ let MGOS_EVENT_TIME_CHANGED = Event.SYS + 3;
 let floor = ffi('double floor(double)');
 
 
-let hostbase = 'jarvis-iot-';
+let hostbase = 'jarvis-';
 let hostname = hostbase + whoami.name;
 
 whoami.hostname     = hostname
@@ -16,13 +16,18 @@ whoami.fw_timestamp = ffi('char *get_fw_timestamp()')();
 whoami.fw_id        = ffi('char *get_fw_id()')();
 
 mqtt.rootTopic            = 'jarvis';
-mqtt.devicesAnnounceTopic = mqtt.rootTopic + '/hub/devices/announce';
-mqtt.devicesScanTopic     = mqtt.rootTopic + '/hub/devices/scan';
-mqtt.deviceTopic          = mqtt.rootTopic + '/' + whoami.id;
-mqtt.getTopic             = mqtt.deviceTopic + '/get';
-mqtt.availabilityTopic    = mqtt.deviceTopic + '/availability';
-mqtt.uptimeTopic          = mqtt.deviceTopic + '/uptime';
-mqtt.ipTopic              = mqtt.deviceTopic + '/ip';
+
+function createMqttTopics() {
+	mqtt.devicesAnnounceTopic = mqtt.rootTopic + '/hub/devices/announce';
+	mqtt.devicesScanTopic     = mqtt.rootTopic + '/hub/devices/scan';
+	mqtt.deviceTopic          = mqtt.rootTopic + '/' + whoami.id;
+	mqtt.getTopic             = mqtt.deviceTopic + '/get';
+	mqtt.availabilityTopic    = mqtt.deviceTopic + '/availability';
+	mqtt.uptimeTopic          = mqtt.deviceTopic + '/uptime';
+	mqtt.ipTopic              = mqtt.deviceTopic + '/ip';
+}
+
+createMqttTopics();
 
 console.log('--------------------------------------------------');
 
@@ -49,28 +54,34 @@ let needsReboot = false;
 // reset ID on boards previously flashed with old FW
 let defaultId = whoami.arch + '_' + whoami.mac.slice(-6);
 if (Cfg.get('device.id') !== defaultId) {
-	needsReboot = true;
+	console.log('Changing Device ID')
 	Cfg.set({
 		device: {id: defaultId}
 	});
+	// recreate MQTT topics with new ID.
+	whoami.id = defaultId;
+	createMqttTopics();
+	needsReboot = true;
 }
 
 if (
+	(Cfg.get('wifi.sta.enable') !== true) ||
 	(Cfg.get('wifi.sta.ssid') !== wifi.ssid) ||
 	(Cfg.get('wifi.sta.pass') !== wifi.pass) ||
 	(Cfg.get('wifi.sta.dhcp_hostname') !== hostname)
 ) {
 	console.log('Changing WIFI settings')
-	needsReboot = true;
 	Cfg.set({
 		wifi: {
 			sta: {
+				enable: true,
 				ssid: wifi.ssid,
 				pass: wifi.pass,
 				dhcp_hostname: hostname
 			}
 		}
 	});
+	needsReboot = true;
 }
 
 if (
@@ -79,7 +90,6 @@ if (
 	(Cfg.get('mqtt.will_topic') !== mqtt.availabilityTopic)
 ) {
 	console.log('Changing MQTT settings')
-	needsReboot = true;
 	Cfg.set({
 		mqtt: {
 			enable: true,
@@ -88,6 +98,7 @@ if (
   			will_message: 'offline',
 		}
 	});
+	needsReboot = true;
 }
 
 if (needsReboot) {

@@ -31,6 +31,11 @@ export class DevicesBase extends Map {
 		return Array.from(this.values())
 	}
 
+	filter = (...args) => this.array.filter(...args)
+	find   = (...args) => this.array.find(...args)
+	some   = (...args) => this.array.some(...args)
+	every  = (...args) => this.array.every(...args)
+
 	getByName = name => this.array.find(d => d.name === name)
 	deleteByName = name => {} // todo
 	hasByName = name => {} // todo

@@ -7,8 +7,8 @@
     "cjs": true
   },
   "scripts": {
-    "z2m": "node lan-hub/zigbee2mqtt.js",
-    "dev": "node lan-hub/index.js",
+    "z2m": "node --no-expose-wasm lan-hub/zigbee2mqtt.js",
+    "dev": "node --no-expose-wasm lan-hub/index.js",
     "dev-proxy": "node internet-proxy/proxytunnel.cjs",
     "start": "pm2 start lan-hub/index.js --name jarvis --time && pm2 logs jarvis",
     "start-proxy": "pm2 start internet-proxy/proxytunnel.cjs --name jarvis-proxy --time && pm2 logs jarvis-proxy",

@@ -1,7 +1,7 @@
 // https://github.com/mongoose-os-libs/mjs/pull/15
 let MGOS_EVENT_TIME_CHANGED = Event.SYS + 3;
 
-let hostbase = 'jarvis-iot-';
+let hostbase = 'jarvis-';
 let hostname = hostbase + whoami.id;
 
 whoami.mac          = ffi('char *get_mac_address()')();

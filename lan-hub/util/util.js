@@ -6,7 +6,7 @@ import chokidar from 'chokidar'
 import YAML from 'yaml'
 import '../util/proto.js'
 
-export const HOSTNAME_PREFIX = 'jarvis-iot-'
+export const HOSTNAME_PREFIX = 'jarvis-'
 
 export function getAbsolutePath(importMetaUrl, relativePath) {
 	let filePath = fileURLToPath(importMetaUrl)

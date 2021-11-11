@@ -15,14 +15,13 @@ filesystem:
 
 config_schema:
   - ["debug.level", 0]
-#  - ["debug.level", 1]
   - ["dns_sd.enable", true]
   - ["dns_sd.adv_only", true]
   - ["wifi.ap.enable", false]
-  - ["wifi.sta.enable", true]
+#  - ["wifi.sta.enable", true]
   # dummy credentials needed for initial boot, before those from wifi.js are dynamically applied. 
-  - ["wifi.sta.dhcp_hostname", "dummy"]
-  - ["wifi.sta.ssid", "dummy"]
+#  - ["wifi.sta.dhcp_hostname", "dummy"]
+#  - ["wifi.sta.ssid", "dummy"]
   - ["mqtt.will_message", "offline"]
 
 libs:

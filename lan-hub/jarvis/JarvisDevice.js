@@ -162,8 +162,8 @@ export class Device extends GhomeDevice {
 		this.type       = whoami.type
 		this.name       = whoami.name
 		this.arch       = whoami.arch
-		this.traits     = whoami.traits
-		this.attributes = whoami.attributes
+		this.traits     = whoami.traits     ?? this.traits
+		this.attributes = whoami.attributes ?? this.attributes
 		// other, internal jarvis props
 		this.checkBootTime(whoami.bootTime)
 		this.ip         = whoami.ip

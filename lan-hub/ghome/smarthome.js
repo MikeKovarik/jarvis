@@ -23,25 +23,25 @@ export let connected = false
 const smarthomeHandler = payloadCreator => {
 	return async body => {
 		connected = true
-		return {
-			requestId: body.requestId,
-			payload: payloadCreator(body)
-		}
+		let {requestId} = body
+		let payload = await payloadCreator(body)
+        console.log(JSON.stringify(payload, null, 2))
+		return {requestId, payload}
 	}
 }
 
-smarthome.onSync(smarthomeHandler(async body => ({
+smarthome.onSync(smarthomeHandler(async () => ({
 	agentUserId: config.agentUserId,
-	devices: await handleSync(body)
+	devices: await handleSync()
 })))
 
-smarthome.onQuery(async body => ({
+smarthome.onQuery(smarthomeHandler(async body => ({
 	devices: await handleQuery(body.inputs[0].payload),
-}))
+})))
 
-smarthome.onExecute(async body => ({
+smarthome.onExecute(smarthomeHandler(async body => ({
 	commands: await handleExecute(body.inputs[0].payload)
-}))
+})))
 
 smarthome.onDisconnect(async body => {
 	connected = false

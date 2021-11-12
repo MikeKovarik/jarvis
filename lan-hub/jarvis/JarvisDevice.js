@@ -24,6 +24,9 @@ export class Device extends GhomeDevice {
 		this.hostname = HOSTNAME_PREFIX + this.id
 		this.injectWhoami(whoami)
 		this.injectState(whoami.state)
+		// Jarvis device is only discovered by receiving message from it.
+		// Unline zigbee2mqtt which stores it and its state in db.
+		this.online = true
 	}
 
 	unsubscribe() {

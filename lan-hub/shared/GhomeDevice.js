@@ -82,6 +82,7 @@ export class GhomeDevice extends EventEmitter {
 		let {linkquality, update, action, action_rate, ...state} = val
 		let newState = {...this.#state, ...state}
 		this.injectState(newState)
+		this.online = true
 	}
 
 	//injectState(newState = {}) {

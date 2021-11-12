@@ -132,19 +132,21 @@ export class GhomeDevice extends EventEmitter {
 	// each of which triggers reportState. Not only is it redundant, but the first call could arrive
 	// with delay, causing old data to win over actual state.
 	reportState = async () => {
-	    console.gray(this.name, 'reporting:', this.#state)
+		if (!this.willReportState) return
+	    console.gray(this.name, 'reporting:', this.state)
 		if (config.ghome === false) return
 		try {
+			const payload = {
+				devices: {
+					states: {
+						[this.id]: this.state,
+					},
+				},
+			}
 			let res = await smarthome.reportState({
 				agentUserId: config.agentUserId,
 				requestId: Math.random().toString(),
-				payload: {
-					devices: {
-						states: {
-							[this.id]: this.state,
-						},
-					},
-				},
+				payload,
 			})
 			return JSON.parse(res)
 		} catch (e) {

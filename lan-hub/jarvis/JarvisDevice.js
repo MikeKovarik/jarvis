@@ -123,6 +123,7 @@ export class Device extends GhomeDevice {
 		}
 		try {
 			let res = await fetch(url, options)
+			this.online = true
 			try {
 				let json = await res.json()
 				if (!isErrorMessage(json)) return json

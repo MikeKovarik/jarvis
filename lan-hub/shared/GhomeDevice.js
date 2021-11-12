@@ -101,25 +101,25 @@ export class GhomeDevice extends EventEmitter {
 	get state() {
 		return {
 			...this.translateStateToGh(this.#state),
-			online: this.#online
+			online: this._online
 		}
 	}
 
 	// ONLINE -----------------------------
 
-	#online = false
+	_online = false
 
 	onAvailability = val => {
 		this.online = val === 'online'
 	}
 
 	get online() {
-		return this.#online
+		return this._online
 	}
 
 	set online(newVal = false) {
-		if (this.#online === newVal) return
-		this.#online = newVal
+		if (this._online === newVal) return
+		this._online = newVal
 		this.emit(newVal ? 'online' : 'offline')
 		//this.emit('state-change', this.state)
 	}
@@ -149,9 +149,8 @@ export class GhomeDevice extends EventEmitter {
 				payload,
 			})
 			return JSON.parse(res)
-		} catch (e) {
-			const errorResponse = JSON.parse(e)
-			console.error(this.name, 'error reporting device states to homegraph:', errorResponse)
+		} catch (err) {
+			console.error(this.name, 'reportState: error reporting device states to homegraph:', err.message)
 		}
 	}
 

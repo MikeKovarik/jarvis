@@ -1,5 +1,4 @@
 import fetch from 'node-fetch'
-import equal from 'fast-deep-equal'
 import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {stateToActions} from '../ghome/const.js'
 import '../util/proto.js'
@@ -10,6 +9,10 @@ import {HOSTNAME_PREFIX} from '../util/util.js'
 export class Device extends GhomeDevice {
 
 	willReportState = true
+
+	// Jarvis device is only discovered by receiving message from it.
+	// Unline zigbee2mqtt which stores it and its state in db.
+	_online = true
 
 	static getIdFromWhoami = whoami => whoami.id
 
@@ -24,9 +27,6 @@ export class Device extends GhomeDevice {
 		this.hostname = HOSTNAME_PREFIX + this.id
 		this.injectWhoami(whoami)
 		this.injectState(whoami.state)
-		// Jarvis device is only discovered by receiving message from it.
-		// Unline zigbee2mqtt which stores it and its state in db.
-		this.online = true
 	}
 
 	unsubscribe() {

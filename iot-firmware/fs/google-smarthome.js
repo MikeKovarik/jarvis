@@ -53,6 +53,7 @@ function handleCommand(cmd, data) {
 	if (typeof(data) === 'object' && cmd.validate(data)) {
 		cmd.handle(data)
 		setPins();
+		broadcastState();
 		return state;
 	} else {
 		return badRequestReponse;

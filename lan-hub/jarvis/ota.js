@@ -5,7 +5,7 @@ import fs from 'fs-extra'
 import util from 'util'
 import cp from 'child_process'
 import {/*HOSTNAME_PREFIX,*/ getAbsolutePath} from '../util/util.js'
-const HOSTNAME_PREFIX = 'jarvis-iot-'
+const HOSTNAME_PREFIX = 'jarvis-'
 
 
 const exec = util.promisify(cp.exec)

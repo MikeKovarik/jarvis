@@ -37,6 +37,13 @@ apiRouter.delete('/devices/:deviceName', (req, res) => {
 	res.json({})
 })
 
+apiRouter.get('/devices/:deviceName/reboot', (req, res) => {
+	const {deviceName} = req.params
+	let device = devices.getByName(deviceName)
+	device?.delete?.()
+	res.json({})
+})
+
 apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 	const {deviceName} = req.params
 	let device = devices.getByName(deviceName)

@@ -4,6 +4,7 @@ import {stateToActions} from '../ghome/const.js'
 import '../util/proto.js'
 import * as jTopics from './topics.js'
 import {HOSTNAME_PREFIX} from '../util/util.js'
+import {topics} from '../shared/mqtt.js'
 
 
 export class Device extends GhomeDevice {
@@ -27,6 +28,7 @@ export class Device extends GhomeDevice {
 		this.hostname = HOSTNAME_PREFIX + this.id
 		this.injectWhoami(whoami)
 		this.injectState(whoami.state)
+		this.subscribe()
 	}
 
 	unsubscribe() {

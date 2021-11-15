@@ -72,8 +72,8 @@ export class ZbDevice extends GhomeDevice {
 	}
 
 	onRename = friendlyName => {
-    	//console.log('~ onRename', friendlyName)
-		this.unsubscribe()
+		// skip unsubscribe on boot when we dont know the name yet
+		if (this.name !== undefined) this.unsubscribe()
 		this.name = friendlyName
 		this.subscribe()
 	}

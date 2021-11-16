@@ -16,22 +16,22 @@ apiRouter.get('/devices', (req, res) => {
 })
 
 apiRouter.get('/devices/:deviceName', (req, res) => {
-	console.gray('GET /device')
 	const {deviceName} = req.params
+	console.gray(`GET /devices/${deviceName}`)
 	let device = devices.getByName(deviceName)
 	res.json(device.toGoogleDevice())
 })
 
 apiRouter.get('/devices/:deviceName/state', (req, res) => {
-	console.gray('GET /device')
 	const {deviceName} = req.params
+	console.gray(`GET /devices/${deviceName}/state`)
 	let device = devices.getByName(deviceName)
 	res.json(device.state)
 })
 
 apiRouter.delete('/devices/:deviceName', (req, res) => {
-	console.gray('DELETE /device')
 	const {deviceName} = req.params
+	console.gray(`DELETE /devices/${deviceName}`)
 	devices.deleteByName(deviceName)
 	// TODO
 	res.json({})
@@ -39,13 +39,19 @@ apiRouter.delete('/devices/:deviceName', (req, res) => {
 
 apiRouter.get('/devices/:deviceName/reboot', (req, res) => {
 	const {deviceName} = req.params
+	console.gray(`GET /devices/${deviceName}/reboot`)
 	let device = devices.getByName(deviceName)
-	device?.delete?.()
-	res.json({})
+	if (device?.reboot) {
+		device?.reboot?.()
+		res.send('rebooting')
+	} else {
+		res.send('unable to reboot')
+	}
 })
 
 apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 	const {deviceName} = req.params
+	console.gray(`GET /devices/${deviceName}/ota`)
 	let device = devices.getByName(deviceName)
 	//if (device instanceof JarvisDevice) {
 		let ota = new OtaUploader(deviceName)
@@ -59,6 +65,6 @@ apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 })
 
 apiRouter.get('/ghome-sync', async (req, res) => {
-	console.gray('GET /request-sync')
+	console.gray('GET /devices/ghome-sync')
 	res.json(await smarthome.requestSync(config.agentUserId))
 })

@@ -1,5 +1,6 @@
 // https://developers.google.com/assistant/smarthome/develop/process-intents
 import aog from 'actions-on-google'
+import google from '@googleapis/homegraph'
 import devices from '../shared/devices.js'
 import config from '../config.js'
 import {app} from '../http/server.js'
@@ -9,12 +10,17 @@ import '../util/proto.js'
 
 const jwtPath = getAbsolutePath(import.meta.url, '../../data/ghome-key.json')
 const jwt = readJson(jwtPath)
-const smarthome = aog.smarthome({jwt})
-
-export default smarthome
+export const smarthome = aog.smarthome({jwt})
 
 app.post('/smarthome', smarthome)
 
+export const homegraph = google.homegraph({
+	auth: new google.auth.GoogleAuth({
+		keyFile: jwtPath,
+		scopes: ['https://www.googleapis.com/auth/homegraph'],
+	}),
+	version: 'v1'
+})
 
 export let connected = false
 

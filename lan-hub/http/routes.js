@@ -1,4 +1,4 @@
-import smarthome from '../ghome/smarthome.js'
+import {smarthome, homegraph} from '../ghome/smarthome.js'
 import {OtaUploader} from '../jarvis/ota.js'
 //import {Device as JarvisDevice} from '../jarvis/JarvisDevice.js'
 import devices from '../shared/devices.js'
@@ -66,5 +66,7 @@ apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 
 apiRouter.get('/ghome-sync', async (req, res) => {
 	console.gray('GET /devices/ghome-sync')
-	res.json(await smarthome.requestSync(config.agentUserId))
+	let {agentUserId} = config
+	await homegraph.devices.requestSync({requestBody: {agentUserId}})
+	res.json({})
 })

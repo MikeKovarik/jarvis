@@ -1,7 +1,7 @@
 import equal from 'fast-deep-equal'
 import {EventEmitter} from 'events'
 import '../util/console.js'
-import smarthome from '../ghome/smarthome.js'
+import {homegraph} from '../ghome/smarthome.js'
 import config from '../config.js'
 import {TRAITS} from '../ghome/const.js'
 import {topics} from './mqtt.js'
@@ -143,12 +143,13 @@ export class GhomeDevice extends EventEmitter {
 					},
 				},
 			}
-			let res = await smarthome.reportState({
-				agentUserId: config.agentUserId,
-				requestId: Math.random().toString(),
-				payload,
+			await homegraph.devices.reportStateAndNotification({
+				requestBody: {
+					agentUserId: config.agentUserId,
+					requestId: Math.random().toString().slice(2),
+					payload,
+				}
 			})
-			return JSON.parse(res)
 		} catch (err) {
 			console.error(this.name, 'reportState: error reporting device states to homegraph:', err.message)
 		}

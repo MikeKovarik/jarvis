@@ -18,48 +18,36 @@ config_schema:
   - ["dns_sd.enable", true]
   - ["dns_sd.adv_only", true]
   - ["wifi.ap.enable", false]
-#  - ["wifi.sta.enable", true]
-  # dummy credentials needed for initial boot, before those from wifi.js are dynamically applied. 
-#  - ["wifi.sta.dhcp_hostname", "dummy"]
-#  - ["wifi.sta.ssid", "dummy"]
   - ["mqtt.will_message", "offline"]
 
 libs:
   - origin: https://github.com/mongoose-os-libs/boards
   - origin: https://github.com/mongoose-os-libs/mjs
-
-  - origin: https://github.com/mongoose-os-libs/ca-bundle
+#  - origin: https://github.com/mongoose-os-libs/ca-bundle
   - origin: https://github.com/mongoose-os-libs/core
   - origin: https://github.com/mongoose-os-libs/fstab
-  - origin: https://github.com/mongoose-os-libs/http-server # needed for OTA
-  - origin: https://github.com/mongoose-os-libs/rpc-service-config
-  - origin: https://github.com/mongoose-os-libs/rpc-service-fs
-  - origin: https://github.com/mongoose-os-libs/rpc-uart
-  - origin: https://github.com/mongoose-os-libs/rpc-ws
+#  - origin: https://github.com/mongoose-os-libs/rpc-ws
   - origin: https://github.com/mongoose-os-libs/sntp # time
-
-  - origin: https://github.com/mongoose-os-libs/mqtt
-  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
-
-  - origin: https://github.com/mongoose-os-libs/adc
+#  - origin: https://github.com/mongoose-os-libs/adc
+  - origin: https://github.com/mongoose-os-libs/http-server # needed for OTA
   - origin: https://github.com/mongoose-os-libs/ota-http-client
   - origin: https://github.com/mongoose-os-libs/ota-http-server # needed for OTA
   - origin: https://github.com/mongoose-os-libs/pwm
+  - origin: https://github.com/mongoose-os-libs/mqtt
+  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
+  - origin: https://github.com/mongoose-os-libs/rpc-service-config
+  - origin: https://github.com/mongoose-os-libs/rpc-service-fs
+  - origin: https://github.com/mongoose-os-libs/rpc-uart
+  - origin: https://github.com/mongoose-os-libs/rpc-common # needed for OTA
   - origin: https://github.com/mongoose-os-libs/rpc-loopback
   - origin: https://github.com/mongoose-os-libs/rpc-service-ota
   - origin: https://github.com/mongoose-os-libs/rpc-service-wifi
   - origin: https://github.com/mongoose-os-libs/vfs-dev-spi-flash
   - origin: https://github.com/mongoose-os-libs/wifi
 
-  - origin: https://github.com/mongoose-os-libs/rpc-common # needed for OTA
-
-# OTA over HTTP: https://blog.avotrix.com/ota-update-in-mongoose-os/
-
-# OTA UPDATE - OVER LAN
-# curl -v -F file=@build/fw.zip http://IP_ADDR/update
-
-#  - origin: https://github.com/mongoose-os-libs/shadow
-#  - origin: https://github.com/mongoose-os-libs/ota-shadow
-
-# OTHER FEATURES
-#  - origin: https://github.com/mongoose-os-libs/dht # humidity and temp sensors
+conds:
+  - when: mos.platform == "esp32"
+    apply:
+      build_vars:
+        # Icrease app size for ESP32
+        APP_SLOT_SIZE: 0x190000

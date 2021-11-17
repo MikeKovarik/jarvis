@@ -13,7 +13,7 @@ RPC.addHandler('state', function() {
 function mqttSend(topic, data, description) {
 	if (MQTT.isConnected()) {
 		console.log('MQTT:', description);
-		MQTT.pub(topic, JSON.stringify(data), 1);
+		MQTT.pub(topic, JSON.stringify(data), 0);
 	} else {
 		console.log('MQTT: failed to', description, '. not connected to MQTT');
 	}

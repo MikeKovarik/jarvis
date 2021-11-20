@@ -4,28 +4,41 @@ import arpScan from 'local-devices'
 import {topics} from './shared/mqtt.js'
 
 
-let pollPort = 1609
-let emitPort = 1610
-
-var broadcastIp = '224.0.0.69'
-var broadcastPort = 1609
-
-const helloToken = 'JARVIS'
-const delimeter = '␊'
 
 const devicesAnnounceTopic = 'jarvis/hub/devices/announce';
-const devicesScanTopic     = 'jarvis/hub/devices/scan';
+topics.on(devicesAnnounceTopic, data => console.log('announced', data))
 
-let activeSockets = new Map
+topics.on('jarvis/esp32_479934', data => console.log('testlight', data))
+/*
+topics.on('jarvis/esp32_662BE4', data => console.log('big lights', data))
+
+setTimeout(() => {
+	topics.emit('jarvis/esp32_662BE4/rpc', {
+		method: 'action.devices.commands.OnOff',
+		params: {
+			on: false
+		}
+	})
+}, 2000)
+*/
+
+const deviceTcpPollPort = 1609
+const deviceTcpCmdPort = 1610
+const deviceTcpTriggerPort = 1611
+
+const udpBroadcastIp = '224.0.0.69'
+const udpBroadcastPort = 1609
+
+const delimeter = '␊'
+
+const activeSockets = new Map
 
 class IpHandler {
 
 	static from(ip) {
-		return activeSockets.get(ip) || new this(ip)
+		return activeSockets.get(ip)?.onHeartbeat?.() || new this(ip)
+		//return activeSockets.get(ip) || new this(ip)
 	}
-
-	verified = false
-	valid = false
 
 	constructor(ip) {
 		this.ip = ip
@@ -36,53 +49,47 @@ class IpHandler {
 	}
 
 	connect() {
-		this.pollSock = net.connect(pollPort, this.ip)
+		this.pollSock = net.connect(deviceTcpPollPort, this.ip)
 		this.pollSock.on('close', this.onClose)
 		this.pollSock.on('error', this.onError)
 		this.pollSock.on('data', this.onData)
-		//this.pollSock.on('connect', this.onConnect)
+		this.pollSock.on('connect', this.onConnect)
 	}
 
-	verifyConnection() {
-		if (this.verified) return
-		if (this.rawString.length >= helloToken.length) {
-			this.verified = true
-			this.valid = this.rawString.startsWith(helloToken)
-			if (this.valid)
-				this.rawString = this.rawString.slice((helloToken + delimeter).length)
-			else
-				this.invalidateDevice()
-		}
+	onConnect = () => {
+		console.log(this.ip, 'conneted')
+		setInterval(() => {
+			console.log('sending')
+			this.emit('cmd', 'onoff')
+		}, 3000)
 	}
 
-	invalidateDevice() {
-		activeSockets.delete(this.ip)
-		this.pollSock?.destroy()
+	onHeartbeat() {
+		//console.log(this.ip, 'MQTT-emul: heartbeat')
+		return this
 	}
 
 	// -------
 
-	rawString = ''
-	chunks = []
+	dataString = ''
+	dataSegments = []
 
 	onData = buffer => {
-		this.rawString += buffer.toString()
-		this.verifyConnection()
-        console.log('this.valid', this.valid)
-		if (this.valid) this.parseChunks()
+		this.dataString += buffer.toString()
+		this.parseChunks()
 	}
 
 	parseChunks() {
-		this.chunks = this.rawString.split(delimeter)
-		this.rawString = this.chunks.pop()
-		this.chunks.forEach(this.onJson)
-		if (this.rawString.endsWith(delimeter)) {
-			this.onJson(this.rawString)
-			this.rawString = ''
+		this.dataSegments = this.dataString.split(delimeter)
+		this.dataString = this.dataSegments.pop()
+		this.dataSegments.forEach(this.handleSegmennt)
+		if (this.dataString.endsWith(delimeter)) {
+			this.handleSegmennt(this.dataString)
+			this.dataString = ''
 		}
 	}
 
-	onJson = json => {
+	handleSegmennt = json => {
 		let data = JSON.parse(json)
 		if (data.topics)
 			this.onInfo(data)
@@ -102,10 +109,14 @@ class IpHandler {
 	}
 
 	sendCommand(data) {
-		const tempSock = net.connect(emitPort, this.ip, () => {
+		console.log(this.ip, 'sending command')
+		const tempSock = net.connect(deviceTcpCmdPort, this.ip, () => {
 			let json = JSON.stringify(data)
-			let buffer = Buffer.from(json)
-			tempSock.write(buffer)
+			tempSock.on('end', () => console.log(this.ip, 'temp sock end'))
+			tempSock.on('close', () => console.log(this.ip, 'temp sock close'))
+			tempSock.end(json, () => console.log(this.ip, 'temp sock callback end'))
+			//let buffer = Buffer.from(json)
+			//tempSock.write(buffer, () => tempSock.end())
 		})
 	}
 
@@ -116,18 +127,12 @@ class IpHandler {
 	// --- other event handlers ---
 
 	onClose = () => {
-		// Skip logging connections we've initiated after ARPing the network to try find all devices.
-		// This error is most likely just ECONNREFUSED
-		if (!this.valid) return
-		console.log(this.ip, 'MQTT-emul socket close')
+		console.log(this.ip, 'MQTT-emul: socket close')
 		// TODO: retry
 	}
 
 	onError = err => {
-		// Skip logging connections we've initiated after ARPing the network to try find all devices.
-		// This error is most likely just ECONNREFUSED
-		if (!this.valid) return
-		console.error(this.ip, 'MQTT-emul socket failed', err)
+		console.error(this.ip, 'MQTT-emul: socket failed', err)
 	}
 
 	// --- topics ---
@@ -164,68 +169,61 @@ class IpHandler {
 }
 
 
+class MqttEmulator {
 
-async function main() {
-	// scan on first launch to find the devices before they do their heartbeat
-	console.log('ARP: scanning')
-	let ipList = await arpScan()
-	console.log('ARP: scan done')
-	ipList
-		.filter(d => d.name.startsWith('jarvis') || d.name === '?')
-		.forEach(d => IpHandler.from(d.ip))
+	constructor() {
+		this.listenToUdpBroadcasts()
+		this.runArpScan()
+	}
+
+	async runArpScan() {
+		// scan on first launch to find the devices before they do their heartbeat
+		//console.log('ARP: scanning')
+		let ipList = await arpScan()
+		//console.log('ARP: scan done')
+		ipList
+			.filter(d => d.name.startsWith('jarvis') || d.name === '?')
+			.forEach(d => this.triggerUdpBroadcast(d.ip))
+	}
+
+	triggerUdpBroadcast(ip) {
+        //console.log('triggering broadcast', ip)
+		// open quick disposable connection that triggers the device to announce itself on UDP broadcast IP.
+		let testSock = net.connect(deviceTcpTriggerPort, ip)
+		// close the connection right after it's established.
+		testSock.on('connect', () => testSock.end())
+		// 4 seconds to try receive data from socket
+		setTimeout(() => testSock.destroy(), 4 * 1000)
+		// noop neede to prevent unhandled rejection
+		testSock.on('error', () => {})
+	}
+
+	listenToUdpBroadcasts() {
+		// heartbeat socket
+		this.hbSocket = dgram.createSocket({type: 'udp4', reuseAddr: true})
+		this.hbSocket.on('listening', this.onUdpListening)
+		this.hbSocket.on('message', this.onUdpMessage)
+		this.hbSocket.on('error', this.onUdpError)
+		this.hbSocket.bind(udpBroadcastPort)
+	}
+
+	onUdpListening = () => {
+		//let address = this.hbSocket.address()
+		//console.log(`Listening for UDP broadcasts on ${address.address}:${address.port}`)
+		this.hbSocket.setBroadcast(true)
+		this.hbSocket.setMulticastTTL(128) 
+		this.hbSocket.addMembership(udpBroadcastIp)
+	}
+
+	onUdpMessage = (buffer, remote) => {
+		let ip = remote.address
+		IpHandler.from(ip)
+	}
+
+	onUdpError = err => {
+		console.error('UDP broadcast listener error:', err.message)
+	}
+
 }
 
-main()
-
-//handleIp('192.168.1.235')
-//IpHandler.from('192.168.1.233')
-
-topics.on(devicesAnnounceTopic, data => console.log('announced', data))
-/*
-topics.on(devicesScanTopic, () => console.log('starting scan!'))
-setTimeout(() => {
-	topics.emit(devicesScanTopic)
-}, 2000)
-*/
-
-
-/*
-const onUdpMessage = (buffer, remote) => {
-	let ip = remote.address
-	let json = buffer.toString()
-	console.log('onUdpMessage', ip, json, buffer.toString())
-	if (!activeSockets.has(ip))
-		handleIp(ip)
-}
-
-// heartbeat socket
-let hbSocket = dgram.createSocket({type: 'udp4', reuseAddr: true})
-hbSocket.on('listening', () => {
-	var address = hbSocket.address()
-	console.log(`Listening for UDP broadcasts on ${address.address}:${address.port}`)
-	hbSocket.setBroadcast(true)
-	hbSocket.setMulticastTTL(128) 
-	hbSocket.addMembership(broadcastIp)
-})
-hbSocket.on('error', err => console.error('UDP broadcast listener error:', err.message))
-hbSocket.on('message', onUdpMessage)
-hbSocket.bind(broadcastPort)
-*/
-
-
-
-/*
-var sock = dgram.createSocket("udp4");
-
-sock.bind(function() {
-    sock.setBroadcast(true);
-    setInterval(broadcastNew, 3000);
-});
-
-function broadcastNew() {
-    var message = Buffer.from("HEY!");
-    sock.send(message, 0, message.length, broadcastPort, broadcastIp, function() {
-        console.log("Sent '" + message + "'");
-    });
-}
-*/
+new MqttEmulator

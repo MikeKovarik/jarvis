@@ -1,11 +1,11 @@
 let pollPort = 1609;
 let cmdPort = 1610;
+let triggerPort = 1611;
 
 let broadcastIp = '224.0.0.69';
 let broadcastPort = 1609;
 let broadcastAddr = 'udp://' + broadcastIp + ':' + JSON.stringify(broadcastPort);
 
-let helloToken = 'JARVIS';
 let delimeter = '␊';
 
 let topics = {};
@@ -23,6 +23,7 @@ Event.addHandler(Net.STATUS_CONNECTED, function(ev, evdata, ud) {
 	console.log('MQTT-E: net connected')
 	createTcpPollServer();
 	createTcpCmdServer();
+	createTcpTriggerServer();
 	broadcastUdpAnnounce();
 }, null);
 
@@ -30,14 +31,13 @@ function createTcpPollServer() {
 	Net.serve({
 		addr: 'tcp://' + JSON.stringify(pollPort),
 		onconnect: function(conn) {
-			console.log('MQTT-E: poll-hub onconnect');
+			console.log('MQTT-E: poll-server onconnect');
 			tcpConn = conn;
-			sendToHub(helloToken);
 			callAllEventHandlers(conn, EV_CONNACK);
-			sendJsonToHub(getMqttInfo());
+			sendToHub(getMqttInfo());
 		},
 		onclose: function(conn) {
-			console.log('MQTT-E: poll-hub onclose');
+			console.log('MQTT-E: poll-server onclose');
 			tcpConn = undefined;
 			callAllEventHandlers(conn, EV_CLOSE);
 		},
@@ -47,8 +47,25 @@ function createTcpPollServer() {
 function createTcpCmdServer() {
 	Net.serve({
 		addr: 'tcp://' + JSON.stringify(cmdPort),
+		onconnect: function(conn) {
+			console.log('MQTT-E: cmd-server onconnect');
+		},
 		ondata: function(conn, json) {
+			console.log('MQTT-E: cmd-server ondata');
 			handleDataFromHub(json);
+		},
+		onclose: function(conn) {
+			console.log('MQTT-E: cmd-server onclose');
+		},
+	});
+}
+
+function createTcpTriggerServer() {
+	Net.serve({
+		addr: 'tcp://' + JSON.stringify(triggerPort),
+		onconnect: function(conn, json) {
+			console.log('# TRIGGER SERVER onconnect')
+			broadcastUdpAnnounce();
 		},
 	});
 }
@@ -78,13 +95,9 @@ function getMqttInfo() {
 	}
 }
 
-function sendJsonToHub(data) {
-	sendToHub(JSON.stringify(data));
-}
-
 function sendToHub(data) {
 	if (isConnected()) {
-		Net.send(tcpConn, data);
+		Net.send(tcpConn, JSON.stringify(data));
 		Net.send(tcpConn, delimeter);
 	}
 }
@@ -113,13 +126,13 @@ function isConnected() {
 function sub(topic, handler) {
 	topics[topic] = true;
 	handlers[topic] = handler;
-	sendJsonToHub({
+	sendToHub({
 		topics: topics
 	});
 }
 
 function pub(topic, message) {
-	sendJsonToHub({
+	sendToHub({
 		topic: topic,
 		message: message
 	});

@@ -1,3 +1,31 @@
+
+function broadcast(topic, data, description) {
+	if (MQTT.isConnected()) {
+		console.log('MQTT:', description);
+		MQTT.pub(topic, JSON.stringify(data), 0);
+	} else {
+		console.log('MQTT: failed to', description, '. not connected to MQTT');
+	}
+}
+
+function broadcastHeartbeat() {
+	// not needed in MQTT
+}
+
+// ------------ MQTT -------------------------
+
+// Disabled because running enabling MQTT seems to drop packets when used with raspberry zero az hub
+
+MQTT.setEventHandler(function(conn, ev, edata) {
+	if (ev === MQTT.EV_CONNACK) {
+		console.log('MQTT: CONNECTED');
+		broadcastWhoami();
+	} else if (ev === MQTT.EV_CLOSE) {
+		console.log('MQTT: DISCONNECTED');
+	}
+}, null);
+
+
 // ------------ RPC -------------------------
 
 RPC.addHandler('whoami', function() {
@@ -8,50 +36,31 @@ RPC.addHandler('state', function() {
 	return state;
 });
 
-// ------------ MQTT -------------------------
-
-function mqttSend(topic, data, description) {
-	if (MQTT.isConnected()) {
-		console.log('MQTT:', description);
-		MQTT.pub(topic, JSON.stringify(data), 0);
-	} else {
-		console.log('MQTT: failed to', description, '. not connected to MQTT');
-	}
-}
+// ------------ BROADCASTS -------------------------
 
 function broadcastState() {
-	mqttSend(mqtt.deviceTopic, state, 'broadcast state');
+    console.log('broadcastState()')
+	broadcast(mqtt.deviceTopic, state, 'broadcast state');
 }
 
-function broadcastAnnounce() {
-	mqttSend(mqtt.devicesAnnounceTopic, whoami, 'announce device');
+function broadcastWhoami() {
+    console.log('broadcastWhoami()')
+	broadcast(mqtt.devicesAnnounceTopic, whoami, 'announce device');
 }
 
 function broadcastUptime() {
-	mqttSend(mqtt.uptimeTopic, {
+	broadcast(mqtt.uptimeTopic, {
 		bootTime: whoami.bootTime,
 		upTime: whoami.upTime,
 	}, 'broadcast uptime');
 }
 
 function broadcastIp() {
-	mqttSend(mqtt.ipTopic, {
+	broadcast(mqtt.ipTopic, {
 		ip: whoami.ip,
 		hostname: whoami.hostname,
 	}, 'broadcast ip');
 }
-
-MQTT.sub(mqtt.getTopic, broadcastState, null);
-MQTT.sub(mqtt.devicesScanTopic, broadcastAnnounce, null);
-
-MQTT.setEventHandler(function(conn, ev, edata) {
-	if (ev === MQTT.EV_CONNACK) {
-		console.log('MQTT: CONNECTED');
-		broadcastAnnounce();
-	} else if (ev === MQTT.EV_CLOSE) {
-		console.log('MQTT: DISCONNECTED');
-	}
-}, null);
 
 // ------------ TIME -------------------------
 
@@ -76,12 +85,8 @@ Event.addHandler(Net.STATUS_CONNECTING, function(ev, evdata, ud) {
 
 Event.addHandler(Net.STATUS_CONNECTED, function(ev, evdata, ud) {
 	console.log('NET: CONNECTED');
+	broadcastHeartbeat();
 }, null);
 
-Event.addHandler(Net.STATUS_GOT_IP, function(ev, evdata, ud) {
-	RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function(resp, ud) {
-		console.log('NET: GOT_IP', resp.wifi.sta_ip);
-		whoami.ip = resp.wifi.sta_ip;
-		broadcastIp();
-	}, null);
-}, null);
+MQTT.sub(mqtt.devicesScanTopic, broadcastWhoami);
+MQTT.sub(mqtt.getTopic, broadcastState);

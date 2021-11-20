@@ -12,7 +12,7 @@ let state = {
 };
 
 let whoami = {
-	name: 'terrace-small-lights',
+	name: 'testlight',
 	type: 'action.devices.types.LIGHT',
 	traits: [
 		'action.devices.traits.OnOff',

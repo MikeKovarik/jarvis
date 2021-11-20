@@ -4,8 +4,9 @@ import path from 'path'
 import fs from 'fs-extra'
 import util from 'util'
 import cp from 'child_process'
+import fetch from 'node-fetch'
 import {/*HOSTNAME_PREFIX,*/ getAbsolutePath} from '../util/util.js'
-const HOSTNAME_PREFIX = 'jarvis-'
+//const HOSTNAME_PREFIX = 'jarvis-'
 
 
 const exec = util.promisify(cp.exec)
@@ -15,7 +16,6 @@ export class OtaUploader {
 
 	constructor(deviceName) {
 		this.deviceName = deviceName
-		this.url = `http://${HOSTNAME_PREFIX}${deviceName}.lan/update`
 		this.fwBuildName = 'fw.zip'
 		this.sourceFwDir = getAbsolutePath(import.meta.url, '../../iot-firmware/')
 		this.tempFwDir   = getAbsolutePath(import.meta.url,   `../../iot-firmware-temp-${deviceName}/`)
@@ -31,13 +31,34 @@ export class OtaUploader {
         console.log('tempConfigPath  ', this.tempConfigPath)
 	}
 
+	get url() {
+		return `http://${this.prefix}${this.deviceName}.lan/update`
+	}
+
 	log(...args) {
 		console.log('OTA', this.deviceName, '-', ...args)
+	}
+
+	async findPrefix() {
+		let newPrefix = 'jarvis-'
+		let oldPrefix = 'jarvis-iot-'
+		try {
+			await fetch(`http://${newPrefix}${this.deviceName}.lan`)
+			this.prefix = newPrefix
+		} catch {
+			try {
+				await fetch(`http://${oldPrefix}${this.deviceName}.lan`)
+				this.prefix = oldPrefix
+			} catch {
+				throw new Error('endpoint not found')
+			}
+		}
 	}
 
 	async run() {
 		try {
 			this.log('STARTED')
+			await this.findPrefix()
 			await this.clone()
 			await this.compile()
 			await this.upload()

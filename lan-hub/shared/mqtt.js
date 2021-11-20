@@ -30,10 +30,9 @@ class Topics extends EventEmitter {
 
 	#onConnect = () => {
 		console.log('MQTT connected')
-		this.eventNames().map(topic => mqtt.subscribe(topic))
-		for (let [topic, message] of this.#emitQueue) {
+		this.eventNames().forEach(topic => mqtt.subscribe(topic))
+		for (let [topic, message] of this.#emitQueue)
 			mqtt.publish(topic, message)
-		}
 		this.#emitQueue.length = 0
 	}
 
@@ -50,30 +49,20 @@ class Topics extends EventEmitter {
 		this.emit(...args)
 	}
 
-	on(...args) {
-		let [topic] = args
-		let listeners = this.listeners(topic)
-		if (listeners.length === 0) {
-		// TODO: only subscribe events once MQTT is connected
+	on(topic, cb) {
+		if (mqtt.connected && this.listeners(topic).length === 0) {
 			mqtt.subscribe(topic, err => {
 				if (err) console.error(`failed subscribing to ${topic}`)
 			})
 		}
-		if (args.length > 1) {
-			super.on(...args)
-		}
+		super.on(topic, cb)
 	}
 
-	off(...args) {
-		if (args.length > 1) {
-			super.removeListener(...args)
-		}
-		let [topic] = args
-		let listeners = this.listeners(topic)
-		if (listeners.length === 0) {
-		// TODO: only subscribe events once MQTT is connected
+	off(topic, cb) {
+		super.removeListener(topic, cb)
+		if (mqtt.connected && this.listeners(topic).length === 0) {
 			mqtt.unsubscribe(topic, err => {
-				if (err) console.error(`failed subscribing to ${topic}`)
+				if (err) console.error(`failed unsubscribing from ${topic}`)
 			})
 		}
 	}

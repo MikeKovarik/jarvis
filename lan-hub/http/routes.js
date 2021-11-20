@@ -65,7 +65,7 @@ apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 })
 
 apiRouter.get('/ghome-sync', async (req, res) => {
-	console.gray('GET /devices/ghome-sync')
+	console.gray('GET /ghome-sync')
 	let {agentUserId} = config
 	await homegraph.devices.requestSync({requestBody: {agentUserId}})
 	res.json({})

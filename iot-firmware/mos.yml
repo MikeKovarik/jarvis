@@ -15,8 +15,8 @@ filesystem:
 
 config_schema:
   - ["debug.level", 0]
-  - ["dns_sd.enable", true]
-  - ["dns_sd.adv_only", true]
+#  - ["dns_sd.enable", true]
+#  - ["dns_sd.adv_only", true]
   - ["wifi.ap.enable", false]
   - ["mqtt.will_message", "offline"]
 
@@ -33,8 +33,8 @@ libs:
   - origin: https://github.com/mongoose-os-libs/ota-http-client
   - origin: https://github.com/mongoose-os-libs/ota-http-server # needed for OTA
   - origin: https://github.com/mongoose-os-libs/pwm
-  - origin: https://github.com/mongoose-os-libs/mqtt
-  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
+#  - origin: https://github.com/mongoose-os-libs/mqtt
+#  - origin: https://github.com/mongoose-os-libs/rpc-mqtt
   - origin: https://github.com/mongoose-os-libs/rpc-service-config
   - origin: https://github.com/mongoose-os-libs/rpc-service-fs
   - origin: https://github.com/mongoose-os-libs/rpc-uart

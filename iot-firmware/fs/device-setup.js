@@ -39,10 +39,12 @@ console.log('fw_timestamp          ', whoami.fw_timestamp);
 console.log('fw_id                 ', whoami.fw_id);
 console.log('wifi.sta.dhcp_hostname', Cfg.get('wifi.sta.dhcp_hostname'));
 console.log('wifi.sta.ssid         ', Cfg.get('wifi.sta.ssid'));
+/*
 console.log('mqtt.enable           ', Cfg.get('mqtt.enable'));
 console.log('mqtt.server           ', Cfg.get('mqtt.server'));
 console.log('mqtt.will_topic       ', Cfg.get('mqtt.will_topic'));
 console.log('mqtt.will_message     ', Cfg.get('mqtt.will_message'));
+*/
 //console.log('otaUpdate             ', whoami.otaUpdate);
 console.log('board.led1.pin        ', Cfg.get('board.led1.pin'));
 console.log('board.btn1.pin        ', Cfg.get('board.btn1.pin'));
@@ -83,7 +85,7 @@ if (
 	});
 	needsReboot = true;
 }
-
+/*
 if (
 	(Cfg.get('mqtt.enable') !== true) ||
 	(Cfg.get('mqtt.server') !== mqtt.server) ||
@@ -100,7 +102,7 @@ if (
 	});
 	needsReboot = true;
 }
-
+*/
 if (needsReboot) {
 	console.log('CONF CHANGED');
 	console.log('--- REBOOTING ---');

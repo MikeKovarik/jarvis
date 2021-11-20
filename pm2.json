@@ -1,0 +1,17 @@
+{
+	"apps" : [{
+		"name"        : "jarvis",
+		"script"      : "lan-hub/index.js",
+		"node_args"   : "--no-expose-wasm",
+		"env": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name"        : "zigbee2mqtt",
+		"script"      : "lan-hub/zigbee2mqtt.js",
+		"node_args"   : "--no-expose-wasm",
+		"env": {
+			"NODE_ENV": "production"
+		}
+	}]
+}

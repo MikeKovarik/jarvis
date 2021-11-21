@@ -1,17 +1,26 @@
 {
 	"apps" : [{
-		"name"        : "jarvis",
+		"name"        : "hub",
 		"script"      : "lan-hub/index.js",
 		"node_args"   : "--no-expose-wasm",
+		"args"        : "--time",
 		"env": {
-			"NODE_ENV": "production"
+			"NODE_ENV": "prod"
 		}
 	}, {
-		"name"        : "zigbee2mqtt",
+		"name"        : "z2m",
 		"script"      : "lan-hub/zigbee2mqtt.js",
 		"node_args"   : "--no-expose-wasm",
+		"args"        : "--time",
 		"env": {
-			"NODE_ENV": "production"
+			"NODE_ENV": "prod"
+		}
+	}, {
+		"name"        : "proxy",
+		"script"      : "internet-proxy/proxytunnel.cjs",
+		"args"        : "--time",
+		"env": {
+			"NODE_ENV": "prod"
 		}
 	}]
 }

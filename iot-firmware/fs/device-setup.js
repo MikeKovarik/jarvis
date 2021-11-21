@@ -50,19 +50,6 @@ console.log('board.btn1.pin        ', Cfg.get('board.btn1.pin'));
 
 let needsReboot = false;
 
-// reset ID on boards previously flashed with old FW
-let defaultId = whoami.arch + '_' + whoami.mac.slice(-6);
-if (Cfg.get('device.id') !== defaultId) {
-	console.log('Changing Device ID')
-	Cfg.set({
-		device: {id: defaultId}
-	});
-	// recreate MQTT topics with new ID.
-	whoami.id = defaultId;
-	createMqttTopics();
-	needsReboot = true;
-}
-
 if (
 	(Cfg.get('wifi.sta.enable') !== true) ||
 	(Cfg.get('wifi.sta.ssid') !== wifi.ssid) ||

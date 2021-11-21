@@ -160,14 +160,16 @@ export class GhomeDevice extends EventEmitter {
 	sanitizeGhState(arg) {
 		let ghState = {}
 		let type = typeof arg
-		if (type === 'number' && this.traits.includes(TRAITS.Brightness))
+		if (type === 'number' && this.traits.includes(TRAITS.Brightness)) {
 			ghState.brightness = arg
-		else if (type === 'boolean' && this.traits.includes(TRAITS.OnOff))
+			ghState.on = true
+		} else if (type === 'boolean' && this.traits.includes(TRAITS.OnOff)) {
 			ghState.on = arg
-		else if (type === 'object')
+		} else if (type === 'object') {
 			ghState = {...ghState, ...arg}
-		else
+		} else {
 			throw new Error(`Incorrect arg`, arg)
+		}
 		if (ghState.brightness === 0) {
 			ghState.state = false
 			delete ghState.brightness

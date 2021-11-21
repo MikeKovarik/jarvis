@@ -31,7 +31,7 @@ const smarthomeHandler = payloadCreator => {
 		connected = true
 		let {requestId} = body
 		let payload = await payloadCreator(body)
-        console.log(JSON.stringify(payload, null, 2))
+        //console.log(JSON.stringify(payload, null, 2))
 		return {requestId, payload}
 	}
 }

@@ -18,7 +18,7 @@
 	"off": "terrace-off"
 }, {
 	"source": "shortcut-1",
-	"on": "debug-on",
+	"on": "bedroom-reading",
 	"brightness_move_up": "debug-hold"
 }, {
 	"source": ["shortcut-2", "shortcut-3"],

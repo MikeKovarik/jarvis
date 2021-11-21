@@ -5,7 +5,7 @@ import cp from 'child_process'
 
 const exec = util.promisify(cp.exec)
 
-const deployScript = 'restart'
+const deployScript = 'hub:restart'
 
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'

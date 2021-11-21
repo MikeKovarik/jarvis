@@ -16,6 +16,8 @@ function run(command) {
 }
 
 app.post('/gh-webhook', async (req, res) => {
+	if (process.env.NODE_ENV === 'dev')
+		return console.log('skipping git autoupdate in dev env')
 	// We're not awaiting handler because we don't want to timeout the repose. Github would consider it errored.
 	handleHook(req.body).catch(console.error)
 	res.sendStatus(200)

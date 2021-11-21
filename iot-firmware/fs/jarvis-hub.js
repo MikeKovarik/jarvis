@@ -1,15 +1,10 @@
-
 function broadcast(topic, data, description) {
 	if (MQTT.isConnected()) {
-		console.log('MQTT:', description);
+		//console.log('MQTT:', description);
 		MQTT.pub(topic, JSON.stringify(data), 0);
 	} else {
 		console.log('MQTT: failed to', description, '. not connected to MQTT');
 	}
-}
-
-function broadcastHeartbeat() {
-	// not needed in MQTT
 }
 
 // ------------ MQTT -------------------------
@@ -29,17 +24,19 @@ MQTT.setEventHandler(function(conn, ev, edata) {
 // ------------ RPC -------------------------
 
 RPC.addHandler('whoami', function() {
+	console.log('RPC.addHandler, whoami');
 	return whoami;
 });
 
 RPC.addHandler('state', function() {
+	console.log('RPC.addHandler, state');
 	return state;
 });
 
 // ------------ BROADCASTS -------------------------
 
 function broadcastState() {
-    console.log('broadcastState()')
+    console.log('broadcastState()', JSON.stringify(state))
 	broadcast(mqtt.deviceTopic, state, 'broadcast state');
 }
 
@@ -49,17 +46,11 @@ function broadcastWhoami() {
 }
 
 function broadcastUptime() {
+    console.log('broadcastUptime()')
 	broadcast(mqtt.uptimeTopic, {
 		bootTime: whoami.bootTime,
 		upTime: whoami.upTime,
 	}, 'broadcast uptime');
-}
-
-function broadcastIp() {
-	broadcast(mqtt.ipTopic, {
-		ip: whoami.ip,
-		hostname: whoami.hostname,
-	}, 'broadcast ip');
 }
 
 // ------------ TIME -------------------------
@@ -85,8 +76,17 @@ Event.addHandler(Net.STATUS_CONNECTING, function(ev, evdata, ud) {
 
 Event.addHandler(Net.STATUS_CONNECTED, function(ev, evdata, ud) {
 	console.log('NET: CONNECTED');
-	broadcastHeartbeat();
 }, null);
 
 MQTT.sub(mqtt.devicesScanTopic, broadcastWhoami);
 MQTT.sub(mqtt.getTopic, broadcastState);
+
+// ------------ CUSTOM HANDLER API -------------------------
+
+let handlers = {};
+let cmdPort = 1610;
+
+function addHandler(method, handler) {
+	RPC.addHandler(method, handler);
+	handlers[method] = handler;
+}

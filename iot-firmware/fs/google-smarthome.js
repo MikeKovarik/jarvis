@@ -4,12 +4,21 @@ load('config.js');
 let badRequestReponse = {error: -1, message: 'Bad request'};
 
 let traitNameStem   = 'action.devices.traits.';
+let commandNameStem = 'action.devices.commands.';
+
+function traitShortName(fullName) {
+	return fullName.slice(traitNameStem.length);
+}
+
+function commandShortName(fullName) {
+	return fullName.slice(commandNameStem.length);
+}
 
 let traits = {};
 for (let i = 0; i < whoami.traits.length; i++) {
 	let fullName = whoami.traits[i];
-	let shortName = fullName.slice(traitNameStem.length);
-	traits[shortName] = true
+	let shortName = traitShortName(fullName);
+	traits[shortName] = true;
 }
 
 let commands = {
@@ -51,6 +60,7 @@ let commands = {
 
 function handleCommand(cmd, data) {
 	if (typeof(data) === 'object' && cmd.validate(data)) {
+		console.log('command:', commandShortName(cmd.fullName), JSON.stringify(data));
 		cmd.handle(data)
 		setPins();
 		broadcastState();
@@ -60,19 +70,24 @@ function handleCommand(cmd, data) {
 	}
 }
 
+function runCommand(json) {
+	let action = JSON.parse(json);
+	if (handlers[action.method]) {
+		let result = handlers[action.method](action.params);
+		return JSON.stringify(result);
+	}
+}
 
 if (traits.OnOff) {
 	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
-	RPC.addHandler(commands.OnOff.fullName, function(data) {
-		//console.log('command: OnOff');
+	addHandler(commands.OnOff.fullName, function(data) {
 		return handleCommand(commands.OnOff, data);
 	});
 }
 
 
 if (traits.Brightness) {
-	RPC.addHandler(commands.BrightnessAbsolute.fullName, function(data) {
-		//console.log('command: BrightnessAbsolute');
+	addHandler(commands.BrightnessAbsolute.fullName, function(data) {
 		return handleCommand(commands.BrightnessAbsolute, data);
 	});
 }
@@ -82,8 +97,7 @@ if (traits.ColorSetting) {
 	GPIO.set_mode(pins.out1, GPIO.MODE_OUTPUT);
 	GPIO.set_mode(pins.out2, GPIO.MODE_OUTPUT);
 	GPIO.set_mode(pins.out3, GPIO.MODE_OUTPUT);
-	RPC.addHandler(commands.ColorAbsolute.fullName, function(data) {
-		//console.log('command: ColorAbsolute');
+	addHandler(commands.ColorAbsolute.fullName, function(data) {
 		return handleCommand(commands.ColorAbsolute, data);
 	});
 }
@@ -98,6 +112,17 @@ if (pins.in1 !== undefined) {
 		broadcastState();
 	}, true);
 }
+
+
+Net.serve({
+	addr: 'tcp://' + JSON.stringify(cmdPort),
+	ondata: function(conn, input) {
+		let output = runCommand(input) || '{}';
+		Net.send(conn, output);
+		Net.discard(conn, input.length); // Discard received data
+	},
+});
+
 
 
 // Compensate perceived brightness exponentially 

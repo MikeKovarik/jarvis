@@ -1,3 +1,4 @@
+import net from 'net'
 import fetch from 'node-fetch'
 import {GhomeDevice} from '../shared/GhomeDevice.js'
 import {stateToActions} from '../ghome/const.js'
@@ -6,6 +7,9 @@ import * as jTopics from './topics.js'
 import {HOSTNAME_PREFIX} from '../util/util.js'
 import {topics} from '../shared/mqtt.js'
 
+
+const mosMqttRpcResTopic = 'rpc-response'
+const deviceTcpCmdPort = 1610
 
 export class Device extends GhomeDevice {
 
@@ -100,6 +104,11 @@ export class Device extends GhomeDevice {
 		return `${this.deviceTopic}/ip`
 	}
 
+	// This is Mongoose OS convention: DEVICE_ID/rpc
+	get rpcTopic() {
+		return `${this.id}/rpc`
+	}
+
 	// ----------------------------- 
 
 	getUrl(path) {
@@ -113,15 +122,84 @@ export class Device extends GhomeDevice {
 		return this.getUrl(`/rpc/${method}`)
 	}
 
-	async callRpcMethod(command, data) {
-		let url = this.getRpcUrl(command)
+	callRpcMethod(method, params) {
+        //console.log('callRpcMethod()', method, params)
+		//return this.callRpcTcp(method, params)
+		return this.callRpcMqtt(method, params)
+		//return this.callRpcHttp(method, params)
+	}
+
+	callRpcTcp(method, params) {
+        //console.log('callRpcTcp()', method, params)
+		// TODO: get IP
+		return new Promise((resolve, reject) => {
+			const socket = net.connect(deviceTcpCmdPort, this.ip, () => {
+				let close = () => {
+					clearTimeout(timeout)
+					socket.removeListener('data', onData)
+					socket.removeListener('error', reject)
+					socket.end()
+					socket.destroy()
+				}
+
+				let timeout = setTimeout(() => {
+					close()
+					reject(`RPC ${method}:${JSON.stringify(params)} timed out`)
+				}, 10 * 1000)
+
+				let onData = buffer => {
+					close()
+					resolve(JSON.parse(buffer.toString()))
+				}
+
+				socket.on('data', onData)
+				socket.on('error', reject)
+				let object = {method, params}
+				let json = JSON.stringify(object)
+				socket.write(json)
+			})
+		})
+	}
+
+	callRpcMqtt(method, params) {
+        //console.log('callRpcMqtt()', method, params)
+		return new Promise((resolve, reject) => {
+			let reqId = Math.round(Math.random() * 100000000)
+
+			let timeout = setTimeout(() => {
+				reject(`RPC ${method}:${JSON.stringify(params)} timed out`)
+				topics.off(mosMqttRpcResTopic, listener)
+			}, 20 * 1000)
+
+			let listener = res => {
+				if (res.id === reqId) {
+					topics.off(mosMqttRpcResTopic, listener)
+					resolve(res.result)
+					clearTimeout(timeout)
+				}
+			}
+
+			topics.on(mosMqttRpcResTopic, listener)
+			let payload = {
+				id: reqId,
+				src: 'src',
+				method,
+				params
+			}
+			topics.emit(this.rpcTopic, payload)
+		})
+	}
+
+	// works but as a fallback
+	async callRpcHttp(method, params) {
+		let url = this.getRpcUrl(method)
 		let options = {
 			method: 'POST',
 			headers: {'Accept': 'application/json'}
 		}
-		if (data) {
+		if (params) {
 			options.headers['Content-Type'] = 'application/json'
-			options.body = JSON.stringify(data)
+			options.body = JSON.stringify(params)
 		}
 		try {
 			let res = await fetch(url, options)
@@ -131,7 +209,7 @@ export class Device extends GhomeDevice {
 				if (!isErrorMessage(json)) return json
 			} catch {}
 		} catch (err) {
-			console.error(this.id, 'RPC method', command, 'failed')
+			console.error(this.id, 'RPC method', method, 'failed')
 			delete err.stack
 			console.error(err.message)
 			this.online = false

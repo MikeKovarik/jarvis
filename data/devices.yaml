@@ -12,7 +12,9 @@
   friendly_name: bulb-office
 '0xb4e3f9fffe5bedd1':
   friendly_name: bulb-kitchen
-'0xb4e3f9fffe5234f8':
-  friendly_name: switch-1
 '0x5c0272fffe43a2f6':
   friendly_name: knob-1
+'0x50325ffffe70acea':
+  friendly_name: switch-2
+'0xb4e3f9fffe5234f8':
+  friendly_name: switch-1

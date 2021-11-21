@@ -6,14 +6,14 @@
 	"brightness_move_up": "bedroom-all-full",
 	"brightness_move_down": "bedroom-all-off"
 }, {
-	"source": ["styrbar-3"],
+	"source": ["styrbar-3", "styrbar-4"],
 	"scenes": ["livingroom-bulbs-only", "livingroom-dim", "livingroom-cosy"],
 	"on": "livingroom-on",
 	"off": "livingroom-off",
 	"brightness_move_up": "livingroom-all-full",
 	"brightness_move_down": "livingroom-all-off"
 }, {
-	"source": ["switch-1", "switch-2"],
+	"source": ["switch-9", "switch-10"],
 	"on": "terrace-on",
 	"off": "terrace-off"
 }, {

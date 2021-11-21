@@ -84,19 +84,19 @@
 	"livingroom-decorations-default": {
 		"bulbstring": 70,
 		"smallstring": 100,
-		"stringlight": 100,
+		"stringlight1": 100,
 		"cagelight": 20
 	},
 	"livingroom-decorations-full": {
 		"bulbstring": 100,
 		"smallstring": 100,
-		"stringlight": 100,
+		"stringlight1": 100,
 		"cagelight": 100
 	},
 	"livingroom-decorations-off": {
 		"bulbstring": false,
 		"smallstring": false,
-		"stringlight": false,
+		"stringlight1": false,
 		"cagelight": false
 	},
 

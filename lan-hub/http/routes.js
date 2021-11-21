@@ -5,6 +5,13 @@ import devices from '../shared/devices.js'
 import {apiRouter} from './server.js'
 import config from '../config.js'
 
+apiRouter.get('/devices/sync', async (req, res) => {
+	console.gray('GET /devices/sync')
+	let {agentUserId} = config
+	await homegraph.devices.requestSync({requestBody: {agentUserId}})
+	res.json({})
+})
+
 // Expose list of devices as JSON for debugging.
 apiRouter.get('/devices', (req, res) => {
 	console.gray('GET /devices')
@@ -62,11 +69,4 @@ apiRouter.get('/devices/:deviceName/ota', (req, res) => {
 		res.status(500).send('not a jarvis device')
 	}
 	*/
-})
-
-apiRouter.get('/ghome-sync', async (req, res) => {
-	console.gray('GET /ghome-sync')
-	let {agentUserId} = config
-	await homegraph.devices.requestSync({requestBody: {agentUserId}})
-	res.json({})
 })

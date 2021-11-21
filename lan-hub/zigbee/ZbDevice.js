@@ -174,7 +174,7 @@ export class Light extends ZbDevice {
 
 		this.traits = []
 
-		let state = features.find(f => f.name === 'state')
+		let state = features?.find(f => f.name === 'state')
 		if (state && state.type ===  'binary') {
 			this.traits.push(TRAITS.OnOff)
 			this.stateProps.add('state')
@@ -182,7 +182,7 @@ export class Light extends ZbDevice {
 			this._stateOnZb  = state.value_on
 		}
 
-		let brightness = features.find(f => f.name === 'brightness')
+		let brightness = features?.find(f => f.name === 'brightness')
 		if (brightness) {
 			this.traits.push(TRAITS.Brightness)
 			this.stateProps.add('brightness')

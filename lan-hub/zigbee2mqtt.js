@@ -1,32 +1,35 @@
 import './config.js'
-import Controller from '/opt/zigbee2mqtt/dist/controller.js'
-//import Controller from 'zigbee2mqtt/dist/controller.js'
 
 
-let controller
-let stopping = false
+import(process.env.Z2M_PATH).then(module => {
+	let Controller = module.default
 
-async function restart() {
-    await controller.stop()
-    await start()
-}
+	let controller
+	let stopping = false
 
-async function onExit(code) {
-    process.exit(code)
-}
+	async function restart() {
+		await controller.stop()
+		await start()
+	}
 
-async function start() {
-    controller = new Controller(restart, onExit)
-    await controller.start()
-}
+	async function onExit(code) {
+		process.exit(code)
+	}
 
-async function handleQuit() {
-    if (!stopping && controller) {
-        stopping = true
-        await controller.stop()
-    }
-}
+	async function start() {
+		controller = new Controller(restart, onExit)
+		await controller.start()
+	}
 
-process.on('SIGINT', handleQuit)
-process.on('SIGTERM', handleQuit)
-start()
+	async function handleQuit() {
+		if (!stopping && controller) {
+			stopping = true
+			await controller.stop()
+		}
+	}
+
+	process.on('SIGINT', handleQuit)
+	process.on('SIGTERM', handleQuit)
+	start()
+
+})

@@ -217,10 +217,7 @@ export class Light extends ZbDevice {
 	// ------------------- COMMUNICATION WITH DEVICE -----------------------
 
 	setQuery(query) {
-		super.setQuery({
-			transition: 1, // fade animations
-			...query
-		})
+		super.setQuery(query)
 	}
 
 	// ------------------- GHOME-ZIGBEE STATE FORMAT CONVERTION -----------------------

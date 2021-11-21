@@ -1,5 +1,8 @@
+import dotenv from 'dotenv'
 import {getAbsolutePath, readJson, readYaml} from './util/util.js'
 
+
+dotenv.config()
 
 const dataPath      = getAbsolutePath(import.meta.url, '../data')
 const configPath    = getAbsolutePath(import.meta.url, '../data/config.json')

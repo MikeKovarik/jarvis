@@ -15,18 +15,34 @@ apiRouter.get('/devices/sync', async (req, res) => {
 // Expose list of devices as JSON for debugging.
 apiRouter.get('/devices', (req, res) => {
 	console.gray('GET /devices')
-	let array = devices.array
-	let json  = JSON.stringify(array)
-	let bytes = Buffer.byteLength(json)
-	res.header('Content-Length', bytes)
-	res.json(array)
+	res.json(devices.array)
+})
+
+apiRouter.get('/devices/google', (req, res) => {
+	console.gray('GET /devices/google')
+	let data = devices
+		.filter(device => device.willReportState)
+		.map(device => device.toGoogleDevice())
+	res.json(data)
+})
+
+apiRouter.get('/devices/google/all', (req, res) => {
+	console.gray('GET /devices/google/all')
+	res.json(devices.array.map(device => device.toGoogleDevice()))
+})
+
+apiRouter.get('/devices/:deviceName/google', (req, res) => {
+	const {deviceName} = req.params
+	console.gray(`GET /devices/${deviceName}/google`)
+	let device = devices.getByName(deviceName)
+	res.json(device.toGoogleDevice())
 })
 
 apiRouter.get('/devices/:deviceName', (req, res) => {
 	const {deviceName} = req.params
 	console.gray(`GET /devices/${deviceName}`)
 	let device = devices.getByName(deviceName)
-	res.json(device.toGoogleDevice())
+	res.json(device)
 })
 
 apiRouter.get('/devices/:deviceName/state', (req, res) => {

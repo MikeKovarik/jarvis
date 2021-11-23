@@ -7,6 +7,8 @@ import {TRAITS} from '../ghome/const.js'
 import {topics} from './mqtt.js'
 
 
+let ignoredKeys = ['zb2gh', 'gh2zb']
+
 function getKeys(ctx) {
 	let set = new Set([
 		...Object.keys(ctx),
@@ -208,6 +210,7 @@ export class GhomeDevice extends EventEmitter {
 			let val = this[key]
 			if (key.startsWith('_')) continue
 			if (typeof val === 'function') continue
+			if (ignoredKeys.includes(key)) continue
 			output[key] = val
 		}
 		return output

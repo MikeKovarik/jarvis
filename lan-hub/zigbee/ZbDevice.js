@@ -102,9 +102,9 @@ export class ZbDevice extends GhomeDevice {
 
 	// ------------------- COMMUNICATION WITH DEVICE -----------------------
 
-	stateProps = new Set
+	_stateProps = new Set
 
-	fetchState(props = this.stateProps) {
+	fetchState(props = this._stateProps) {
 		let entries = Array.from(props).map(prop => [prop, ''])
 		let query = Object.fromEntries(entries)
 		this.getQuery(query)
@@ -177,7 +177,7 @@ export class Light extends ZbDevice {
 		let state = features?.find(f => f.name === 'state')
 		if (state && state.type ===  'binary') {
 			this.traits.push(TRAITS.OnOff)
-			this.stateProps.add('state')
+			this._stateProps.add('state')
 			this._stateOffZb = state.value_off
 			this._stateOnZb  = state.value_on
 		}
@@ -185,7 +185,7 @@ export class Light extends ZbDevice {
 		let brightness = features?.find(f => f.name === 'brightness')
 		if (brightness) {
 			this.traits.push(TRAITS.Brightness)
-			this.stateProps.add('brightness')
+			this._stateProps.add('brightness')
 			this._brightnessMaxZb = brightness.value_max
 			this._brightnessMinZb = brightness.value_min
 		}

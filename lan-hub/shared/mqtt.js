@@ -70,3 +70,7 @@ class Topics extends EventEmitter {
 }
 
 export const topics = new Topics
+
+// Here to prevent MaxListenersExceededWarning because every device listens to same topics (like rename)
+// This sets arbitrary limit at 100 devices for now.
+topics.setMaxListeners(100)

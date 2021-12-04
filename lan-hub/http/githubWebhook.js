@@ -45,10 +45,7 @@ async function handleHook(body) {
 	// get metadata
 	await run('git fetch origin master')
 	const changedFiles = await getChangedFiles()
-    console.log('~ changedFiles', changedFiles)
 	await update()
-    console.log('!changedFiles.every(isWatched)', !changedFiles.every(isWatched))
-
 	if (changedFiles.every(isWatched)) {
 		console.gray('updating watched files')
 	} else {

@@ -53,7 +53,7 @@ apiRouter.get('/devices/:idOrName/state', (req, res) => {
 	const {idOrName} = req.params
 	console.gray(`GET /devices/${idOrName}/state`)
 	let device = getDevice(idOrName)
-	res.json(device.state)
+	res.json(device?.state)
 })
 
 apiRouter.delete('/devices/:idOrName', (req, res) => {

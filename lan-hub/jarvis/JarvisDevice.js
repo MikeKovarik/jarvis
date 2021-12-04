@@ -244,6 +244,7 @@ export class Device extends GhomeDevice {
 	injectWhoami = ({state, bootTime, upTime, ...rest}) => {
 		Object.assign(this, rest)
 		this.checkBootTime(bootTime)
+		this.online = true
 	}
 
 }

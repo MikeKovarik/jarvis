@@ -1,14 +1,4 @@
 {
-
-	"debug-on": {
-		"bulb-kitchen": true,
-		"testlight": true
-	},
-	"debug-hold": {
-		"bulb-kitchen": false,
-		"testlight": false
-	},
-
 	"bedroom-on": {
 		"bulb-office": 100
 	},

@@ -19,7 +19,7 @@
 }, {
 	"source": "shortcut-1",
 	"on": "bedroom-reading",
-	"brightness_move_up": "debug-hold"
+	"brightness_move_up": "bedroom-all-off"
 }, {
 	"source": ["shortcut-2", "shortcut-3"],
 	"on": "bedroom-cosy",

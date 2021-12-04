@@ -9,15 +9,6 @@ const exec = util.promisify(cp.exec)
 const deployScript = 'hub:restart'
 const gitDiff = 'git diff --stat ...origin/master'
 
-const updateCommands = [
-	// get metadata
-	'git fetch origin master',
-	// just in case there were some modifications outside this script
-	'git reset --hard origin/master',
-	// download files
-	'git pull origin master --force',
-]
-
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'
 
@@ -51,24 +42,29 @@ async function handleHook(body) {
 		let branch = body.ref.split('/').pop()
 		if (branch !== 'master') throw 'Not master'
 	}
+	// get metadata
+	await run('git fetch origin master')
 	const changedFiles = await getChangedFiles()
     console.log('~ changedFiles', changedFiles)
 	await update()
     console.log('!changedFiles.every(isWatched)', !changedFiles.every(isWatched))
 
-	if (!changedFiles.every(isWatched)) {
+	if (changedFiles.every(isWatched)) {
+		console.gray('updating watched files')
+	} else {
 		// only do full install & restart if other than config json changed.
 		// the app handles updates of watched files and no restart is needed.
 		await deploy()
-	} else {
-		console.gray('updating watched files')
 	}
 }
 
 async function update() {
 	console.magenta(`UPDATING REPO`)
 	try {
-		for (let command of updateCommands) await run(command)
+		// just in case there were some modifications outside this script
+		await run('git reset --hard origin/master')
+		// download files
+		await run('git pull origin master --force')
 		console.green('UPDATE OK')
 	} catch(err) {
 		console.error(`Couldn't update repo`)

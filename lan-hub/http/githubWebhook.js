@@ -1,11 +1,22 @@
-import {app} from './server.js'
 import util from 'util'
 import cp from 'child_process'
+import {app} from './server.js'
+import {watchedFiles, getRootPath} from '../util/util.js'
 
 
 const exec = util.promisify(cp.exec)
 
 const deployScript = 'hub:restart'
+const gitDiff = 'git diff --stat ...origin/master'
+
+const updateCommands = [
+	// get metadata
+	'git fetch origin master',
+	// just in case there were some modifications outside this script
+	'git reset --hard origin/master',
+	// download files
+	'git pull origin master --force',
+]
 
 // Only I can trigger update by posting to webhook endpoint
 const allowedSender = 'MikeKovarik'
@@ -24,6 +35,11 @@ app.post('/gh-webhook', async (req, res) => {
 	res.end()
 })
 
+const parseFileLine = line => line.split('|')[0].trim()
+const parseFileNames = stdout => stdout.trim().split('\n').slice(0, -1).map(parseFileLine)
+const getChangedFiles = () => exec(gitDiff).then(res => parseFileNames(res.stdout))
+const isWatched = filePath => watchedFiles.map(getRootPath).includes(filePath)
+
 async function handleHook(body) {
 	console.log('--------------------------------------------')
 	if (body.sender.login !== allowedSender) throw new Error('Incorrect user')
@@ -35,18 +51,14 @@ async function handleHook(body) {
 		let branch = body.ref.split('/').pop()
 		if (branch !== 'master') throw 'Not master'
 	}
-	await update()
-	await deploy()
+	const changedFiles = await getChangedFiles()
+	if (!changedFiles.every(isWatched)) {
+		// only do full install & restart if other than config json changed.
+		// the app handles updates of watched files and no restart is needed.
+		await update()
+		await deploy()
+	}
 }
-
-const updateCommands = [
-	// get metadata
-	'git fetch origin master',
-	// just in case there were some modifications outside this script
-	'git reset --hard origin/master',
-	// download files
-	'git pull origin master --force',
-]
 
 async function update() {
 	console.magenta(`UPDATING REPO`)

@@ -8,6 +8,14 @@ import '../util/proto.js'
 
 export const HOSTNAME_PREFIX = 'jarvis-'
 
+export const watchedFiles = []
+
+const rootPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
+
+export function getRootPath(absolutePath) {
+	return path.relative(rootPath, absolutePath).replace(/\\/g, '/')
+}
+
 export function getAbsolutePath(importMetaUrl, relativePath) {
 	let filePath = fileURLToPath(importMetaUrl)
 	let dirName = path.dirname(filePath)
@@ -27,6 +35,7 @@ export function readJson(filePath, cb) {
 export function readAndWatchJson(filePath, cb) {
 	let handler = handlerFactory(filePath, cb, JSON)
 	let watcher = chokidar.watch(filePath, { persistent: true })
+	watchedFiles.push(filePath)
 	watcher.on('change', async () => {
 		// need to wait for file to save properly
 		await Promise.timeout(100)

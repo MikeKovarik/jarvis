@@ -52,11 +52,13 @@ async function handleHook(body) {
 		if (branch !== 'master') throw 'Not master'
 	}
 	const changedFiles = await getChangedFiles()
+	await update()
 	if (!changedFiles.every(isWatched)) {
 		// only do full install & restart if other than config json changed.
 		// the app handles updates of watched files and no restart is needed.
-		await update()
 		await deploy()
+	} else {
+		console.gray('updating watched files')
 	}
 }
 

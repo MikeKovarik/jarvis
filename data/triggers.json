@@ -13,6 +13,18 @@
 	"brightness_move_up": "livingroom-all-full",
 	"brightness_move_down": "livingroom-all-off"
 }, {
+	"source": ["switch-6"],
+	"on": "plug-balcony-on",
+	"off": "plug-balcony-off"
+}, {
+	"source": ["switch-7"],
+	"on": "plug-curtain-on",
+	"off": "plug-curtain-off"
+}, {
+	"source": ["switch-8"],
+	"on": "plug-tree-on",
+	"off": "plug-tree-off"
+}, {
 	"source": ["switch-9", "switch-10"],
 	"on": "terrace-on",
 	"off": "terrace-off"

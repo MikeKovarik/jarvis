@@ -55,6 +55,7 @@ async function handleHook(body) {
     console.log('~ changedFiles', changedFiles)
 	await update()
     console.log('!changedFiles.every(isWatched)', !changedFiles.every(isWatched))
+
 	if (!changedFiles.every(isWatched)) {
 		// only do full install & restart if other than config json changed.
 		// the app handles updates of watched files and no restart is needed.

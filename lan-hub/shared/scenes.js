@@ -25,9 +25,19 @@ readAndWatchJson(jsonPath, raw => {
 export function set(sceneName) {
 	let scene = scenes.get(sceneName)
 	console.log('set scene', sceneName/*, JSON.stringify(scene, null, 2)*/)
-	if (scene)
+	if (scene) {
 		for (let [deviceName, state] of Object.entries(scene))
 			devices.execute(deviceName, state)
+	} else if (sceneName.includes(':')) {
+		let [deviceName, state] = sceneName.split(':')
+		state = sanitizeNumberOrBool(state)
+		devices.execute(deviceName, state)
+	}
+}
+
+function sanitizeNumberOrBool(arg) {
+	let num = Number(arg)
+	return Number.isNaN(num) ? arg === 'true' : num
 }
 
 function mapReplace(map, newEntries) {

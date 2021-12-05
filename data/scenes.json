@@ -111,27 +111,6 @@
 	"terrace-cosy": {
 		"terrace-big-lights": 50,
 		"terrace-small-lights": 100
-	},
-
-	"plug-balcony-on": {
-		"plug-balcony": true
-	},
-	"plug-balcony-off": {
-		"plug-balcony": false
-	},
-
-	"plug-curtain-on": {
-		"plug-curtain": true
-	},
-	"plug-curtain-off": {
-		"plug-curtain": false
-	},
-
-	"plug-tree-on": {
-		"plug-tree": true
-	},
-	"plug-tree-off": {
-		"plug-tree": false
 	}
 
 }

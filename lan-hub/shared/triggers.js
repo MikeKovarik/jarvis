@@ -40,13 +40,23 @@ function handleSingleScene(sources, triggers) {
 	const tuples = []
 	for (let source of sources) {
 		for (let [action, scene] of Object.entries(triggers)) {
-			if (action.includes(':'))
-				devices.execute(...action.split(':'))
-			else
-				tuples.push([action, source, () => scenes.set(scene)])
+			let callback
+			if (scene.includes(':')) {
+				let [deviceName, state] = scene.split(':')
+				state = sanitizeNumberOrBool(state)
+				callback = () => devices.execute(deviceName, state)
+			} else {
+				callback = () => scenes.set(scene)
+			}
+			tuples.push([action, source, callback])
 		}
 	}
 	return tuples
+}
+
+function sanitizeNumberOrBool(arg) {
+	let num = Number(arg)
+	return Number.isNaN(num) ? arg === 'true' : num
 }
 
 function handleSceneArray(sources, triggerScenes) {

@@ -1,5 +1,6 @@
 import actions from './actions.js'
 import * as scenes from './scenes.js'
+import devices from './devices.js'
 import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
@@ -37,9 +38,14 @@ function handleTrigger({source, scenes, ...triggers}) {
 
 function handleSingleScene(sources, triggers) {
 	const tuples = []
-	for (let [action, scene] of Object.entries(triggers))
-		for (let source of sources)
-			tuples.push([action, source, () => scenes.set(scene)])
+	for (let source of sources) {
+		for (let [action, scene] of Object.entries(triggers)) {
+			if (action.includes(':'))
+				devices.execute(...action.split(':'))
+			else
+				tuples.push([action, source, () => scenes.set(scene)])
+		}
+	}
 	return tuples
 }
 

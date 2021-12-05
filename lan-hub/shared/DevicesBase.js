@@ -52,4 +52,9 @@ export class DevicesBase extends Map {
 		}
 	}
 
+	execute(name, state) {
+		let device = devices.getByName(name)
+		device?.executeState(state)
+	}
+
 }

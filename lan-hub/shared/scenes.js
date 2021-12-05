@@ -1,4 +1,4 @@
-import allDevices from '../shared/devices.js'
+import devices from '../shared/devices.js'
 import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 
@@ -25,12 +25,9 @@ readAndWatchJson(jsonPath, raw => {
 export function set(sceneName) {
 	let scene = scenes.get(sceneName)
 	console.log('set scene', sceneName/*, JSON.stringify(scene, null, 2)*/)
-	if (scene) {
-		for (let [deviceName, state] of Object.entries(scene)) {
-			let device = allDevices.getByName(deviceName)
-			device?.executeState(state)
-		}
-	}
+	if (scene)
+		for (let [deviceName, state] of Object.entries(scene))
+			devices.execute(deviceName, state)
 }
 
 function mapReplace(map, newEntries) {

@@ -14,6 +14,10 @@ export class DevicesBase extends Map {
 		this.removeListener = emitter.removeListener.bind(emitter)
 	}
 
+	get(idOrName) {
+		return super.get(idOrName) ?? this.getByName(idOrName)
+	}
+
 	set(id, device) {
 		let has = this.has(id)
 		super.set(id, device)
@@ -53,7 +57,7 @@ export class DevicesBase extends Map {
 	}
 
 	execute(name, state) {
-		let device = devices.getByName(name)
+		let device = this.getByName(name)
 		device?.executeState(state)
 	}
 

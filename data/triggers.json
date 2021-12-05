@@ -14,8 +14,9 @@
 	"brightness_move_down": "livingroom-all-off"
 }, {
 	"source": "switch-4",
-	"on":  "cagelight:true",
-	"off": "cagelight:false"
+	"brightness_move_up": "cagelight:100",
+	"on":                 "cagelight:true",
+	"off":                "cagelight:false"
 }, {
 	"source": ["switch-5", "switch-6"],
 	"on":  "plug-balcony:true",

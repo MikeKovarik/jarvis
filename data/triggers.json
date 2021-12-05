@@ -1,32 +1,36 @@
 [{
 	"source": ["styrbar-1", "styrbar-2"],
 	"scenes": ["bedroom-bulbs-only", "bedroom-dim", "bedroom-cosy"],
-	"on": "bedroom-on",
+	"on":  "bedroom-on",
 	"off": "bedroom-off",
 	"brightness_move_up": "bedroom-all-full",
 	"brightness_move_down": "bedroom-all-off"
 }, {
 	"source": ["styrbar-3", "styrbar-4"],
 	"scenes": ["livingroom-bulbs-only", "livingroom-dim", "livingroom-cosy"],
-	"on": "livingroom-on",
+	"on":  "livingroom-on",
 	"off": "livingroom-off",
 	"brightness_move_up": "livingroom-all-full",
 	"brightness_move_down": "livingroom-all-off"
 }, {
-	"source": ["switch-6"],
-	"on": "plug-balcony:true",
+	"source": "switch-4",
+	"on":  "cagelight:true",
+	"off": "cagelight:false"
+}, {
+	"source": ["switch-5", "switch-6"],
+	"on":  "plug-balcony:true",
 	"off": "plug-balcony:false"
 }, {
 	"source": ["switch-7"],
-	"on": "plug-curtain:true",
+	"on":  "plug-curtain:true",
 	"off": "plug-curtain:false"
 }, {
 	"source": ["switch-8"],
-	"on": "plug-tree:true",
+	"on":  "plug-tree:true",
 	"off": "plug-tree:false"
 }, {
 	"source": ["switch-9", "switch-10"],
-	"on": "terrace-on",
+	"on":  "terrace-on",
 	"off": "terrace-off"
 }, {
 	"source": "shortcut-1",

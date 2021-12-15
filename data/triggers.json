@@ -42,7 +42,7 @@
 	"on": "bedroom-cosy",
 	"brightness_move_up": "bedroom-all-off"
 }, {
-	"source": "shortcut-3",
+	"source": ["shortcut-3", "shortcut-5"],
 	"on": "livingroom-cosy",
-	"brightness_move_up": "livingroom-all-off"
+	"brightness_move_up": "all-off"
 }]

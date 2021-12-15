@@ -1,5 +1,5 @@
 {
-	"all-off":  ["bedroom-all-off", "livingroom-all-off"],
+	"all-off":  ["bedroom-all-off", "livingroom-all-off", "terrace-all-off"],
 
 	"bedroom-on": {
 		"bulb-office": 100
@@ -125,6 +125,10 @@
 	"terrace-cosy": {
 		"terrace-big-lights": 50,
 		"terrace-small-lights": 100
-	}
+	},
+	"terrace-all-off": ["terrace-off", {
+		"plug-balcony": false,
+		"plug-curtain": false
+	}]
 
 }

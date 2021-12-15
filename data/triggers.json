@@ -38,11 +38,11 @@
 	"on": "bedroom-reading",
 	"brightness_move_up": "bedroom-all-off"
 }, {
-	"source": ["shortcut-2"],
+	"source": ["shortcut-2", "shortcut-5"],
 	"on": "bedroom-cosy",
 	"brightness_move_up": "all-off"
 }, {
-	"source": ["shortcut-3", "shortcut-5"],
+	"source": ["shortcut-3"],
 	"on": "livingroom-cosy",
 	"brightness_move_up": "livingroom-all-off"
 }]

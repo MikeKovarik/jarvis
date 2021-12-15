@@ -20,10 +20,10 @@
 		"lamp-bed": 100
 	}],
 	"bedroom-decoration-off": {
-		"star-1": true,
-		"star-2": true,
-		"lamp-reading": true,
-		"lamp-bed": 100
+		"star-1": false,
+		"star-2": false,
+		"lamp-reading": false,
+		"lamp-bed": false
 	},
 
 	"bedroom-bulbs-only": ["bedroom-bulbs-full", "bedroom-lamps-off"],

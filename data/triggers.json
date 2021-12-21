@@ -38,7 +38,11 @@
 	"on": "bedroom-reading",
 	"brightness_move_up": "bedroom-all-off"
 }, {
-	"source": ["shortcut-2", "shortcut-5"],
+	"source": ["shortcut-2"],
+	"on": "bedroom-cosy-bedside",
+	"brightness_move_up": "all-off"
+}, {
+	"source": "shortcut-5",
 	"on": "bedroom-cosy",
 	"brightness_move_up": "all-off"
 }, {

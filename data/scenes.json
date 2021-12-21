@@ -1,6 +1,7 @@
 {
 	"all-off":  ["bedroom-all-off", "livingroom-all-off", "terrace-all-off"],
 
+	
 	"bedroom-on": {
 		"bulb-office": 100
 	},

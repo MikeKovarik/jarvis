@@ -14,14 +14,14 @@
 		"bulb-bed": false
 	},
 	"bedroom-cosy": ["bedroom-bulbs-off", {
-		"star-1": true,
-		"star-2": true,
+		"star-table": true,
+		"star-hanging": true,
 		"lamp-reading": true,
 		"lamp-bed": 100
 	}],
 	"bedroom-decoration-off": {
-		"star-1": false,
-		"star-2": false,
+		"star-table": false,
+		"star-hanging": false,
 		"lamp-reading": false,
 		"lamp-bed": false
 	},

@@ -6,8 +6,8 @@
 	},
 	"bedroom-off": ["bedroom-bulbs-off"],
 
-	"bedroom-all-full": ["bedroom-bulbs-full", "bedroom-lamps-full"],
-	"bedroom-all-off":  ["bedroom-bulbs-off",  "bedroom-lamps-off", "bedroom-decoration-off"],
+	"bedroom-all-full": ["bedroom-bulbs-full", "bedroom-lamps-full", "bedroom-decoration-on", "bedroom-christmas-on"],
+	"bedroom-all-off":  ["bedroom-bulbs-off",  "bedroom-lamps-off", "bedroom-decoration-off", "bedroom-christmas-off"],
 
 	"bedroom-dim": {
 		"bulb-office": 40,
@@ -25,11 +25,23 @@
 		"lamp-reading": true,
 		"lamp-bed": 100
 	}],
+	"bedroom-decoration-on": {
+		"lamp-reading": true,
+		"lamp-bed": true
+	},
 	"bedroom-decoration-off": {
-		"star-table": false,
-		"star-hanging": false,
 		"lamp-reading": false,
 		"lamp-bed": false
+	},
+	"bedroom-christmas-on": {
+		"star-table": true,
+		"star-hanging": true,
+		"plug-curtain": true
+	},
+	"bedroom-christmas-off": {
+		"star-table": false,
+		"star-hanging": false,
+		"plug-curtain": false
 	},
 
 	"bedroom-bulbs-only": ["bedroom-bulbs-full", "bedroom-lamps-off"],
@@ -74,10 +86,8 @@
 	},
 	"livingroom-off": ["livingroom-bulbs-off"],
 
-	"livingroom-all-full": ["livingroom-bulbs-full", "livingroom-decorations-full"],
-	"livingroom-all-off":  ["livingroom-bulbs-off",  "livingroom-decorations-off", {
-		"plug-tree": false
-	}],
+	"livingroom-all-full": ["livingroom-bulbs-full", "livingroom-decorations-full", "livingroom-christmas-on"],
+	"livingroom-all-off":  ["livingroom-bulbs-off",  "livingroom-decorations-off", "livingroom-christmas-off"],
 
 	"livingroom-dim": {
 		"bulb-couch": 60,
@@ -89,10 +99,15 @@
 	}],
 
 	"livingroom-decorations-only": ["livingroom-bulbs-off", "livingroom-decorations-full"],
-	"livingroom-christmas": {
+	"livingroom-christmas-on": {
 		"plug-tree": true,
 		"plug-diorama": true,
 		"plug-garland": true
+	},
+	"livingroom-christmas-off": {
+		"plug-tree": false,
+		"plug-diorama": false,
+		"plug-garland": false
 	},
 	"livingroom-decorations-default": {
 		"bulbstring": 70,

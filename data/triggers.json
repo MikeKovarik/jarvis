@@ -7,7 +7,7 @@
 	"brightness_move_down": "bedroom-all-off"
 }, {
 	"source": ["styrbar-3", "styrbar-4"],
-	"scenes": ["livingroom-bulbs-only", "livingroom-dim", "livingroom-cosy"],
+	"scenes": ["livingroom-bulbs-full", "livingroom-dim", "livingroom-cosy"],
 	"on":  "livingroom-on",
 	"off": "livingroom-off",
 	"brightness_move_up": "livingroom-all-full",

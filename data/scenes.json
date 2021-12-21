@@ -128,7 +128,6 @@
 		"cagelight": false
 	},
 
-	"livingroom-bulbs-only": ["livingroom-bulbs-full", "livingroom-decorations-off"],
 	"livingroom-bulbs-full": {
 		"bulb-couch": 100,
 		"bulb-kitchen": 100

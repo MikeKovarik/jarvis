@@ -77,14 +77,18 @@
 		"bulb-couch": 60,
 		"bulb-kitchen": 40
 	},
-	"livingroom-cosy": ["livingroom-decorations-default", {
+	"livingroom-cosy": ["livingroom-decorations-default", "livingroom-christmas", {
 		"bulb-couch": 30,
 		"bulb-kitchen": false
 	}],
 
 	"livingroom-decorations-only": ["livingroom-bulbs-off", "livingroom-decorations-full"],
-	"livingroom-decorations-default": {
+	"livingroom-christmas": {
 		"plug-tree": true,
+		"plug-diorama": true,
+		"plug-garland": true
+	},
+	"livingroom-decorations-default": {
 		"bulbstring": 70,
 		"smallstring": 100,
 		"stringlight1": 100,

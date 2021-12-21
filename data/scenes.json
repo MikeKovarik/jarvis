@@ -92,7 +92,7 @@
 		"bulb-couch": 60,
 		"bulb-kitchen": 40
 	},
-	"livingroom-cosy": ["livingroom-decorations-default", "livingroom-christmas", {
+	"livingroom-cosy": ["livingroom-decorations-default", "livingroom-christmas-on", {
 		"bulb-couch": 30,
 		"bulb-kitchen": false
 	}],

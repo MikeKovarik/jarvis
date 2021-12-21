@@ -1,7 +1,6 @@
 {
 	"all-off":  ["bedroom-all-off", "livingroom-all-off", "terrace-all-off"],
 
-	
 	"bedroom-on": {
 		"bulb-office": 100
 	},
@@ -15,8 +14,8 @@
 		"bulb-bed": false
 	},
 	"bedroom-cosy": ["bedroom-bulbs-off", {
-		"star-table": true,
-		"star-hanging": true,
+		"star-table": 30,
+		"star-hanging": 30,
 		"lamp-reading": false,
 		"lamp-bed": false
 	}],

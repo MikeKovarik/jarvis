@@ -13,15 +13,11 @@
 		"bulb-office": 40,
 		"bulb-bed": false
 	},
-	"bedroom-cosy": ["bedroom-bulbs-off", {
-		"star-table": 30,
-		"star-hanging": 30,
+	"bedroom-cosy": ["bedroom-bulbs-off", "bedroom-christmas-on", {
 		"lamp-reading": false,
 		"lamp-bed": false
 	}],
 	"bedroom-cosy-old": ["bedroom-bulbs-off", {
-		"star-table": true,
-		"star-hanging": true,
 		"lamp-reading": true,
 		"lamp-bed": 100
 	}],

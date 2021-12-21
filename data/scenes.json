@@ -16,6 +16,12 @@
 	"bedroom-cosy": ["bedroom-bulbs-off", {
 		"star-table": true,
 		"star-hanging": true,
+		"lamp-reading": false,
+		"lamp-bed": false
+	}],
+	"bedroom-cosy-old": ["bedroom-bulbs-off", {
+		"star-table": true,
+		"star-hanging": true,
 		"lamp-reading": true,
 		"lamp-bed": 100
 	}],

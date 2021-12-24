@@ -22,13 +22,13 @@ apiRouter.get('/devices', (req, res) => {
 	res.json(devices.array)
 })
 
-apiRouter.get('/devices/google', (req, res) => {
+const ghomeHandler = (req, res) => {
 	console.gray('GET /devices/google')
-	let data = devices
-		.filter(device => device.willReportState)
-		.map(device => device.toGoogleDevice())
-	res.json(data)
-})
+	res.json(devices.ghomeArray)
+}
+
+apiRouter.get('/devices/google', ghomeHandler)
+apiRouter.get('/devices/ghome', ghomeHandler)
 
 apiRouter.get('/devices/google/all', (req, res) => {
 	console.gray('GET /devices/google/all')

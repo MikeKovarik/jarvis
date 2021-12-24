@@ -61,4 +61,11 @@ export class DevicesBase extends Map {
 		device?.executeState(state)
 	}
 
+	get ghomeArray() {
+		return this
+			.filter(device => device.willReportState)
+			.filter(device => device.traits.length > 0)
+			.map(device => device.toGoogleDevice())
+	}
+
 }

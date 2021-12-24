@@ -114,19 +114,18 @@
 		"stringlight1": 100,
 		"cagelight": 20
 	},
-	"livingroom-decorations-full": {
-		"plug-tree": true,
+	"livingroom-decorations-full": ["livingroom-christmas-on", {
 		"bulbstring": 100,
 		"smallstring": 100,
 		"stringlight1": 100,
 		"cagelight": 100
-	},
-	"livingroom-decorations-off": {
+	}],
+	"livingroom-decorations-off": ["livingroom-christmas-off", {
 		"bulbstring": false,
 		"smallstring": false,
 		"stringlight1": false,
 		"cagelight": false
-	},
+	}],
 
 	"livingroom-bulbs-full": {
 		"bulb-couch": 100,

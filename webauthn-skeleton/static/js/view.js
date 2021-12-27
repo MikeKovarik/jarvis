@@ -1,6 +1,5 @@
 /* global $, QrCreator, register, login */
 /* exported loadMainContainer, checkIfLoggedIn */
-
 const renderMainContainer = (response) => {
     
 	// Update name

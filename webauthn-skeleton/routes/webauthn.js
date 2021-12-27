@@ -110,7 +110,9 @@ router.post('/add', async (ctx) => {
 
 	// Exclude existing credentials
 	const mapFn = ({id, type}) => ({ id, type })
-	//challengeMakeCred.excludeCredentials = database.users[ctx.session.username].authenticators.map(mapFn)
+	/*
+	challengeMakeCred.excludeCredentials = database.users[ctx.session.username].authenticators.map(mapFn)
+	*/
 	challengeMakeCred.excludeCredentials = database.map(mapFn)
     console.log('~ challengeMakeCred.excludeCredentials', challengeMakeCred.excludeCredentials)
 

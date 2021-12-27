@@ -1,5 +1,6 @@
 /* global $, QrCreator, register, login */
 /* exported loadMainContainer, checkIfLoggedIn */
+
 const renderMainContainer = (response) => {
     
 	// Update name
@@ -95,21 +96,16 @@ $("#button-add-credential").click(() => {
 });
 
 $("#button-register").click(() => {
-	const username = $("#username")[0].value;
-	if(!username) {
+	const name = $("#name")[0].value;
+	if(!name) {
 		alert("Username is missing!");
 	} else {
-		register(username);
+		register(name);
 	}
 });
 
 $("#button-login").click(() => {   
-	const username = $("#username")[0].value;
-	if(!username) {
-		alert("Username is missing!");
-	} else {
-		login(username);
-	}
+	login();
 });
 
 

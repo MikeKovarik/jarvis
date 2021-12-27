@@ -122,15 +122,9 @@ router.post('/add', async (ctx) => {
 
 router.post('/login', async (ctx) => {
 	console.log('GET /login')
-	if (!ctx.request.body || !ctx.request.body.username) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'ctx missing username field!'
-		};
-	}
-
     console.log('~ ctx.request.body.username', ctx.request.body.username)
-	let usernameClean = sanitizeUsername(ctx.request.body.username);
+	//let usernameClean = sanitizeUsername(ctx.request.body.username);
+	let usernameClean = 'foo'
     console.log('~ usernameClean', usernameClean)
 /*
 	if (!database.users[usernameClean] || !database.users[usernameClean].registered) {

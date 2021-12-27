@@ -1,4 +1,4 @@
-let postJson = (url, body) => {
+let postJson = (url, body = {}) => {
 	return fetch(url, {
 		method: 'POST',
 		credentials: 'include',
@@ -72,8 +72,8 @@ function register (username, additional) {
 }
 
 /* Handler for login form submission */
-function login(username) {
-	getGetAssertionChallenge({username})
+function login() {
+	getGetAssertionChallenge()
 		.then((response) => {
             console.log('~ response 1', response)
 			let publicKey = preformatGetAssertReq(response)

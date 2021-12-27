@@ -25,4 +25,4 @@ config.baseUrl = config.baseUrl.substr(-1) === "/" ? config.baseUrl.slice(0,-1) 
 config.origin = config.origin.substr(-1) === "/" ? config.origin.slice(0,-1) : config.origin;
 
 // Export config
-module.exports = config;
+export default config

@@ -11,4 +11,4 @@ let database = {
 	}
 };
 
-module.exports = database;
+export default database;

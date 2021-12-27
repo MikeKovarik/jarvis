@@ -1,10 +1,10 @@
-const Fido2     = require('../utils/fido2')
-const config    = require('../config')
-const crypto    = require('crypto')
-const database  = require('../db/db')
-const username  = require('../utils/username')
-const base64url = require('@hexagon/base64-arraybuffer')
-const koaRouter = require('@koa/router')
+import crypto from 'crypto'
+import base64url from '@hexagon/base64-arraybuffer'
+import koaRouter from '@koa/router'
+import Fido2 from '../utils/fido2.js'
+import config from '../config.js'
+import database from '../db/db.js'
+import sanitizeUsername from '../utils/username.js'
 
 const router = koaRouter({ prefix: '/webauthn' })
 
@@ -36,7 +36,7 @@ router.post('/register', async (ctx) => {
 		return fail(ctx, 'ctx missing name or username field!')
 	}
 
-	let usernameClean = username.clean(ctx.request.body.username),
+	let usernameClean = sanitizeUsername(ctx.request.body.username),
 		name     = usernameClean;
 
 	if (!usernameClean) {
@@ -73,7 +73,7 @@ router.post('/login', async (ctx) => {
 		return fail(ctx, 'ctx missing username field!')
 	}
 
-	let usernameClean = username.clean(ctx.request.body.username);
+	let usernameClean = sanitizeUsername(ctx.request.body.username);
 
 	if (!database.users[usernameClean] || !database.users[usernameClean].registered) {
 		return fail(ctx, `User ${usernameClean} does not exist!`)
@@ -184,4 +184,4 @@ router.post('/response', async (ctx) => {
 	}
 });
 
-module.exports = router;
+export default router;

@@ -1,6 +1,4 @@
-const database = require('../db/db')
-const token = require('../utils/token')
-const koaRouter = require('@koa/router')
+import koaRouter from '@koa/router'
 
 const router = koaRouter()
 
@@ -37,4 +35,4 @@ router.get('/personalInfo', (ctx) => {
 	}
 })
 
-module.exports = router
+export default router

@@ -1,19 +1,19 @@
-const 
-	{ Fido2Lib } = require("fido2-lib"),
-	base64url = require("@hexagon/base64-arraybuffer");
+import base64url from '@hexagon/base64-arraybuffer'
+import fido2lib from 'fido2-lib'
+const { Fido2Lib } = fido2lib
 
-class Fido2 {
+export default class Fido2 {
 	constructor(rpId, rpName, rpIcon, timeout) {
 		this.f2l = new Fido2Lib({
 			timeout,
 			rpId,
 			rpName,
 			challengeSize: 128,
-			attestation: "none",
+			attestation: 'none',
 			cryptoParams: [-7, -257],
-			authenticatorAttachment: undefined, // ["platform", "cross-platform"]
+			authenticatorAttachment: undefined, // ['platform', 'cross-platform']
 			authenticatorRequireResidentKey: false,
-			authenticatorUserVerification: "preferred"
+			authenticatorUserVerification: 'preferred'
 		});
 	}
 
@@ -27,7 +27,7 @@ class Fido2 {
 			displayName: displayName
 		};
 
-		registrationOptions.status = "ok";
+		registrationOptions.status = 'ok';
 
 		registrationOptions.challenge = base64url.encode(registrationOptions.challenge, true);
 
@@ -38,7 +38,7 @@ class Fido2 {
 		let attestationExpectations = {
 			challenge: challenge,
 			origin: origin,
-			factor: "either"
+			factor: 'either'
 		};
 		let regResult = await this.f2l.attestationResult(clientAttestationResponse, attestationExpectations); // will throw on error
 		return regResult;
@@ -47,7 +47,7 @@ class Fido2 {
 	async login() {
 		let assertionOptions = await this.f2l.assertionOptions();
 		assertionOptions.challenge = base64url.encode(assertionOptions.challenge, true);
-		assertionOptions.status = "ok";
+		assertionOptions.status = 'ok';
 		return assertionOptions;
 	}
 
@@ -56,5 +56,3 @@ class Fido2 {
 		return authnResult;
 	}
 }
-
-module.exports = Fido2;

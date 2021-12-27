@@ -34,6 +34,12 @@ router.get("/personalInfo", (ctx) => {
 			"message": "Access denied"
 		};
 	} else {
+		return ctx.body = {
+			"status": "ok",
+			"authenticators": database,
+			"name": 'foo',
+		};
+		/*
 		let tokenInfo = undefined,
 			userInfo = database.users[ctx.session.username];
 		if (userInfo.oneTimeToken) {            
@@ -54,6 +60,7 @@ router.get("/personalInfo", (ctx) => {
 			"oneTimeToken": tokenInfo,
 			"recoveryEmail": userInfo.recoveryEmail
 		};
+		*/
 	}
 });
 

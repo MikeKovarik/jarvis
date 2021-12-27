@@ -28,6 +28,11 @@ router.post('/register', async (ctx) => {
 		};
 	}
 
+	let usernameClean = 'foo'
+	let name = 'foo'
+	let id = 'foo'
+
+	/*
 	let usernameClean = sanitizeUsername(ctx.request.body.username),
 		name     = usernameClean;
 
@@ -55,12 +60,13 @@ router.post('/register', async (ctx) => {
 		'oneTimeToken': undefined,
 		'recoveryEmail': undefined
 	};
+	*/
 
 	let challengeMakeCred = await f2l.registration(usernameClean, name, id);
     
 	// Transfer challenge and username to session
 	ctx.session.challenge = challengeMakeCred.challenge;
-	ctx.session.username  = usernameClean;
+	//ctx.session.username  = usernameClean;
 
 	// Respond with credentials
 	return ctx.body = challengeMakeCred;
@@ -83,10 +89,14 @@ router.post('/add', async (ctx) => {
 	}
 
     console.log('~ ctx.session.username', ctx.session.username)
-
+/*
 	let usernameClean = sanitizeUsername(ctx.session.username),
 		name     = usernameClean,
 		id       = database.users[ctx.session.username].id;
+*/
+	let usernameClean = 'foo'
+	let name = 'foo'
+	let id = 'foo'
 
     console.log('~ usernameClean', usernameClean)
     console.log('~ name', name)
@@ -99,8 +109,9 @@ router.post('/add', async (ctx) => {
 	ctx.session.challenge = challengeMakeCred.challenge;
 
 	// Exclude existing credentials
-	challengeMakeCred.excludeCredentials = database.users[ctx.session.username].authenticators
-		.map(({id, type}) => ({ id, type }))
+	const mapFn = ({id, type}) => ({ id, type })
+	//challengeMakeCred.excludeCredentials = database.users[ctx.session.username].authenticators.map(mapFn)
+	challengeMakeCred.excludeCredentials = database.map(mapFn)
     console.log('~ challengeMakeCred.excludeCredentials', challengeMakeCred.excludeCredentials)
 
 	// Respond with credentials
@@ -119,14 +130,14 @@ router.post('/login', async (ctx) => {
     console.log('~ ctx.request.body.username', ctx.request.body.username)
 	let usernameClean = sanitizeUsername(ctx.request.body.username);
     console.log('~ usernameClean', usernameClean)
-
+/*
 	if (!database.users[usernameClean] || !database.users[usernameClean].registered) {
 		return ctx.body = {
 			'status': 'failed',
 			'message': `User ${usernameClean} does not exist!`
 		};
 	}
-
+*/
 	let assertionOptions = await f2l.login(usernameClean);
     console.log('~ assertionOptions', assertionOptions)
 
@@ -139,7 +150,8 @@ router.post('/login', async (ctx) => {
 	// Pass this, to limit selectable credentials for user... This may be set in response instead, so that
 	// all of a users server (public) credentials isn't exposed to anyone
 	let allowCredentials = [];
-	for (let {type, id} of database.users[ctx.session.username].authenticators) {
+	//for (let {type, id} of database.users[ctx.session.username].authenticators) {
+	for (let {type, id} of database) {
 		allowCredentials.push({
 			type,
 			id,
@@ -175,18 +187,18 @@ router.post('/response', async (ctx) => {
         
 		const credId = result.authnrData.get('credId')
 		const id = uint8ToBase64(credId)
-        console.log('~ id', id)
 
 		const token = {
 			id,
+			credId,
 			publicKey: result.authnrData.get('credentialPublicKeyPem'),
 			type: webauthnResp.type,
-			counter: result.authnrData.get('counter'),
-			created: new Date().getTime()
+			counter: 0,
 		};
 
-		database.users[ctx.session.username].authenticators.push(token);
-		database.users[ctx.session.username].registered = true;
+		database.push(token);
+		//database.users[ctx.session.username].authenticators.push(token);
+		//database.users[ctx.session.username].registered = true;
 
 		ctx.session.loggedIn = true;
 
@@ -203,14 +215,14 @@ router.post('/response', async (ctx) => {
 		// get response back from client (clientAssertionResponse)
 		webauthnResp.rawId = base64ToUint8(webauthnResp.rawId, true);
 		webauthnResp.response.userHandle = base64ToUint8(webauthnResp.rawId, true);
-		let validAuthenticators = database.users[ctx.session.username].authenticators,
-			winningAuthenticator;            
+		//let validAuthenticators = database.users[ctx.session.username].authenticators
+		let validAuthenticators = [...database]
+		let winningAuthenticator;            
 		for (let authrIdx in validAuthenticators) {
 			let authr = validAuthenticators[authrIdx];
 			try {
 
 				const userHandle = base64ToUint8(authr.id)
-                console.log('~ authr.id', authr.id)
 				let assertionExpectations = {
 					// Remove the following comment if allowCredentials has been added into authnOptions so the credential received will be validate against allowCredentials array.
 					allowCredentials: ctx.session.allowCredentials,
@@ -218,24 +230,20 @@ router.post('/response', async (ctx) => {
 					origin: config.origin,
 					factor: 'either',
 					publicKey: authr.publicKey,
-					prevCounter: authr.counter,
+					prevCounter: 0,
 					userHandle
 				};
 
 				let result = await f2l.assertion(webauthnResp, assertionExpectations);
 
 				winningAuthenticator = result;
-				if (database.users[ctx.session.username].authenticators[authrIdx]) {
-					database.users[ctx.session.username].authenticators[authrIdx].counter = result.authnrData.get('counter');
-				}                    
-				break;
+				break
         
-			} catch (e) {
-				// Ignore
-			}
+			} catch {}
 		}
 		// authentication complete!
-		if (winningAuthenticator && database.users[ctx.session.username].registered ) {
+		//if (winningAuthenticator && database.users[ctx.session.username].registered ) {
+		if (winningAuthenticator) {
 			ctx.session.loggedIn = true;
 			return ctx.body = { 'status': 'ok' };
 

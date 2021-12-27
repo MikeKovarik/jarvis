@@ -75,14 +75,19 @@ function register (username, additional) {
 function login(username) {
 	getGetAssertionChallenge({username})
 		.then((response) => {
+            console.log('~ response 1', response)
 			let publicKey = preformatGetAssertReq(response)
+            console.log('~ publicKey', publicKey)
 			return navigator.credentials.get( { publicKey } )
 		})
 		.then((response) => {
+            console.log('~ response 2', response)
 			let getAssertionResponse = publicKeyCredentialToJSON(response)
+            console.log('~ getAssertionResponse', getAssertionResponse)
 			return sendWebAuthnResponse(getAssertionResponse)
 		})
 		.then((response) => {
+            console.log('~ response 3', response)
 			if(response.status === 'ok') {
 				loadMainContainer()   
 			} else {

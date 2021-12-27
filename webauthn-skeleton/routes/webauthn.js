@@ -9,17 +9,6 @@ import sanitizeUsername from '../utils/username.js'
 const router = koaRouter({ prefix: '/webauthn' })
 
 const f2l       = new Fido2(config.rpId, config.rpName, undefined, config.challengeTimeoutMs)
-
-function success(ctx, data) {
-	ctx.status = 200
-	return ctx.body = data
-}
-
-function fail(ctx, data) {
-	ctx.status = 500
-	return ctx.body = data
-}
-
 /**
  * Returns base64url encoded buffer of the given length
  * @param  {Number} len - length of the buffer
@@ -31,31 +20,40 @@ let randomBase64URLBuffer = (len) => {
 	return base64url.encode(buff, true);
 };
 
-router.post('/register', async (ctx) => {
-	if (!ctx.request.body || !ctx.request.body.username || !ctx.request.body.name) {
-		return fail(ctx, 'ctx missing name or username field!')
+router.post("/register", async (ctx) => {
+	if(!ctx.request.body || !ctx.request.body.username || !ctx.request.body.name) {
+		return ctx.body = {
+			"status": "failed",
+			"message": "ctx missing name or username field!"
+		};
 	}
 
 	let usernameClean = sanitizeUsername(ctx.request.body.username),
 		name     = usernameClean;
 
 	if (!usernameClean) {
-		return fail(ctx, 'Invalid username!')
+		return ctx.body = {
+			"status": "failed",
+			"message": "Invalid username!"
+		};
 	}
 
-	if (database.users[usernameClean] && database.users[usernameClean].registered) {
-		return fail(ctx, `Username ${username} already exists`)
+	if(database.users[usernameClean] && database.users[usernameClean].registered) {
+		return ctx.body = {
+			"status": "failed",
+			"message": `Username ${username} already exists`
+		};
 	}
 
 	let id = randomBase64URLBuffer();
 
 	database.users[usernameClean] = {
-		name: name,
-		registered: false,
-		id: id,
-		authenticators: [],
-		oneTimeToken: undefined,
-		recoveryEmail: undefined
+		"name": name,
+		"registered": false,
+		"id": id,
+		"authenticators": [],
+		"oneTimeToken": undefined,
+		"recoveryEmail": undefined
 	};
 
 	let challengeMakeCred = await f2l.registration(usernameClean, name, id);
@@ -68,15 +66,61 @@ router.post('/register', async (ctx) => {
 	return ctx.body = challengeMakeCred;
 });
 
-router.post('/login', async (ctx) => {
-	if (!ctx.request.body || !ctx.request.body.username) {
-		return fail(ctx, 'ctx missing username field!')
+
+router.post("/add", async (ctx) => {
+	if(!ctx.request.body) {
+		return ctx.body = {
+			"status": "failed",
+			"message": "ctx missing name or username field!"
+		};
+	}
+
+	if(!ctx.session.loggedIn) {
+		return ctx.body = {
+			"status": "failed",
+			"message": "User not logged in!"
+		};
+	}
+
+    console.log('~ ctx.session.username', ctx.session.username)
+
+	let usernameClean = sanitizeUsername(ctx.session.username),
+		name     = usernameClean,
+		id       = database.users[ctx.session.username].id;
+
+    console.log('~ usernameClean', usernameClean)
+    console.log('~ name', name)
+    console.log('~ id', id)
+
+	let challengeMakeCred = await f2l.registration(usernameClean, name, id);
+    console.log('~ challengeMakeCred', challengeMakeCred)
+    
+	// Transfer challenge to session
+	ctx.session.challenge = challengeMakeCred.challenge;
+
+	// Exclude existing credentials
+	challengeMakeCred.excludeCredentials = database.users[ctx.session.username].authenticators.map((e) => { return { id: base64url.encode(e.credId, true), type: e.type }; });
+    console.log('~ challengeMakeCred.excludeCredentials', challengeMakeCred.excludeCredentials)
+
+	// Respond with credentials
+	return ctx.body = challengeMakeCred;
+});
+
+router.post("/login", async (ctx) => {
+	if(!ctx.request.body || !ctx.request.body.username) {
+		return ctx.body = {
+			"status": "failed",
+			"message": "ctx missing username field!"
+		};
 	}
 
 	let usernameClean = sanitizeUsername(ctx.request.body.username);
 
-	if (!database.users[usernameClean] || !database.users[usernameClean].registered) {
-		return fail(ctx, `User ${usernameClean} does not exist!`)
+	if(!database.users[usernameClean] || !database.users[usernameClean].registered) {
+		return ctx.body = {
+			"status": "failed",
+			"message": `User ${usernameClean} does not exist!`
+		};
 	}
 
 	let assertionOptions = await f2l.login(usernameClean);
@@ -92,7 +136,7 @@ router.post('/login', async (ctx) => {
 		allowCredentials.push({
 			type: authr.type,
 			id: base64url.encode(authr.credId, true),
-			transports: ['usb', 'nfc', 'ble', 'internal']
+			transports: ["usb", "nfc", "ble","internal"]
 		});
 	}
 
@@ -103,24 +147,29 @@ router.post('/login', async (ctx) => {
 	return ctx.body = assertionOptions;
 });
 
-router.post('/response', async (ctx) => {
-	if (!ctx.request.body       || !ctx.request.body.id
+router.post("/response", async (ctx) => {
+	console.log('GET /response')
+	if(!ctx.request.body       || !ctx.request.body.id
     || !ctx.request.body.rawId || !ctx.request.body.response
-    || !ctx.request.body.type  || ctx.request.body.type !== 'public-key' ) {
-		return fail(ctx, 'Response missing one or more of id/rawId/response/type fields, or type is not public-key!')
+    || !ctx.request.body.type  || ctx.request.body.type !== "public-key" ) {
+		return ctx.body = {
+			"status": "failed",
+			"message": "Response missing one or more of id/rawId/response/type fields, or type is not public-key!"
+		};
 	}
 	let webauthnResp = ctx.request.body;
-	if (webauthnResp.response.attestationObject !== undefined) {
+	if(webauthnResp.response.attestationObject !== undefined) {
 		/* This is create cred */
 		webauthnResp.rawId = base64url.decode(webauthnResp.rawId, true);
 		webauthnResp.response.attestationObject = base64url.decode(webauthnResp.response.attestationObject, true);
 		const result = await f2l.attestation(webauthnResp, config.origin, ctx.session.challenge);
+		console.log('~ result.authnrData.get("credentialPublicKeyPem")', result.authnrData.get("credentialPublicKeyPem"))
         
 		const token = {
-			credId: result.authnrData.get('credId'),
-			publicKey: result.authnrData.get('credentialPublicKeyPem'),
+			credId: result.authnrData.get("credId"),
+			publicKey: result.authnrData.get("credentialPublicKeyPem"),
 			type: webauthnResp.type,
-			counter: result.authnrData.get('counter'),
+			counter: result.authnrData.get("counter"),
 			created: new Date().getTime()
 		};
 
@@ -129,10 +178,10 @@ router.post('/response', async (ctx) => {
 
 		ctx.session.loggedIn = true;
 
-		return ctx.body = { status: 'ok' };
+		return ctx.body = { "status": "ok" };
 
 
-	} else if (webauthnResp.response.authenticatorData !== undefined) {
+	} else if(webauthnResp.response.authenticatorData !== undefined) {
 		/* This is get assertion */
 		//result = utils.verifyAuthenticatorAssertionResponse(webauthnResp, database.users[ctx.session.username].authenticators);
 		// add allowCredentials to limit the number of allowed credential for the authentication process. For further details refer to webauthn specs: (https://www.w3.org/TR/webauthn-2/#dom-publickeycredentialctxoptions-allowcredentials).
@@ -152,7 +201,7 @@ router.post('/response', async (ctx) => {
 					allowCredentials: ctx.session.allowCredentials,
 					challenge: ctx.session.challenge,
 					origin: config.origin,
-					factor: 'either',
+					factor: "either",
 					publicKey: authr.publicKey,
 					prevCounter: authr.counter,
 					userHandle: authr.credId
@@ -162,7 +211,7 @@ router.post('/response', async (ctx) => {
 
 				winningAuthenticator = result;
 				if (database.users[ctx.session.username].authenticators[authrIdx]) {
-					database.users[ctx.session.username].authenticators[authrIdx].counter = result.authnrData.get('counter');
+					database.users[ctx.session.username].authenticators[authrIdx].counter = result.authnrData.get("counter");
 				}                    
 				break;
         
@@ -173,15 +222,25 @@ router.post('/response', async (ctx) => {
 		// authentication complete!
 		if (winningAuthenticator && database.users[ctx.session.username].registered ) {
 			ctx.session.loggedIn = true;
-			return ctx.body = { status: 'ok' };
+			return ctx.body = { "status": "ok" };
 
 			// Authentication failed
 		} else {
-			return fail(ctx, 'Can not authenticate signature!')
+			return ctx.body = {
+				"status": "failed",
+				"message": "Can not authenticate signature!"
+			};
 		}
 	} else {
-		return fail(ctx, 'Can not authenticate signature!')
+		return ctx.body = {
+			"status": "failed",
+			"message": "Can not authenticate signature!"
+		};
 	}
 });
+
+router.get('/db', async (ctx) => {
+	return ctx.body = JSON.stringify(database, null, 2)
+})
 
 export default router;

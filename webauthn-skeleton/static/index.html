@@ -10,9 +10,12 @@
 
     <!-- View when logged out -->
     <div id="registerContainer">
+        <div class="right-column fl">
+            <h2><i class="fas fa-user-ninja"></i>&nbsp;Enter username</h2>
             <input type="text" class="full" id="username">
             <button class="button-primary fl half" id="button-register">Register</button>
             <button class="button-primary fl half" id="button-login">Login</button>
+        </div>
     </div>
 
     <!-- View when logged in -->
@@ -34,6 +37,7 @@
 
             </tbody>
         </table>
+        <button id="button-add-credential">Add credential</button>
         <button id="button-logout">Logout</button>
     </div>
 
@@ -49,11 +53,13 @@
 
     <!-- Check if already logged in -->
     <script>
-		window.addEventListener('load', async () => {
-			console.log('load')
-            let loggedIn = await checkIfLoggedIn()
-            if (loggedIn) loadMainContainer()
-		})
+        $(document).ready(() => {
+            checkIfLoggedIn()
+            .then((response) => {
+                if(response)
+                    return loadMainContainer()
+            })
+        })
     </script>
 
 </body>

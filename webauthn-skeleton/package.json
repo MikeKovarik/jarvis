@@ -1,0 +1,46 @@
+{
+  "name": "webauthn-skeleton",
+  "version": "0.9.0",
+  "description": "Skeleton for a Node.js powered Web Authentication API enabled website",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ./**/*.js",
+    "lint:fix": "eslint --fix  ./**/*.js",
+    "start": "node app.js"
+  },
+  "keywords": [
+    "webauthn",
+    "fido2",
+    "security key",
+    "u2f",
+    "yubikey",
+    "hello",
+    "windows hello",
+    "passwordless",
+    "assword",
+    "koa",
+    "koajs"
+  ],
+  "author": "Hexagon <hexagon@56k.guru>",
+  "contributors": [
+    "Pinta365@GitHub"
+  ],
+  "bugs": {
+    "url": "https://github.com/hexagon/webauthn-skeleton/issues"
+  },
+  "homepage": "https://github.com/hexagon/webauthn-skeleton#readme",
+  "license": "MIT",
+  "dependencies": {
+    "@hexagon/base64-arraybuffer": "^2.0.1",
+    "@koa/router": "^10.1.1",
+    "fido2-lib": "^2.6.8",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-session": "^6.2.0",
+    "koa-static": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.4.1"
+  }
+}

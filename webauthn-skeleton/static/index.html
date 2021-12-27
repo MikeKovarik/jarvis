@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
+    <link rel="stylesheet" href="css/demo.css">
+</head>
+<body>
+
+    <!-- View when logged out -->
+    <div id="registerContainer">
+            <input type="text" class="full" id="username">
+            <button class="button-primary fl half" id="button-register">Register</button>
+            <button class="button-primary fl half" id="button-login">Login</button>
+    </div>
+
+    <!-- View when logged in -->
+    <div id="mainContainer">
+        <h3>Hey <span id="name"></span>!</h3>
+        <div id="login-token">
+            <blockquote>
+                <h4>Login token active</h4>
+                <p>To log in on another device, send the link below, or scan the QR code. This will enable you to add local credentials from that device.</p>
+                <p>Token will expire at <span id="login-token-expires"></span></p>
+                <p>Link: <span id="login-token-link"></span></p>
+                <p id="login-token-qr"></p>
+            </blockquote>
+        </div>
+        <h4>Your credentials</h4>
+        <table id="credential-table">
+            <thead><th width="10%">Counter</th><th>Public Key</th><th width="25%">Created</th></thead>
+            <tbody>
+
+            </tbody>
+        </table>
+        <button id="button-logout">Logout</button>
+    </div>
+
+    <!-- External dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hexagon/base64-arraybuffer@2.0.2/dist/base64-arraybuffer.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-creator/dist/qr-creator.min.js"></script>
+
+    <!-- Internals-->
+    <script src="js/utils.js"></script>
+    <script src="js/view.js"></script>
+    <script src="js/webauthn.auth.js"></script>
+
+    <!-- Check if already logged in -->
+    <script>
+		window.addEventListener('load', async () => {
+			console.log('load')
+            let loggedIn = await checkIfLoggedIn()
+            if (loggedIn) loadMainContainer()
+		})
+    </script>
+
+</body>
+</html>

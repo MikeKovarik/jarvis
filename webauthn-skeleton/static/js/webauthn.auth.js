@@ -1,0 +1,79 @@
+/* global base64, loadMainContainer, preformatMakeCredReq, preformatGetAssertReq, publicKeyCredentialToJSON */
+/* exported register, login */
+
+const postJson = (url, body) => {
+	return fetch(url, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(body)
+	})
+		.then((response) => response.json())
+}
+
+let getMakeCredentialsChallenge = (formBody) => {
+	return postJson('/webauthn/register', formBody)
+}
+
+let sendWebAuthnResponse = (body) => {
+	return postJson('/webauthn/response', body)
+}
+
+let getGetAssertionChallenge = (formBody) => {
+	return postJson('/webauthn/login', formBody)
+}
+
+/* Handle for register form submission */
+function register (username, additional) {
+    
+	let name = username
+
+	getMakeCredentialsChallenge({username, name}, additional)
+		.then((response) => {
+			let publicKey = preformatMakeCredReq(response)
+			return navigator.credentials.create({ publicKey })
+		})
+		.then((response) => {
+			let makeCredResponse = {
+				id: response.id,
+				rawId: base64.encode(response.rawId,true),
+				response: {
+					attestationObject: base64.encode(response.response.attestationObject,true),
+					clientDataJSON: base64.encode(response.response.clientDataJSON,true)
+				},
+				type: response.type
+			}
+			return sendWebAuthnResponse(makeCredResponse)
+		})
+		.then((response) => {
+			if (response.status === 'ok') {
+				loadMainContainer()   
+			} else {
+				alert(`Server responed with error. The message is: ${response.message}`)
+			}
+		})
+		.catch((error) => alert(error))
+}
+
+/* Handler for login form submission */
+function login(username) {
+	getGetAssertionChallenge({username})
+		.then((response) => {
+			let publicKey = preformatGetAssertReq(response)
+			return navigator.credentials.get( { publicKey } )
+		})
+		.then((response) => {
+			let getAssertionResponse = publicKeyCredentialToJSON(response)
+			return sendWebAuthnResponse(getAssertionResponse)
+		})
+		.then((response) => {
+			if (response.status === 'ok') {
+				loadMainContainer()   
+			} else {
+				alert(`Server responed with error. The message is: ${response.message}`)
+			}
+		})
+		.catch((error) => alert(error))
+}

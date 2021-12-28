@@ -6,21 +6,21 @@
  * @param  {Object} pubKeyCred
  * @return {Object}            - JSON encoded publicKeyCredential
  */
-const publicKeyCredentialToJSON = (pubKeyCred) => {
+export const publicKeyCredentialToJSON = (pubKeyCred) => {
 	/* ----- DO NOT MODIFY THIS CODE ----- */
-	if(pubKeyCred instanceof Array) {
+	if (pubKeyCred instanceof Array) {
 		let arr = [];
-		for(let i of pubKeyCred)
+		for (let i of pubKeyCred)
 			arr.push(publicKeyCredentialToJSON(i));
 
 		return arr;
 	}
 
-	if(pubKeyCred instanceof ArrayBuffer) {
+	if (pubKeyCred instanceof ArrayBuffer) {
 		return base64.encode(pubKeyCred,true);
 	}
 
-	if(pubKeyCred instanceof Object) {
+	if (pubKeyCred instanceof Object) {
 		let obj = {};
 
 		for (let key in pubKeyCred) {
@@ -36,7 +36,7 @@ const publicKeyCredentialToJSON = (pubKeyCred) => {
 /**
  * Decodes arrayBuffer required fields.
  */
-let preformatMakeCredReq = (makeCredReq) => {
+export const preformatMakeCredReq = (makeCredReq) => {
 	makeCredReq.challenge = base64.decode(makeCredReq.challenge,true);
 	makeCredReq.user.id = base64.decode(makeCredReq.user.id,true);
 
@@ -51,11 +51,11 @@ let preformatMakeCredReq = (makeCredReq) => {
 /**
  * Decodes arrayBuffer required fields.
  */
-let preformatGetAssertReq = (getAssert) => {
+export const preformatGetAssertReq = (getAssert) => {
 	getAssert.challenge = base64.decode(getAssert.challenge,true);
     
 	// Allow any credential, this will be handled later
-	for(let allowCred of getAssert.allowCredentials) {
+	for (let allowCred of getAssert.allowCredentials) {
 		allowCred.id = base64.decode(allowCred.id,true);
 	}
 

@@ -1,3 +1,6 @@
+import {publicKeyCredentialToJSON, preformatMakeCredReq, preformatGetAssertReq} from './utils.js'
+import {loadMainContainer} from './view.js'
+
 let postJson = (url, body = {}) => {
 	return fetch(url, {
 		method: 'POST',
@@ -11,7 +14,7 @@ let postJson = (url, body = {}) => {
 }
 
 let getMakeCredentialsChallenge = (formBody, additional) => {
-	return postJson(additional ? 'webauthn/add' : 'webauthn/register', formBody)
+	return postJson(additional ? '/webauthn/add' : '/webauthn/register', formBody)
 		.then((response) => {
 			if(response.status !== 'ok')
 				throw new Error(`Server responed with error. The message is: ${response.message}`)
@@ -21,7 +24,7 @@ let getMakeCredentialsChallenge = (formBody, additional) => {
 }
 
 let sendWebAuthnResponse = (body) => {
-	return postJson('webauthn/response', body)
+	return postJson('/webauthn/response', body)
 		.then((response) => {
 			if(response.status !== 'ok')
 				throw new Error(`Server responed with error. The message is: ${response.message}`)
@@ -31,7 +34,7 @@ let sendWebAuthnResponse = (body) => {
 }
 
 let getGetAssertionChallenge = (formBody) => {
-	return postJson('webauthn/login', formBody)
+	return postJson('/webauthn/login', formBody)
 		.then((response) => {
 			if(response.status !== 'ok')
 				throw new Error(`Server responed with error. The message is: ${response.message}`)
@@ -40,7 +43,7 @@ let getGetAssertionChallenge = (formBody) => {
 }
 
 /* Handle for register form submission */
-function register (username, additional) {
+export function register (username, additional) {
     
 	let name = username
 
@@ -72,7 +75,7 @@ function register (username, additional) {
 }
 
 /* Handler for login form submission */
-function login() {
+export function login() {
 	getGetAssertionChallenge()
 		.then((response) => {
             console.log('~ response 1', response)

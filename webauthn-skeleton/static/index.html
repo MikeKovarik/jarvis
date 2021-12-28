@@ -10,12 +10,11 @@
 
     <!-- View when logged out -->
     <div id="registerContainer">
-        <div class="right-column fl">
-            <h2><i class="fas fa-user-ninja"></i>&nbsp;Enter username</h2>
-            <input type="text" class="full" id="username">
-            <button class="button-primary fl half" id="button-register">Register</button>
-            <button class="button-primary fl half" id="button-login">Login</button>
-        </div>
+		<input type="text" class="full" id="username">
+		<button class="button-primary fl half" id="button-register">Register</button>
+		<br>
+		<br>
+		<button class="button-primary fl half" id="button-login">Login</button>
     </div>
 
     <!-- View when logged in -->
@@ -44,15 +43,10 @@
     <!-- External dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@hexagon/base64-arraybuffer@2.0.2/dist/base64-arraybuffer.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qr-creator/dist/qr-creator.min.js"></script>
 
-    <!-- Internals-->
-    <script src="js/utils.js"></script>
-    <script src="js/view.js"></script>
-    <script src="js/webauthn.auth.js"></script>
+    <script type="module">
+		import {checkIfLoggedIn} from './js/view.js'
 
-    <!-- Check if already logged in -->
-    <script>
         $(document).ready(() => {
             checkIfLoggedIn()
             .then((response) => {

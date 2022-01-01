@@ -20,7 +20,7 @@ app.use(serve(path.join(__dirname, './static')))
 
 // Session
 app.keys = [crypto.randomBytes(32).toString('hex')]
-app.use(session({key: 'session'}, app))
+app.use(session({key: 'session', renew: true}, app))
 
 // Middleware
 app.use(bodyParser())

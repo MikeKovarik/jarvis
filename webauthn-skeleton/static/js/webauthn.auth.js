@@ -43,59 +43,46 @@ let getGetAssertionChallenge = (formBody) => {
 }
 
 /* Handle for register form submission */
-export function register (username, additional) {
-    
+export async function register(username, additional) {
 	let name = username
-
-	getMakeCredentialsChallenge({username, name}, additional)
-		.then((response) => {
-			let publicKey = preformatMakeCredReq(response)
-			return navigator.credentials.create({ publicKey })
-		})
-		.then((response) => {
-			let makeCredResponse = {
-				id: response.id,
-				rawId: base64.encode(response.rawId,true),
-				response: {
-					attestationObject: base64.encode(response.response.attestationObject,true),
-					clientDataJSON: base64.encode(response.response.clientDataJSON,true)
-				},
-				type: response.type
-			}
-			return sendWebAuthnResponse(makeCredResponse)
-		})
-		.then((response) => {
-			if(response.status === 'ok') {
-				loadMainContainer()   
-			} else {
-				alert(`Server responed with error. The message is: ${response.message}`)
-			}
-		})
-		.catch((error) => alert(error))
+	try {
+		let response1 = await getMakeCredentialsChallenge({username, name}, additional)
+		let publicKey = preformatMakeCredReq(response1)
+		let response2 = await navigator.credentials.create({ publicKey })
+		let makeCredResponse = {
+			id: response2.id,
+			rawId: base64.encode(response2.rawId,true),
+			response: {
+				attestationObject: base64.encode(response2.response.attestationObject,true),
+				clientDataJSON: base64.encode(response2.response.clientDataJSON,true)
+			},
+			type: response2.type
+		}
+		let response3 = await sendWebAuthnResponse(makeCredResponse)
+		if (response3.status === 'ok') {
+			loadMainContainer()   
+		} else {
+			alert(`Server responed with error. The message is: ${response3.message}`)
+		}
+	} catch(error) {
+		alert(error)
+	}
 }
 
 /* Handler for login form submission */
-export function login() {
-	getGetAssertionChallenge()
-		.then((response) => {
-            console.log('~ response 1', response)
-			let publicKey = preformatGetAssertReq(response)
-            console.log('~ publicKey', publicKey)
-			return navigator.credentials.get( { publicKey } )
-		})
-		.then((response) => {
-            console.log('~ response 2', response)
-			let getAssertionResponse = publicKeyCredentialToJSON(response)
-            console.log('~ getAssertionResponse', getAssertionResponse)
-			return sendWebAuthnResponse(getAssertionResponse)
-		})
-		.then((response) => {
-            console.log('~ response 3', response)
-			if(response.status === 'ok') {
-				loadMainContainer()   
-			} else {
-				alert(`Server responed with error. The message is: ${response.message}`)
-			}
-		})
-		.catch((error) => alert(error))
+export async function login() {
+	try {
+		let response1 = await getGetAssertionChallenge()
+		let publicKey = preformatGetAssertReq(response1)
+		let response2 = await navigator.credentials.get( { publicKey } )
+		let getAssertionResponse = publicKeyCredentialToJSON(response2)
+		let response3 = await sendWebAuthnResponse(getAssertionResponse)
+		if (response3.status === 'ok') {
+			loadMainContainer()   
+		} else {
+			alert(`Server responed with error. The message is: ${response3.message}`)
+		}
+	} catch(error) {
+		alert(error)
+	}
 }

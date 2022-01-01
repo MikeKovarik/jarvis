@@ -20,6 +20,8 @@ let randomBase64URLBuffer = (len) => {
 	return uint8ToBase64(buff, true);
 };
 
+const transports = ['usb', 'nfc', 'ble', 'internal']
+
 router.post('/register', async (ctx) => {
 	if (!ctx.request.body || !ctx.request.body.username || !ctx.request.body.name) {
 		return ctx.body = {
@@ -145,22 +147,13 @@ router.post('/login', async (ctx) => {
 
 	// Pass this, to limit selectable credentials for user... This may be set in response instead, so that
 	// all of a users server (public) credentials isn't exposed to anyone
-	let allowCredentials = [];
-	//for (let {type, id} of database.users[ctx.session.username].authenticators) {
-	for (let {type, id} of database) {
-		allowCredentials.push({
-			type,
-			id,
-			transports: ['usb', 'nfc', 'ble','internal']
-		});
-	}
-    console.log('~ allowCredentials', allowCredentials)
+	let allowCredentials = database.map(({type, id}) => allowCredentials.push({type, id, transports}))
 
-	assertionOptions.allowCredentials = allowCredentials;
+	assertionOptions.allowCredentials = allowCredentials
 
-	ctx.session.allowCredentials = allowCredentials;
+	ctx.session.allowCredentials = allowCredentials
 
-	return ctx.body = assertionOptions;
+	return ctx.body = assertionOptions
 });
 
 router.post('/response', async (ctx) => {

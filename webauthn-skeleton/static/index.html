@@ -45,14 +45,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@hexagon/base64-arraybuffer@2.0.2/dist/base64-arraybuffer.umd.min.js"></script>
 
     <script type="module">
-		import {checkIfLoggedIn} from './js/view.js'
+		import {checkIfLoggedIn, loadMainContainer} from './js/view.js'
 
-        $(document).ready(() => {
-            checkIfLoggedIn()
-            .then((response) => {
-                if(response)
-                    return loadMainContainer()
-            })
+		window.addEventListener('DOMContentLoaded', async () => {
+            let res = await checkIfLoggedIn()
+            console.log('~ res', res)
+            if (res) loadMainContainer()
         })
     </script>
 

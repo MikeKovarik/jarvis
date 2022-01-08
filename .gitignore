@@ -21,3 +21,4 @@
 /app1
 /node_modules
 /.env
+/webauthn-skeleton/keys

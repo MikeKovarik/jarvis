@@ -3,7 +3,8 @@ import fido2lib from 'fido2-lib'
 const { Fido2Lib } = fido2lib
 
 export default class Fido2 {
-	constructor(rpId, rpName, rpIcon, timeout) {
+
+	constructor(rpId, rpName, timeout) {
 		this.f2l = new Fido2Lib({
 			timeout,
 			rpId,
@@ -14,7 +15,7 @@ export default class Fido2 {
 			authenticatorAttachment: undefined, // ['platform', 'cross-platform']
 			authenticatorRequireResidentKey: false,
 			authenticatorUserVerification: 'preferred'
-		});
+		})
 	}
 
 	async registration(displayName) {
@@ -32,20 +33,21 @@ export default class Fido2 {
 			challenge: challenge,
 			origin: origin,
 			factor: 'either'
-		};
-		let regResult = await this.f2l.attestationResult(clientAttestationResponse, attestationExpectations); // will throw on error
-		return regResult;
+		}
+		let regResult = await this.f2l.attestationResult(clientAttestationResponse, attestationExpectations) // will throw on error
+		return regResult
 	}
 
 	async login() {
-		let assertionOptions = await this.f2l.assertionOptions();
-		assertionOptions.challenge = base64url.encode(assertionOptions.challenge, true);
-		assertionOptions.status = 'ok';
-		return assertionOptions;
+		let assertionOptions = await this.f2l.assertionOptions()
+		assertionOptions.challenge = base64url.encode(assertionOptions.challenge, true)
+		assertionOptions.status = 'ok'
+		return assertionOptions
 	}
 
 	async assertion(assertionResult, expectedAssertionResult) {
-		let authnResult = await this.f2l.assertionResult(assertionResult, expectedAssertionResult); // will throw on error
-		return authnResult;
+		let authnResult = await this.f2l.assertionResult(assertionResult, expectedAssertionResult) // will throw on error
+		return authnResult
 	}
+
 }

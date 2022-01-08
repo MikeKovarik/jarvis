@@ -17,21 +17,14 @@ export default class Fido2 {
 		});
 	}
 
-	async registration(username, displayName, id) {
-		let registrationOptions = await this.f2l.attestationOptions();
-
-		// make sure to add registrationOptions.user.id
-		registrationOptions.user = {
-			id: id,
-			name: username,
-			displayName: displayName
-		};
-
-		registrationOptions.status = 'ok';
-
-		registrationOptions.challenge = base64url.encode(registrationOptions.challenge, true);
-
-		return registrationOptions;
+	async registration(displayName) {
+		let registrationOptions = await this.f2l.attestationOptions()
+		const id = 'default'
+		const name = 'default'
+		registrationOptions.user = {id, name, displayName}
+		registrationOptions.status = 'ok'
+		registrationOptions.challenge = base64url.encode(registrationOptions.challenge, true)
+		return registrationOptions
 	}
 
 	async attestation(clientAttestationResponse, origin, challenge) {

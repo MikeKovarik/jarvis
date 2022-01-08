@@ -47,8 +47,10 @@ export async function register(username, additional) {
 	let name = username
 	try {
 		let response1 = await getMakeCredentialsChallenge({username, name}, additional)
+        console.log('~ response1', response1)
 		let publicKey = preformatMakeCredReq(response1)
 		let response2 = await navigator.credentials.create({ publicKey })
+        console.log('~ response2.response.attestationObject', response2.response.attestationObject)
 		let makeCredResponse = {
 			id: response2.id,
 			rawId: base64.encode(response2.rawId,true),

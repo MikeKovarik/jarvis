@@ -4,11 +4,10 @@ import koaRouter from '@koa/router'
 import Fido2 from '../utils/fido2.js'
 import config from '../config.js'
 import database from '../db/db.js'
-import sanitizeUsername from '../utils/username.js'
 
 const router = koaRouter({ prefix: '/webauthn' })
 
-const f2l       = new Fido2(config.rpId, config.rpName, undefined, config.challengeTimeoutMs)
+const f2l = new Fido2(config.rpId, config.rpName, undefined, config.challengeTimeoutMs)
 /**
  * Returns base64url encoded buffer of the given length
  * @param  {Number} len - length of the buffer
@@ -23,57 +22,18 @@ let randomBase64URLBuffer = (len) => {
 const transports = ['usb', 'nfc', 'ble', 'internal']
 
 router.post('/register', async (ctx) => {
-	if (!ctx.request.body || !ctx.request.body.username || !ctx.request.body.name) {
+	console.log('GET /register')
+	if (!ctx.request.body || !ctx.request.body.name) {
 		return ctx.body = {
 			'status': 'failed',
 			'message': 'ctx missing name or username field!'
-		};
+		}
 	}
-
-	let usernameClean = 'foo'
-	let name = 'foo'
-	let id = 'foo'
-
-	/*
-	let usernameClean = sanitizeUsername(ctx.request.body.username),
-		name     = usernameClean;
-
-	if (!usernameClean) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'Invalid username!'
-		};
-	}
-
-	if (database.users[usernameClean] && database.users[usernameClean].registered) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': `Username ${username} already exists`
-		};
-	}
-
-	let id = randomBase64URLBuffer();
-
-	database.users[usernameClean] = {
-		'name': name,
-		'registered': false,
-		'id': id,
-		'authenticators': [],
-		'oneTimeToken': undefined,
-		'recoveryEmail': undefined
-	};
-	*/
-
-	let challengeMakeCred = await f2l.registration(usernameClean, name, id);
-    
-	// Transfer challenge and username to session
-	ctx.session.challenge = challengeMakeCred.challenge;
-	//ctx.session.username  = usernameClean;
-
-	// Respond with credentials
-	return ctx.body = challengeMakeCred;
-});
-
+	let challengeMakeCred = await f2l.registration(ctx.request.body.name)
+	ctx.session.challenge = challengeMakeCred.challenge
+    console.log('~ challengeMakeCred', challengeMakeCred)
+	return ctx.body = challengeMakeCred
+})
 
 router.post('/add', async (ctx) => {
 	if (!ctx.request.body) {
@@ -147,7 +107,7 @@ router.post('/login', async (ctx) => {
 
 	// Pass this, to limit selectable credentials for user... This may be set in response instead, so that
 	// all of a users server (public) credentials isn't exposed to anyone
-	let allowCredentials = database.map(({type, id}) => allowCredentials.push({type, id, transports}))
+	let allowCredentials = database.map(({type, id}) => ({type, id, transports}))
 
 	assertionOptions.allowCredentials = allowCredentials
 
@@ -167,11 +127,14 @@ router.post('/response', async (ctx) => {
 		};
 	}
 	let webauthnResp = ctx.request.body;
+    console.log('~ webauthnResp', webauthnResp)
 	if (webauthnResp.response.attestationObject !== undefined) {
         console.log('~ webauthnResp.response.attestationObject')
 		/* This is create cred */
 		webauthnResp.rawId = base64ToUint8(webauthnResp.rawId, true);
+        console.log('~ before', webauthnResp.response.attestationObject)
 		webauthnResp.response.attestationObject = base64ToUint8(webauthnResp.response.attestationObject, true);
+        console.log('~ after', webauthnResp.response.attestationObject)
 		const result = await f2l.attestation(webauthnResp, config.origin, ctx.session.challenge);
         
 		const credId = result.authnrData.get('credId')
@@ -179,7 +142,6 @@ router.post('/response', async (ctx) => {
 
 		const token = {
 			id,
-			credId,
 			publicKey: result.authnrData.get('credentialPublicKeyPem'),
 			type: webauthnResp.type,
 			counter: 0,
@@ -211,7 +173,6 @@ router.post('/response', async (ctx) => {
 			let authr = validAuthenticators[authrIdx];
 			try {
 
-				const userHandle = base64ToUint8(authr.id)
 				let assertionExpectations = {
 					// Remove the following comment if allowCredentials has been added into authnOptions so the credential received will be validate against allowCredentials array.
 					allowCredentials: ctx.session.allowCredentials,
@@ -220,7 +181,7 @@ router.post('/response', async (ctx) => {
 					factor: 'either',
 					publicKey: authr.publicKey,
 					prevCounter: 0,
-					userHandle
+					userHandle: base64ToUint8(authr.id)
 				};
 
 				let result = await f2l.assertion(webauthnResp, assertionExpectations);

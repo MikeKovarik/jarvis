@@ -16,7 +16,6 @@ router.get('/isLoggedIn', (ctx) => {
 /* Logs user out */
 router.get('/logout', (ctx) => {
 	ctx.session.loggedIn = false
-	ctx.session.username = undefined
 	return success(ctx)
 })
 
@@ -30,28 +29,6 @@ router.get('/personalInfo', (ctx) => {
 			'authenticators': database,
 			'name': 'foo',
 		}
-		/*
-		let tokenInfo = undefined,
-			userInfo = database.users[ctx.session.username]
-		if (userInfo.oneTimeToken) {            
-			if (userInfo.oneTimeToken.expires > new Date().getTime()) {
-				tokenInfo = { 
-					token: token.encode(userInfo.oneTimeToken.token),
-					expires: userInfo.oneTimeToken.expires 
-				}
-			} else {
-				tokenInfo = undefined
-				userInfo.oneTimeToken = undefined
-			}
-		}
-		return ctx.body = {
-			'status': 'ok',
-			'authenticators': userInfo.authenticators,
-			'name': userInfo.name,
-			'oneTimeToken': tokenInfo,
-			'recoveryEmail': userInfo.recoveryEmail
-		}
-		*/
 	}
 })
 

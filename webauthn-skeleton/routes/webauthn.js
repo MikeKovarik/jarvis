@@ -1,9 +1,10 @@
-import crypto from 'crypto'
 import base64url from '@hexagon/base64-arraybuffer'
 import koaRouter from '@koa/router'
 import Fido2 from '../utils/fido2.js'
 import config from '../config.js'
 import database from '../db/db.js'
+import {fail, success} from './util.js'
+
 
 const router = koaRouter({ prefix: '/webauthn' })
 
@@ -13,32 +14,23 @@ const transports = ['usb', 'nfc', 'ble', 'internal']
 
 router.post('/register', async (ctx) => {
 	console.log('GET /register')
-	if (!ctx.request.body || !ctx.request.body.name) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'ctx missing name or username field!'
-		}
-	}
+
+	if (!ctx.request.body || !ctx.request.body.name)
+		return fail(ctx, 'ctx missing name or username field!')
+
 	let challengeMakeCred = await f2l.registration(ctx.request.body.name)
 	ctx.session.challenge = challengeMakeCred.challenge
     console.log('~ challengeMakeCred', challengeMakeCred)
 	return ctx.body = challengeMakeCred
 })
 
-router.post('/add', async (ctx) => {
-	if (!ctx.request.body) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'ctx missing name or username field!'
-		}
-	}
 
-	if (!ctx.session.loggedIn) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'User not logged in!'
-		}
-	}
+router.post('/add', async (ctx) => {
+	if (!ctx.request.body)
+		return fail(ctx, 'ctx missing name or username field!')
+
+	if (!ctx.session.loggedIn)
+		return fail(ctx, 'User not logged in!')
 
     console.log('~ ctx.session.username', ctx.session.username)
 
@@ -63,6 +55,7 @@ router.post('/add', async (ctx) => {
 	// Respond with credentials
 	return ctx.body = challengeMakeCred
 })
+
 
 router.post('/login', async (ctx) => {
 	console.log('GET /login')
@@ -91,16 +84,16 @@ router.post('/login', async (ctx) => {
 	return ctx.body = assertionOptions
 })
 
+
 router.post('/response', async (ctx) => {
 	console.log('GET /response')
+
 	if (!ctx.request.body       || !ctx.request.body.id
     || !ctx.request.body.rawId || !ctx.request.body.response
     || !ctx.request.body.type  || ctx.request.body.type !== 'public-key' ) {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'Response missing one or more of id/rawId/response/type fields, or type is not public-key!'
-		}
+		return fail(ctx, 'Response missing one or more of id/rawId/response/type fields, or type is not public-key!')
 	}
+
 	let webauthnResp = ctx.request.body
     console.log('~ webauthnResp', webauthnResp)
 	if (webauthnResp.response.attestationObject !== undefined) {
@@ -128,8 +121,7 @@ router.post('/response', async (ctx) => {
 
 		ctx.session.loggedIn = true
 
-		return ctx.body = { 'status': 'ok' }
-
+		return success(ctx)
 
 	} else if (webauthnResp.response.authenticatorData !== undefined) {
         console.log('~ webauthnResp.response.authenticatorData')
@@ -166,29 +158,17 @@ router.post('/response', async (ctx) => {
         
 			} catch {}
 		}
+
 		// authentication complete!
-		//if (winningAuthenticator && database.users[ctx.session.username].registered ) {
 		if (winningAuthenticator) {
 			ctx.session.loggedIn = true
-			return ctx.body = { 'status': 'ok' }
-
-			// Authentication failed
+			return success(ctx)
 		} else {
-			return ctx.body = {
-				'status': 'failed',
-				'message': 'Can not authenticate signature!'
-			}
+			return fail(ctx, 'Can not authenticate signature!')
 		}
 	} else {
-		return ctx.body = {
-			'status': 'failed',
-			'message': 'Can not authenticate signature!'
-		}
+		return fail(ctx, 'Can not authenticate signature!')
 	}
-})
-
-router.get('/db', async (ctx) => {
-	return ctx.body = JSON.stringify(database, null, 2)
 })
 
 const uint8ToBase64 = buffer => base64url.encode(buffer, true)

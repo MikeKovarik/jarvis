@@ -87,26 +87,22 @@ router.post('/response', async (ctx) => {
 		console.log('GET /RESPONSE A')
 		await handleRegistrationResponse(body, ctx)
 		ctx.session.loggedIn = true
-		return success(ctx)
 	} else if (body.response.authenticatorData !== undefined) {
 		console.log('GET /RESPONSE B')
 		let winningAuthenticator = await handleLoginResponse(body, ctx)
-		// authentication complete!
-		if (winningAuthenticator) {
-			ctx.session.loggedIn = true
-			return success(ctx)
-		} else {
-			return fail(ctx, 'Can not authenticate signature!')
-		}
-	} else {
-		return fail(ctx, 'Can not authenticate signature!')
+		ctx.session.loggedIn = !!winningAuthenticator
 	}
+	
+	if (ctx.session.loggedIn)
+		return success(ctx)
+	else
+		return fail(ctx, 'Can not authenticate signature!')
 })
 
 async function handleRegistrationResponse(body, ctx) {
 	/* This is create cred */
-	body.rawId = base64ToUint8(body.rawId, true)
-	body.response.attestationObject = base64ToUint8(body.response.attestationObject, true)
+	body.rawId = base64ToUint8(body.rawId)
+	body.response.attestationObject = base64ToUint8(body.response.attestationObject)
 	const result = await f2l.attestation(body, config.origin, ctx.session.challenge)
 	
 	const credId = result.authnrData.get('credId')
@@ -129,13 +125,11 @@ async function handleLoginResponse(body, ctx) {
 	// save the challenge in the session information...
 	// send authnOptions to client and pass them in to `navigator.credentials.get()`...
 	// get response back from client (clientAssertionResponse)
-	body.rawId = base64ToUint8(body.rawId, true)
-	body.response.userHandle = base64ToUint8(body.rawId, true)
+	body.rawId = base64ToUint8(body.rawId)
+	body.response.userHandle = base64ToUint8(body.rawId)
 	let validAuthenticators = [...database]
-	for (let authrIdx in validAuthenticators) {
-		let authr = validAuthenticators[authrIdx]
+	for (let authr of validAuthenticators) {
 		try {
-
 			let assertionExpectations = {
 				// Remove the following comment if allowCredentials has been added into authnOptions so the credential received will be validate against allowCredentials array.
 				allowCredentials: ctx.session.allowCredentials,
@@ -146,15 +140,13 @@ async function handleLoginResponse(body, ctx) {
 				prevCounter: 0,
 				userHandle: base64ToUint8(authr.id)
 			}
-
 			let result = await f2l.assertion(body, assertionExpectations)
-
 			return result
 		} catch {}
 	}
 }
 
 const uint8ToBase64 = buffer => base64url.encode(buffer, true)
-const base64ToUint8 = buffer => base64url.decode(buffer, true)
+const base64ToUint8 = string => base64url.decode(string, true)
 
 export default router

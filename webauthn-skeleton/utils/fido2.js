@@ -30,12 +30,11 @@ export default class Fido2 {
 
 	async attestation(clientAttestationResponse, origin, challenge) {
 		let attestationExpectations = {
-			challenge: challenge,
-			origin: origin,
+			challenge,
+			origin,
 			factor: 'either'
 		}
-		let regResult = await this.f2l.attestationResult(clientAttestationResponse, attestationExpectations) // will throw on error
-		return regResult
+		return this.f2l.attestationResult(clientAttestationResponse, attestationExpectations) // will throw on error
 	}
 
 	async login() {
@@ -46,8 +45,7 @@ export default class Fido2 {
 	}
 
 	async assertion(assertionResult, expectedAssertionResult) {
-		let authnResult = await this.f2l.assertionResult(assertionResult, expectedAssertionResult) // will throw on error
-		return authnResult
+		return this.f2l.assertionResult(assertionResult, expectedAssertionResult) // will throw on error
 	}
 
 }

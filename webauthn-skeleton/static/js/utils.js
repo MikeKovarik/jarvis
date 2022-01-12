@@ -33,7 +33,7 @@ function reviveObjectPublicKey(input) {
 	return output
 }
 
-export const preformatMakeCredReq = (makeCredReq) => {
+export const registrationCredFromJson = (makeCredReq) => {
 	makeCredReq.challenge = base64ToUint8(makeCredReq.challenge)
 	makeCredReq.user.id = base64ToUint8(makeCredReq.user.id)
 	if (makeCredReq.excludeCredentials)
@@ -46,7 +46,7 @@ const reviveCred = cred => ({
 	type: cred.type
 })
 
-export const preformatGetAssertReq = getAssert => {
+export const loginAssertFromJson = getAssert => {
 	getAssert.challenge = base64ToUint8(getAssert.challenge)
 	for (let cred of getAssert.allowCredentials)
 		cred.id = base64ToUint8(cred.id)

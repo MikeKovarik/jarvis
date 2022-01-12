@@ -14,23 +14,19 @@ const f2l = new Fido2(config.rpId, config.rpName, config.challengeTimeoutMs)
 
 const transports = ['usb', 'nfc', 'ble', 'internal']
 
-router.post('/register', async (ctx) => {
+router.post('/register', async ctx => {
 	console.log('GET /REGISTER')
-
 	let {name} = ctx.request.body ?? {}
-
 	if (!name)
 		return fail(ctx, 'ctx missing name or username field!')
-
 	let challengeMakeCred = await f2l.registration(name)
-	//challengeMakeCred.excludeCredentials = database.map(({id, type}) => ({ id, type }))
 	ctx.session.challenge = challengeMakeCred.challenge
 	ctx.session.name = name
 	ctx.body = challengeMakeCred
 })
 
 
-router.post('/login', async (ctx) => {
+router.post('/login', async ctx => {
 	console.log('GET /LOGIN')
 	let assertionOptions = await f2l.login(usernameClean)
 	assertionOptions.allowCredentials = database.map(({type, id}) => ({type, id, transports}))
@@ -40,7 +36,7 @@ router.post('/login', async (ctx) => {
 })
 
 
-router.post('/response', async (ctx) => {
+router.post('/response', async ctx => {
 
 	let {body} = ctx.request
 

@@ -1,6 +1,7 @@
 import base64url from '@hexagon/base64-arraybuffer'
 import fido2lib from 'fido2-lib'
-const { Fido2Lib } = fido2lib
+const {Fido2Lib} = fido2lib
+
 
 export default class Fido2 {
 

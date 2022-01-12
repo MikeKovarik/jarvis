@@ -35,15 +35,13 @@ router.post('/login', async ctx => {
 })
 
 
-router.post('/response', async ctx => {
+const isValidResponse = body => body && body.id && body.rawId && body.response && body.type && body.type === 'public-key'
 
+router.post('/response', async ctx => {
 	let {body} = ctx.request
 
-	if (!body       || !body.id
-    || !body.rawId || !body.response
-    || !body.type  || body.type !== 'public-key' ) {
-		return fail(ctx, 'Response missing one or more of id/rawId/response/type fields, or type is not public-key!')
-	}
+	if (!isValidResponse(body))
+		return ctx.throw(500, 'Response missing one or more of id/rawId/response/type fields, or type is not public-key!')
 
 	if (body.response.attestationObject !== undefined) {
 		console.log('GET /RESPONSE A')
@@ -55,10 +53,11 @@ router.post('/response', async ctx => {
 		ctx.session.loggedIn = !!winningAuthenticator
 	}
 	
-	if (ctx.session.loggedIn)
-		return success(ctx)
-	else
-		return fail(ctx, 'Can not authenticate signature!')
+	if (!ctx.session.loggedIn)
+		return ctx.throw(500, 'Can not authenticate signature!')
+
+	ctx.status = 200
+	ctx.body = ''
 })
 
 async function handleRegistrationResponse(body, ctx) {

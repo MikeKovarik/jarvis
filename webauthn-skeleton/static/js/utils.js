@@ -68,8 +68,11 @@ export async function getJsonSimple(url) {
 }
 
 async function handleResponse(res) {
-	let {status, message, ...data} = await res.json()
-	if (status !== 'ok')
-		throw new Error(message)
-	return data
+	let contentLength = res.headers.get('content-length')
+	if (contentLength > 0) {
+		let {status, message, ...data} = (await res.json()) ?? {status: 'ok'}
+		if (status !== 'ok')
+			throw new Error(message)
+		return data
+	}
 }

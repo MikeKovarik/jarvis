@@ -3,45 +3,39 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
-    <link rel="stylesheet" href="css/demo.css">
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+		}
+		* {
+			box-sizing: border-box;
+		}
+		input,
+		button {
+			padding: 0 16px;
+			height: 32px;
+			border-radius: 4px;
+		}
+		button {
+			background-color: rgba(0,0,0,0.2);
+			border: none;
+		}
+		input {
+			border: 1px solid rgba(0,0,0,0.4);
+		}
+	</style>
 </head>
 <body>
 
-    <!-- View when logged out -->
-    <div id="registerContainer">
-		<input type="text" class="full" id="name">
-		<button class="button-primary fl half" id="button-register">Register</button>
-		<br>
-		<br>
-		<button class="button-primary fl half" id="button-login">Login</button>
-    </div>
+	<input type="text" class="full" id="name">
+	<button id="register">Register</button>
+	<br>
+	<br>
+	<button id="login">Login</button>
+    <button id="logout">Logout</button>
+	<br>
+	<table id="credential-table"></table>
 
-    <!-- View when logged in -->
-    <div id="mainContainer">
-        <h3>Hey <span id="name"></span>!</h3>
-        <div id="login-token">
-            <blockquote>
-                <h4>Login token active</h4>
-                <p>To log in on another device, send the link below, or scan the QR code. This will enable you to add local credentials from that device.</p>
-                <p>Token will expire at <span id="login-token-expires"></span></p>
-                <p>Link: <span id="login-token-link"></span></p>
-                <p id="login-token-qr"></p>
-            </blockquote>
-        </div>
-        <h4>Your credentials</h4>
-        <table id="credential-table">
-            <thead><th width="10%">Counter</th><th>Public Key</th><th width="25%">Created</th></thead>
-            <tbody>
-
-            </tbody>
-        </table>
-        <button id="button-add-credential">Add credential</button>
-        <button id="button-logout">Logout</button>
-    </div>
-
-    <!-- External dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@hexagon/base64-arraybuffer@2.0.2/dist/base64-arraybuffer.umd.min.js"></script>
 
     <script type="module">

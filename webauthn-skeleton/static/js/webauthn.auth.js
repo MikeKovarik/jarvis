@@ -1,20 +1,5 @@
-import {publicKeyCredentialToJSON, preformatMakeCredReq, preformatGetAssertReq} from './utils.js'
+import {publicKeyCredentialToJSON, preformatMakeCredReq, preformatGetAssertReq, postJson} from './utils.js'
 import {loadMainContainer} from './view.js'
-
-let postJson = async (url, body = {}) => {
-	let response = await fetch(url, {
-		method: 'POST',
-		credentials: 'include',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(body)
-	})
-	let {status, message, ...data} = await response.json()
-	if (status !== 'ok')
-		throw new Error(`Server responed with error. The message is: ${message}`)
-	return data
-}
 
 let getMakeCredentialsChallenge = (formBody, additional) => {
 	return postJson(additional ? '/webauthn/add' : '/webauthn/register', formBody)

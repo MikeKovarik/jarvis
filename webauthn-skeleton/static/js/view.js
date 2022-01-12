@@ -1,67 +1,44 @@
 import {register, login} from './webauthn.auth.js'
+import {getJson} from './utils.js'
+
+
+const $ = document.querySelector.bind(document)
 
 const renderMainContainer = (response) => {
-    
-	// Update name
-	$('#name').text(response.name)
-    
-	// Clear credential table
-	$('#credential-table tbody').html('')
+	let table = $('table')
+	table.innerHTML = response.authenticators.map(auth => `
+		<tr>
+			<td>${auth.name}</td>
+			<td><pre>${auth.publicKey}</pre></td>
+		</tr>
+	`).join('')
+}
 
-	for(let authenticator of response.authenticators) {        
-		$('#credential-table tbody').append('<tr><td><pre class\'pubkey\'>' + authenticator.counter + '</pre></td><td><pre class=\'pubkey\'>' + authenticator.publicKey + '</pre></td><td><pre class=\'pubkey\'>' + new Date(authenticator.created).toLocaleString() + '</pre></td></tr>')
+export const loadMainContainer = async () => {
+	let data = await getJson('/personalInfo')
+	renderMainContainer(data)
+}
+
+export const checkIfLoggedIn = async () => {
+	try {
+		await getJson('/isLoggedIn')
+		return true
+	} catch {
+		return false
 	}
-
-	$('#login-token').hide()
-	$('#registerContainer').hide()
-	$('#mainContainer').show()
 }
 
-export const loadMainContainer = () => {
-	return fetch('/personalInfo', {credentials: 'include'})
-		.then((response) => response.json())
-		.then((response) => {
-			if(response.status === 'ok') {
-				renderMainContainer(response)
-			} else {
-				alert(`Error! ${response.message}`)
-			}
-		})
-}
+$('#login').addEventListener('click', login)
 
-export const checkIfLoggedIn = () => {
-	return fetch('/isLoggedIn', {credentials: 'include'})
-		.then((response) => response.json())
-		.then((response) => {
-			if(response.status === 'ok') {
-				return true
-			} else {
-				return false
-			}
-		})
-}
-
-$('#button-logout').click(() => {
-	fetch('/logout', {credentials: 'include'})
-
-	$('#registerContainer').show()
-	$('#mainContainer').hide()
+$('#logout').addEventListener('click', async () => {
+	await fetch('/logout', {credentials: 'include'})
+	console.log('logged out?')
 })
 
-
-$('#button-add-credential').click(() => {
-	register(undefined, true)
-})
-
-$('#button-register').click(() => {
-	const name = $('#name')[0].value
-	if (!name) {
-		alert('Username is missing!')
-	} else {
+$('#register').addEventListener('click', () => {
+	const name = $('#name').value
+	if (name)
 		register(name)
-	}
-})
-
-$('#button-login').click(() => {   
-	login()
+	else
+		alert('Username is missing!')
 })

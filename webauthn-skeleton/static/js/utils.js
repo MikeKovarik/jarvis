@@ -60,3 +60,28 @@ export const preformatGetAssertReq = getAssert => {
 
 const uint8ToBase64 = buffer => base64.encode(buffer, true)
 const base64ToUint8 = string => base64.decode(string, true)
+
+
+export async function postJson(url, body = {}) {
+	let res = await fetch(url, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(body)
+	})
+	return handleResponse(res)
+}
+
+export async function getJson(url) {
+	let res = await fetch(url, {credentials: 'include'})
+	return handleResponse(res)
+}
+
+async function handleResponse(res) {
+	let {status, message, ...data} = await res.json()
+	if (status !== 'ok')
+		throw new Error(message)
+	return data
+}

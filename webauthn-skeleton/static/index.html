@@ -42,9 +42,8 @@
 		import {checkIfLoggedIn, loadMainContainer} from './js/view.js'
 
 		window.addEventListener('DOMContentLoaded', async () => {
-            let res = await checkIfLoggedIn()
-            console.log('~ res', res)
-            if (res) loadMainContainer()
+            let loggedIn = await checkIfLoggedIn()
+            if (loggedIn) loadMainContainer()
         })
     </script>
 

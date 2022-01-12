@@ -1,5 +1,5 @@
 import {register, login} from './webauthn.auth.js'
-import {getJson} from './utils.js'
+import {getJson, getJsonSimple} from './utils.js'
 
 
 const $ = document.querySelector.bind(document)
@@ -15,17 +15,13 @@ const renderMainContainer = (response) => {
 }
 
 export const loadMainContainer = async () => {
-	let data = await getJson('/personalInfo')
+	let data = await getJson('/credentials')
 	renderMainContainer(data)
 }
 
 export const checkIfLoggedIn = async () => {
-	try {
-		await getJson('/isLoggedIn')
-		return true
-	} catch {
-		return false
-	}
+	let {loggedIn} = await getJsonSimple('/loggedin')
+	return loggedIn
 }
 
 $('#login').addEventListener('click', login)

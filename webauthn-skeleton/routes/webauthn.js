@@ -17,8 +17,7 @@ const transports = ['usb', 'nfc', 'ble', 'internal']
 router.post('/register', async ctx => {
 	console.log('GET /REGISTER')
 	let {name} = ctx.request.body ?? {}
-	if (!name)
-		return fail(ctx, 'ctx missing name or username field!')
+	if (!name) return ctx.throw(500, 'Missing name field')
 	let challengeMakeCred = await f2l.registration(name)
 	ctx.session.challenge = challengeMakeCred.challenge
 	ctx.session.name = name

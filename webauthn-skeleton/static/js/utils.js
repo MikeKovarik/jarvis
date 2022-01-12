@@ -5,31 +5,18 @@ export const publicKeyCredentialToJSON = cred => {
 	return cred
 }
 
-function reviveArrayPublicKey(cred) {
-	//console.log('array() ---')
-	let arr = []
-	for (let i of cred)
-		arr.push(publicKeyCredentialToJSON(i))
-
-	return arr
+function reviveArrayPublicKey(arr) {
+	return arr.map(publicKeyCredentialToJSON)
 }
 
 function reviveBufferPublicKey(cred) {
-	//console.log('buffer() ---')
 	return uint8ToBase64(cred)
 }
 
 function reviveObjectPublicKey(input) {
-	//console.log('object() -------------------------------')
-    //console.log('input', input)
-    //console.log('Object.keys(input)', Object.keys(input))
 	let output = {}
-	for (let key in input) {
+	for (let key in input)
 		output[key] = publicKeyCredentialToJSON(input[key])
-		//console.log('>', key, input[key], output[key])
-	}
-    //console.log('output', output)
-    //console.log('Object.keys(output)', Object.keys(output))
 	return output
 }
 
@@ -69,9 +56,15 @@ export async function postJson(url, body = {}) {
 	return handleResponse(res)
 }
 
+// todo remove in favor of getJsonSimple
 export async function getJson(url) {
 	let res = await fetch(url, {credentials: 'include'})
 	return handleResponse(res)
+}
+
+export async function getJsonSimple(url) {
+	let res = await fetch(url, {credentials: 'include'})
+	return res.json()
 }
 
 async function handleResponse(res) {

@@ -6,6 +6,8 @@ import database from '../db/db.js'
 import {fail, success} from './util.js'
 
 
+const usernameClean = 'foo'
+
 const router = koaRouter({ prefix: '/webauthn' })
 
 const f2l = new Fido2(config.rpId, config.rpName, config.challengeTimeoutMs)
@@ -15,61 +17,26 @@ const transports = ['usb', 'nfc', 'ble', 'internal']
 router.post('/register', async (ctx) => {
 	console.log('GET /REGISTER')
 
-	if (!ctx.request.body || !ctx.request.body.name)
+	let {name} = ctx.request.body ?? {}
+
+	if (!name)
 		return fail(ctx, 'ctx missing name or username field!')
 
-	let challengeMakeCred = await f2l.registration(ctx.request.body.name)
+	let challengeMakeCred = await f2l.registration(name)
+	//challengeMakeCred.excludeCredentials = database.map(({id, type}) => ({ id, type }))
 	ctx.session.challenge = challengeMakeCred.challenge
-	return ctx.body = challengeMakeCred
-})
-
-
-router.post('/add', async (ctx) => {
-	console.log('GET /ADD')
-
-	if (!ctx.request.body)
-		return fail(ctx, 'ctx missing name or username field!')
-
-	if (!ctx.session.loggedIn)
-		return fail(ctx, 'User not logged in!')
-
-	let usernameClean = 'foo'
-	let name = 'foo'
-	let id = 'foo'
-
-
-	let challengeMakeCred = await f2l.registration(usernameClean, name, id)
-    
-	// Transfer challenge to session
-	ctx.session.challenge = challengeMakeCred.challenge
-
-	// Exclude existing credentials
-	challengeMakeCred.excludeCredentials = database.map(({id, type}) => ({ id, type }))
-
-	// Respond with credentials
-	return ctx.body = challengeMakeCred
+	ctx.session.name = name
+	ctx.body = challengeMakeCred
 })
 
 
 router.post('/login', async (ctx) => {
 	console.log('GET /LOGIN')
-	//let usernameClean = sanitizeUsername(ctx.request.body.username)
-	let usernameClean = 'foo'
-
 	let assertionOptions = await f2l.login(usernameClean)
-
-	// Transfer challenge and username to session
+	assertionOptions.allowCredentials = database.map(({type, id}) => ({type, id, transports}))
 	ctx.session.challenge = assertionOptions.challenge
-
-	// Pass this, to limit selectable credentials for user... This may be set in response instead, so that
-	// all of a users server (public) credentials isn't exposed to anyone
-	let allowCredentials = database.map(({type, id}) => ({type, id, transports}))
-
-	assertionOptions.allowCredentials = allowCredentials
-
-	ctx.session.allowCredentials = allowCredentials
-
-	return ctx.body = assertionOptions
+	ctx.session.allowCredentials = assertionOptions.allowCredentials
+	ctx.body = assertionOptions
 })
 
 
@@ -104,17 +71,14 @@ async function handleRegistrationResponse(body, ctx) {
 	body.rawId = base64ToUint8(body.rawId)
 	body.response.attestationObject = base64ToUint8(body.response.attestationObject)
 	const result = await f2l.attestation(body, config.origin, ctx.session.challenge)
-	
 	const credId = result.authnrData.get('credId')
 	const id = uint8ToBase64(credId)
-
 	const token = {
 		id,
 		publicKey: result.authnrData.get('credentialPublicKeyPem'),
 		type: body.type,
-		counter: 0,
+		name: ctx.session.name,
 	}
-
 	database.push(token)
 }
 

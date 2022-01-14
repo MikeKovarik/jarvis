@@ -39,8 +39,8 @@ app.use(session({
 
 
 app.use((req, res, next) => {
-	req.session.username = 'mike'
-	req.session['signed-in'] = 'yes'
+	//req.session.username = 'mike'
+	//req.session['signed-in'] = 'yes'
 
 	//process.env.HOSTNAME = req.headers.host
 

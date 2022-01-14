@@ -34,7 +34,7 @@ export const registerCredential = async () => {
 	}
 
 	const options = await _fetch('/auth/registerRequest', opts)
-    console.log('~ options', options)
+	console.log('~ options', options)
 
 	options.user.id = base64url.decode(options.user.id)
 	options.challenge = base64url.decode(options.challenge)
@@ -49,7 +49,7 @@ export const registerCredential = async () => {
 		publicKey: options,
 	})
 
-    console.log('~ cred', cred)
+	console.log('~ cred', cred)
 
 	const credential = {}
 	credential.id = cred.id
@@ -67,16 +67,65 @@ export const registerCredential = async () => {
 		}
 	}
 
-    console.log('~ credential', credential)
+	console.log('~ credential', credential)
 
 	localStorage.setItem(`credId`, credential.id)
 
 	let regRes = await _fetch('/auth/registerResponse', credential)
-    console.log('~ regRes', regRes)
+	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
 	localStorage.removeItem('credId')
 	return _fetch(`/auth/removeKey?credId=${encodeURIComponent(credId)}`)
+}
+
+export const authenticate = async () => {
+	const opts = {}
+
+	let url = '/auth/signinRequest'
+	const credId = localStorage.getItem(`credId`)
+	if (credId) {
+		url += `?credId=${encodeURIComponent(credId)}`
+	}
+
+	const options = await _fetch(url, opts)
+
+	if (options.allowCredentials.length === 0) {
+		console.info('No registered credentials found.')
+		return Promise.resolve(null)
+	}
+
+	options.challenge = base64url.decode(options.challenge)
+
+	for (let cred of options.allowCredentials) {
+		cred.id = base64url.decode(cred.id)
+	}
+
+	const cred = await navigator.credentials.get({
+		publicKey: options,
+	})
+
+	const credential = {}
+	credential.id = cred.id
+	credential.type = cred.type
+	credential.rawId = base64url.encode(cred.rawId)
+
+	if (cred.response) {
+		const clientDataJSON = base64url.encode(cred.response.clientDataJSON)
+		const authenticatorData = base64url.encode(
+			cred.response.authenticatorData
+		)
+		const signature = base64url.encode(cred.response.signature)
+		const userHandle = base64url.encode(cred.response.userHandle)
+		credential.response = {
+			clientDataJSON,
+			authenticatorData,
+			signature,
+			userHandle,
+		}
+	}
+
+	return await _fetch(`/auth/signinResponse`, credential)
 }

@@ -1,25 +1,7 @@
-/*
- * @license
- * Copyright 2019 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License
- */
-
-// init project
-const express = require('express')
-const session = require('express-session')
-const hbs = require('hbs')
-const auth = require('./routes/auth')
+import express from 'express'
+import session from 'express-session'
+import hbs from 'hbs'
+import auth from './routes/auth.js'
 const app = express()
 
 app.set('view engine', 'html')
@@ -90,7 +72,7 @@ app.get('/home', (req, res) => {
 		return
 	}
 	// `home.html` shows sign-out link
-	res.render('home.html', { username: req.session.username })
+	res.render('home.html', {username: req.session.username})
 })
 
 app.get('/reauth', (req, res) => {
@@ -104,7 +86,7 @@ app.get('/reauth', (req, res) => {
 	// Show `reauth.html`.
 	// User is supposed to enter a password (which will be ignored)
 	// Make XHR POST to `/signin`
-	res.render('reauth.html', { username: username })
+	res.render('reauth.html', {username: username})
 })
 
 app.use('/auth', auth)

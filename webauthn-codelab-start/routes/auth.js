@@ -1,36 +1,18 @@
-/*
- * @license
- * Copyright 2019 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License
- */
-const express = require('express')
-const router = express.Router()
-const crypto = require('crypto')
-const fido2 = require('@simplewebauthn/server')
-const base64url = require('base64url')
-const fs = require('fs')
-const low = require('lowdb')
+import express from 'express'
+import crypto from 'crypto'
+import fido2 from '@simplewebauthn/server'
+import base64url from 'base64url'
+import fs from 'fs'
+import low from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync.js'
 
-if (!fs.existsSync('./.data')) {
-	fs.mkdirSync('./.data')
-}
 
-const FileSync = require('lowdb/adapters/FileSync')
-const adapter = new FileSync('.data/db.json')
+const adapter = new FileSync('./data/webauthn.json')
 const db = low(adapter)
 
+const router = express.Router()
 router.use(express.json())
+export default router
 
 const RP_NAME = 'WebAuthn Codelab'
 const TIMEOUT = 30 * 1000 * 60
@@ -41,7 +23,7 @@ db.defaults({
 
 const csrfGuard = (req, res, next) => {
 	if (req.header('X-Requested-With') !== 'XMLHttpRequest') {
-		res.status(400).json({ error: 'invalid access.' })
+		res.status(400).json({error: 'invalid access.'})
 		return
 	}
 	next()
@@ -53,7 +35,7 @@ const csrfGuard = (req, res, next) => {
  **/
 const signedInGuard = (req, res, next) => {
 	if (!req.session['signed-in']) {
-		res.status(401).json({ error: 'not signed in.' })
+		res.status(401).json({error: 'not signed in.'})
 		return
 	}
 	next()
@@ -67,15 +49,15 @@ router.post('/username', (req, res) => {
 	const username = req.body.username
 	// Only check username, no need to check password as this is a mock
 	if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
-		res.status(400).send({ error: 'Bad request' })
+		res.status(400).send({error: 'Bad request'})
 		return
 	} else {
 		// See if account already exists
-		let user = db.get('users').find({ username: username }).value()
+		let user = db.get('users').find({username}).value()
 		// If user entry is not created yet, create one
 		if (!user) {
 			user = {
-				username: username,
+				username,
 				id: base64url.encode(crypto.randomBytes(32)),
 				credentials: [],
 			}
@@ -95,16 +77,16 @@ router.post('/username', (req, res) => {
  **/
 router.post('/password', (req, res) => {
 	if (!req.body.password) {
-		res.status(401).json({ error: 'Enter at least one random letter.' })
+		res.status(401).json({error: 'Enter at least one random letter.'})
 		return
 	}
 	const user = db
 		.get('users')
-		.find({ username: req.session.username })
+		.find({username: req.session.username})
 		.value()
 
 	if (!user) {
-		res.status(401).json({ error: 'Enter username first.' })
+		res.status(401).json({error: 'Enter username first.'})
 		return
 	}
 
@@ -141,7 +123,7 @@ router.get('/signout', (req, res) => {
 router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
 	const user = db
 		.get('users')
-		.find({ username: req.session.username })
+		.find({username: req.session.username})
 		.value()
 	res.json(user || {})
 })
@@ -153,14 +135,14 @@ router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
 router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 	const credId = req.query.credId
 	const username = req.session.username
-	const user = db.get('users').find({ username: username }).value()
+	const user = db.get('users').find({username}).value()
 
 	// Leave credential ids that do not match
 	const newCreds = user.credentials.filter(cred => cred.credId !== credId)
 
 	db.get('users')
-		.find({ username: username })
-		.assign({ credentials: newCreds })
+		.find({username})
+		.assign({credentials: newCreds})
 		.write()
 
 	res.json({})
@@ -201,7 +183,7 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 
 	const username = req.session.username
-	const user = db.get('users').find({ username: username }).value()
+	const user = db.get('users').find({username}).value()
 	try {
 		const excludeCredentials = []
 		if (user.credentials.length > 0) {
@@ -217,7 +199,7 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 		// const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
 		const params = [-7, -257]
 		for (let param of params) {
-			pubKeyCredParams.push({ type: 'public-key', alg: param })
+			pubKeyCredParams.push({type: 'public-key', alg: param})
 		}
 		const as = {} // authenticatorSelection
 		const aa = req.body.authenticatorSelection.authenticatorAttachment
@@ -268,12 +250,12 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 		// Temporary hack until SimpleWebAuthn supports `pubKeyCredParams`
 		options.pubKeyCredParams = []
 		for (let param of params) {
-			options.pubKeyCredParams.push({ type: 'public-key', alg: param })
+			options.pubKeyCredParams.push({type: 'public-key', alg: param})
 		}
 
 		res.json(options)
 	} catch (e) {
-		res.status(400).send({ error: e })
+		res.status(400).send({error: e})
 	}
 })
 
@@ -301,7 +283,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 	const type = req.body.type
 
 	try {
-		const { body } = req
+		const {body} = req
 
 		const verification = await fido2.verifyRegistrationResponse({
 			credential: body,
@@ -310,17 +292,17 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 			expectedRPID,
 		})
 
-		const { verified, registrationInfo } = verification
+		const {verified, registrationInfo} = verification
 
 		if (!verified) {
 			throw 'User verification failed.'
 		}
 
-		const { credentialPublicKey, credentialID, counter } = registrationInfo
+		const {credentialPublicKey, credentialID, counter} = registrationInfo
 		const base64PublicKey = base64url.encode(credentialPublicKey)
 		const base64CredentialID = base64url.encode(credentialID)
 
-		const user = db.get('users').find({ username: username }).value()
+		const user = db.get('users').find({username}).value()
 
 		const existingCred = user.credentials.find(
 			cred => cred.credID === base64CredentialID
@@ -337,7 +319,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 			})
 		}
 
-		db.get('users').find({ username: username }).assign(user).write()
+		db.get('users').find({username}).assign(user).write()
 
 		delete req.session.challenge
 
@@ -345,7 +327,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 		res.json(user)
 	} catch (e) {
 		delete req.session.challenge
-		res.status(400).send({ error: e.message })
+		res.status(400).send({error: e.message})
 	}
 })
 
@@ -367,12 +349,12 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
 	try {
 		const user = db
 			.get('users')
-			.find({ username: req.session.username })
+			.find({username: req.session.username})
 			.value()
 
 		if (!user) {
 			// Send empty response if user is not registered yet.
-			res.json({ error: 'User not found.' })
+			res.json({error: 'User not found.'})
 			return
 		}
 
@@ -406,7 +388,7 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
 
 		res.json(options)
 	} catch (e) {
-		res.status(400).json({ error: e })
+		res.status(400).json({error: e})
 	}
 })
 
@@ -426,7 +408,7 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
  * }```
  **/
 router.post('/signin-response', csrfGuard, async (req, res) => {
-	const { body } = req
+	const {body} = req
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN
 	const expectedRPID = process.env.HOSTNAME
@@ -434,7 +416,7 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 	// Query the user
 	const user = db
 		.get('users')
-		.find({ username: req.session.username })
+		.find({username: req.session.username})
 		.value()
 
 	let credential = user.credentials.find(cred => cred.credId === req.body.id)
@@ -456,7 +438,7 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 			authenticator: credential,
 		})
 
-		const { verified, authenticationInfo } = verification
+		const {verified, authenticationInfo} = verification
 
 		if (!verified) {
 			throw 'User verification failed.'
@@ -465,7 +447,7 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 		credential.prevCounter = authenticationInfo.newCounter
 
 		db.get('users')
-			.find({ username: req.session.username })
+			.find({username: req.session.username})
 			.assign(user)
 			.write()
 
@@ -474,8 +456,6 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 		res.json(user)
 	} catch (e) {
 		delete req.session.challenge
-		res.status(400).json({ error: e })
+		res.status(400).json({error: e})
 	}
 })
-
-module.exports = router

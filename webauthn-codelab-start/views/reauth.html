@@ -1,39 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>WebAuthn Codelab</title>
-		<meta name="description" content="WebAuthn Codelab" />
-		<link
-			id="favicon"
-			rel="icon"
-			href="https://glitch.com/edit/favicon-app.ico"
-			type="image/x-icon"
-		/>
 		<meta charset="utf-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="stylesheet" href="./style.css" />
-		<link
-			rel="stylesheet"
-			href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css"
-		/>
 		<script src="https://cdn.jsdelivr.net/gh/herrjemand/Base64URL-ArrayBuffer@latest/lib/base64url-arraybuffer.js"></script>
 	</head>
-	<body class="mdc-typography">
-		<mwc-top-app-bar-fixed>
-			<span slot="title">WebAuthn codelab</span>
-		</mwc-top-app-bar-fixed>
-		<main class="content">
+	<body>
+
+		<main>
 			<h2>Log in</h2>
-			<form id="form" method="POST" action="/auth/password" class="hidden">
+			<form id="form" method="POST" action="/auth/password">
 				<input type="hidden" name="username" value="{{username}}" />
 				<input type="password" name="password" />
 				</div>
 				<button>Log in</button>
 			</form>
-				<button id="reauth">Log in with biometrics</button>
+			<button id="reauth">Log in with biometrics</button>
 		</main>
-		<script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+
 		<script src="./reauth.js" type="module"></script>
 	</body>
 </html>

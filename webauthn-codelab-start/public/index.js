@@ -1,5 +1,6 @@
-new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'))
-import { _fetch } from '/client.js'
+import {_fetch} from '/client.js'
+
+
 const form = document.querySelector('#form')
 form.addEventListener('submit', e => {
 	e.preventDefault()

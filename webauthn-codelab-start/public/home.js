@@ -1,5 +1,5 @@
 import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
-import {_fetch, registerCredential, unregisterCredential} from '/client.js'
+import {postJson, registerCredential, unregisterCredential} from '/client.js'
 import {checkBiometrics} from '/util.js'
 
 const register = document.querySelector('#register')
@@ -16,7 +16,7 @@ async function main() {
 
 async function getCredentials() {
 	console.log('getCredentials()')
-	const res = await _fetch('/auth/get-keys')
+	const res = await postJson('/auth/get-keys')
 	console.log('~ res', res)
 	const list = document.querySelector('#list')
 	console.log('~ list', list)

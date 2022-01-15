@@ -1,4 +1,4 @@
-export const _fetch = async (path, payload = '') => {
+export const postJson = async (path, payload = '') => {
 	const headers = {
 		'X-Requested-With': 'XMLHttpRequest',
 	}
@@ -33,7 +33,7 @@ export const registerCredential = async () => {
 		},
 	}
 
-	const options = await _fetch('/auth/register-request', opts)
+	const options = await postJson('/auth/register-request', opts)
 	console.log('~ options', options)
 
 	options.user.id = base64url.decode(options.user.id)
@@ -71,14 +71,14 @@ export const registerCredential = async () => {
 
 	localStorage.setItem(`credId`, credential.id)
 
-	let regRes = await _fetch('/auth/register-response', credential)
+	let regRes = await postJson('/auth/register-response', credential)
 	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
 	localStorage.removeItem('credId')
-	return _fetch(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
+	return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 }
 
 export const authenticate = async () => {
@@ -90,7 +90,7 @@ export const authenticate = async () => {
 		url += `?credId=${encodeURIComponent(credId)}`
 	}
 
-	const options = await _fetch(url, opts)
+	const options = await postJson(url, opts)
 
 	if (options.allowCredentials.length === 0) {
 		console.info('No registered credentials found.')
@@ -127,5 +127,5 @@ export const authenticate = async () => {
 		}
 	}
 
-	return await _fetch(`/auth/signin-response`, credential)
+	return await postJson(`/auth/signin-response`, credential)
 }

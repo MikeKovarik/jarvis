@@ -1,4 +1,4 @@
-import {_fetch, authenticate} from '/client.js'
+import {postJson, authenticate} from '/client.js'
 
 
 const form = document.querySelector('#form')
@@ -12,7 +12,7 @@ form.addEventListener('submit', e => {
 	const form = new FormData(e.target)
 	const cred = {}
 	form.forEach((v, k) => (cred[k] = v))
-	_fetch('/auth/password', cred)
+	postJson('/auth/password', cred)
 		.then(user => redirect('/home'))
 		.catch(e => alert(e))
 })

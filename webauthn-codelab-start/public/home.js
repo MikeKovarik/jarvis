@@ -1,17 +1,9 @@
-import { _fetch, registerCredential, unregisterCredential } from '/client.js'
-import {
-	html,
-	render,
-} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
+import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
+import {_fetch, registerCredential, unregisterCredential} from '/client.js'
+import {checkBiometrics} from '/util.js'
 
 const register = document.querySelector('#register')
 
-async function checkBiometrics() {
-	return (
-		(await window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable()) ??
-		false
-	)
-}
 
 async function main() {
 	const hasBiometrics = await checkBiometrics()
@@ -24,7 +16,7 @@ async function main() {
 
 async function getCredentials() {
 	console.log('getCredentials()')
-	const res = await _fetch('/auth/getKeys')
+	const res = await _fetch('/auth/get-keys')
 	console.log('~ res', res)
 	const list = document.querySelector('#list')
 	console.log('~ list', list)

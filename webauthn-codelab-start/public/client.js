@@ -33,7 +33,7 @@ export const registerCredential = async () => {
 		},
 	}
 
-	const options = await _fetch('/auth/registerRequest', opts)
+	const options = await _fetch('/auth/register-request', opts)
 	console.log('~ options', options)
 
 	options.user.id = base64url.decode(options.user.id)
@@ -71,20 +71,20 @@ export const registerCredential = async () => {
 
 	localStorage.setItem(`credId`, credential.id)
 
-	let regRes = await _fetch('/auth/registerResponse', credential)
+	let regRes = await _fetch('/auth/register-response', credential)
 	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
 	localStorage.removeItem('credId')
-	return _fetch(`/auth/removeKey?credId=${encodeURIComponent(credId)}`)
+	return _fetch(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 }
 
 export const authenticate = async () => {
 	const opts = {}
 
-	let url = '/auth/signinRequest'
+	let url = '/auth/signin-request'
 	const credId = localStorage.getItem(`credId`)
 	if (credId) {
 		url += `?credId=${encodeURIComponent(credId)}`
@@ -127,5 +127,5 @@ export const authenticate = async () => {
 		}
 	}
 
-	return await _fetch(`/auth/signinResponse`, credential)
+	return await _fetch(`/auth/signin-response`, credential)
 }

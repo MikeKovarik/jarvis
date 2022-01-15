@@ -24,46 +24,14 @@
 			<span slot="title">WebAuthn codelab</span>
 		</mwc-top-app-bar-fixed>
 		<main class="content">
-			<form
-				id="form"
-				method="POST"
-				action="/auth/password"
-				class="hidden"
-			>
-				<h2>Enter a password</h2>
+			<h2>Log in</h2>
+			<form id="form" method="POST" action="/auth/password" class="hidden">
 				<input type="hidden" name="username" value="{{username}}" />
-				<div class="mdc-text-field mdc-text-field--filled">
-					<span class="mdc-text-field__ripple"></span>
-					<label class="mdc-floating-label" id="password-label"
-						>password</label
-					>
-					<input
-						type="password"
-						class="mdc-text-field__input"
-						aria-labelledby="password-label"
-						name="password"
-					/>
-					<span class="mdc-line-ripple"></span>
+				<input type="password" name="password" />
 				</div>
-				<input
-					type="submit"
-					class="mdc-button mdc-button--raised"
-					value="Sign-In"
-				/>
-				<p class="instructions">
-					password will be ignored in this demo.
-				</p>
+				<button>Log in</button>
 			</form>
-
-			<div id="uvpa_available" class="hidden">
-				<h2>Verify your identity</h2>
-				<div>
-					<button id="reauth" raised>Authenticate</button>
-				</div>
-				<div>
-					<button id="cancel">Sign-in with password</button>
-				</div>
-			</div>
+				<button id="reauth">Log in with biometrics</button>
 		</main>
 		<script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
 		<script src="./reauth.js" type="module"></script>

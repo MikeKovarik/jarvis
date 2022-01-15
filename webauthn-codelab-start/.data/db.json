@@ -7,7 +7,7 @@
         {
           "publicKey": "pAEDAzkBACBZAQC-ajkxgTrebVcxyF8TRPhgcclqJsofWsF19e5P-Zlg5b53ozY20sx2xZ0X16WsjQqFioclZxoBZ4a5dTi75-wF5epmj8nFLxD9zGntUqw43sB_vmELNUKGpbWSdKky-mFyXmUnPvlF8nAHbsq1uBGg6zni6J9qJEusVojHy6is0z9A5psRM4aGDUG7Id15Lf3HCHXlAPRc7ErvFi_6Tae837U-q21IcDdNtCFcIvSxlzl3jGaSrfLQVW7ZjhjgUAOqM8oV-aL79r1Ggq6UfWW9-wvB5911BqQ8K6_8rvDu4vX1ykBGCOkxKefx9Y34o1vEJXxAPlzg8bNzVe0SAqBzIUMBAAE",
           "credId": "kHwJYBUk4d4CiAK05WI6oImDRGCKl3NSSFhZv9nWLPI",
-          "prevCounter": 3,
+          "prevCounter": 6,
           "credentialPublicKey": {
             "type": "Buffer",
             "data": [
@@ -322,7 +322,7 @@
               242
             ]
           },
-          "counter": 2
+          "counter": 5
         }
       ]
     }

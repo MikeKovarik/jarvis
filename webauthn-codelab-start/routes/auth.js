@@ -39,8 +39,8 @@ db.defaults({
 	users: [],
 }).write()
 
-const csrfCheck = (req, res, next) => {
-	if (req.header('X-Requested-With') != 'XMLHttpRequest') {
+const csrfGuard = (req, res, next) => {
+	if (req.header('X-Requested-With') !== 'XMLHttpRequest') {
 		res.status(400).json({ error: 'invalid access.' })
 		return
 	}
@@ -51,7 +51,7 @@ const csrfCheck = (req, res, next) => {
  * Checks CSRF protection using custom header `X-Requested-With`
  * If the session doesn't contain `signed-in`, consider the user is not authenticated.
  **/
-const sessionCheck = (req, res, next) => {
+const signedInGuard = (req, res, next) => {
 	if (!req.session['signed-in']) {
 		res.status(401).json({ error: 'not signed in.' })
 		return
@@ -138,7 +138,7 @@ router.get('/signout', (req, res) => {
  };
  ```
  **/
-router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
+router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
 	const user = db
 		.get('users')
 		.find({ username: req.session.username })
@@ -150,15 +150,13 @@ router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
  * Removes a credential id attached to the user
  * Responds with empty JSON `{}`
  **/
-router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
+router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 	const credId = req.query.credId
 	const username = req.session.username
 	const user = db.get('users').find({ username: username }).value()
 
-	const newCreds = user.credentials.filter(cred => {
-		// Leave credential ids that do not match
-		return cred.credId !== credId
-	})
+	// Leave credential ids that do not match
+	const newCreds = user.credentials.filter(cred => cred.credId !== credId)
 
 	db.get('users')
 		.find({ username: username })
@@ -166,12 +164,6 @@ router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
 		.write()
 
 	res.json({})
-})
-
-router.get('/resetDB', (req, res) => {
-	db.set('users', []).write()
-	const users = db.get('users').value()
-	res.json(users)
 })
 
 /**
@@ -206,7 +198,7 @@ router.get('/resetDB', (req, res) => {
      attestation: ('none'|'indirect'|'direct')
  * }```
  **/
-router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
+router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 
 	const username = req.session.username
 	const user = db.get('users').find({ username: username }).value()
@@ -236,17 +228,17 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
 		let authenticatorSelection
 		let attestation = 'none'
 
-		if (aa && (aa == 'platform' || aa == 'cross-platform')) {
+		if (aa && (aa === 'platform' || aa === 'cross-platform')) {
 			asFlag = true
 			as.authenticatorAttachment = aa
 		}
-		if (rr && typeof rr == 'boolean') {
+		if (rr && typeof rr === 'boolean') {
 			asFlag = true
 			as.requireResidentKey = rr
 		}
 		if (
 			uv &&
-			(uv == 'required' || uv == 'preferred' || uv == 'discouraged')
+			(uv === 'required' || uv === 'preferred' || uv === 'discouraged')
 		) {
 			asFlag = true
 			as.userVerification = uv
@@ -254,7 +246,7 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
 		if (asFlag) {
 			authenticatorSelection = as
 		}
-		if (cp && (cp == 'none' || cp == 'indirect' || cp == 'direct')) {
+		if (cp && (cp === 'none' || cp === 'indirect' || cp === 'direct')) {
 			attestation = cp
 		}
 
@@ -300,7 +292,7 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
      }
  * }```
  **/
-router.post('/registerResponse', csrfCheck, sessionCheck, async (req, res) => {
+router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
 	const username = req.session.username
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN
@@ -371,7 +363,7 @@ router.post('/registerResponse', csrfCheck, sessionCheck, async (req, res) => {
      }, ...]
  * }```
  **/
-router.post('/signinRequest', csrfCheck, async (req, res) => {
+router.post('/signin-request', csrfGuard, async (req, res) => {
 	try {
 		const user = db
 			.get('users')
@@ -391,7 +383,7 @@ router.post('/signinRequest', csrfCheck, async (req, res) => {
 		const allowCredentials = []
 		for (let cred of user.credentials) {
 			// `credId` is specified and matches
-			if (credId && cred.credId == credId) {
+			if (credId && cred.credId === credId) {
 				allowCredentials.push({
 					id: base64url.toBuffer(cred.credId),
 					type: 'public-key',
@@ -433,7 +425,7 @@ router.post('/signinRequest', csrfCheck, async (req, res) => {
      }
  * }```
  **/
-router.post('/signinResponse', csrfCheck, async (req, res) => {
+router.post('/signin-response', csrfGuard, async (req, res) => {
 	const { body } = req
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN

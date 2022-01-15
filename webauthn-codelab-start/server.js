@@ -19,7 +19,7 @@
 const express = require('express')
 const session = require('express-session')
 const hbs = require('hbs')
-const auth = require('./libs/auth')
+const auth = require('./routes/auth')
 const app = express()
 
 app.set('view engine', 'html')
@@ -83,7 +83,7 @@ app.get('/', (req, res) => {
 app.get('/home', (req, res) => {
 	console.log('GET /home')
 	console.log('~ req.session.username', req.session.username)
-	if (!req.session.username || req.session['signed-in'] != 'yes') {
+	if (!req.session.username || req.session['signed-in'] !== 'yes') {
 		console.log('not signed in')
 		// If user is not signed in, redirect to `/`.
 		res.redirect(307, '/')

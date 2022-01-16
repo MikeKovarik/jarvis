@@ -1,57 +1,50 @@
 import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
-import {postJson, registerCredential, unregisterCredential} from '/client.js'
-import {checkBiometrics} from '/util.js'
-
-const register = document.querySelector('#register')
+import {postJson, registerCredential, unregisterCredential} from './client.js'
+import auth from './auth.js'
 
 
-async function main() {
-	const hasBiometrics = await checkBiometrics()
-	console.log('~ hasBiometrics', hasBiometrics)
+render(html`
+	<h2>Welcome, ${auth.username}!</h2>
+	<h3>Your registered credentials:</h3>
+	<div id="list"></div>
+	<button @click=${addCredential}>Add credential</button>
+	<button @click=${() => redirect('/reauth')}>Try reauth</button>
+	<button @click=${() => redirect('/auth/signout')}>Sign out</button>
+`, document.body)
 
-	if (!hasBiometrics) {
-		alert(`doesn't support biometrics`)
-	}
+const $list = document.querySelector('#list')
+getCredentials()
+
+const redirect = where => location.href = where
+
+async function removeCredential(credId) {
+	console.log('removeCredential()', credId)
+	await unregisterCredential(credId)
+	await getCredentials()
+}
+
+async function addCredential() {
+	console.log('addCredential()')
+	await registerCredential()
+	await getCredentials()
 }
 
 async function getCredentials() {
 	console.log('getCredentials()')
-	const res = await postJson('/auth/get-keys')
-	console.log('~ res', res)
-	const list = document.querySelector('#list')
-	console.log('~ list', list)
-	const creds = html`${res.credentials.length > 0
-		? res.credentials.map(
-				cred => html` <div class="mdc-card credential">
-					<span class="mdc-typography mdc-typography--body2"
-						>${cred.credId}</span
-					>
-					<pre class="public-key">${cred.publicKey}</pre>
-					<div class="mdc-card__actions">
-						<mwc-button
-							id="${cred.credId}"
-							@click="${removeCredential}"
-							raised
-							>Remove</mwc-button
-						>
-					</div>
-				</div>`
-		  )
+	const {credentials} = await postJson('/auth/get-keys')
+	renderCredentials(credentials)
+}
+
+function renderCredentials(credentials) {
+	console.log('renderCredentials()', credentials)
+	const creds = html`${credentials.length > 0
+		? credentials.map(cred => html`
+				<div>
+					${cred.credId}</span
+					<pre>${cred.publicKey}</pre>
+					<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">Remove</button>
+				</div>
+		`)
 		: html` <p>No credentials found.</p> `}`
-	render(creds, list)
+	render(creds, $list)
 }
-
-async function removeCredential() {
-	try {
-		await unregisterCredential(e.target.id)
-		getCredentials()
-	} catch (e) {
-		alert(e)
-	}
-}
-
-register.addEventListener('click', e => {
-	registerCredential().then(getCredentials).catch(alert)
-})
-
-main()

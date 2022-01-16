@@ -46,7 +46,9 @@ const signedInGuard = (req, res, next) => {
  * Set a `username` in the session.
  **/
 router.post('/username', (req, res) => {
+    console.log('~ req.body', req.body)
 	const username = req.body.username
+    console.log('~ username', username)
 	// Only check username, no need to check password as this is a mock
 	if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
 		res.status(400).send({error: 'Bad request'})

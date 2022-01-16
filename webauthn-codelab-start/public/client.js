@@ -1,3 +1,6 @@
+import {bufferToBase64, base64ToBuffer} from './util.js'
+
+
 export const postJson = async (path, payload = '') => {
 	const headers = {
 		'X-Requested-With': 'XMLHttpRequest',

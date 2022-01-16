@@ -1,13 +1,18 @@
-import {postJson} from '/client.js'
+import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
+import auth from '/auth.js'
 
 
-const form = document.querySelector('#form')
-form.addEventListener('submit', e => {
-	e.preventDefault()
-	const form = new FormData(e.target)
-	const cred = {}
-	form.forEach((v, k) => (cred[k] = v))
-	postJson(e.target.action, cred)
-		.then(user => location.href = '/reauth')
-		.catch(alert)
-})
+let username
+
+render(html`
+	<input type="text" placeholder="Username" @change=${e => username = e.target.value} />
+	<button @click=${onSubmit}>Next</button>
+`, document.body)
+
+const redirect = where => location.href = where
+
+async function onSubmit() {
+    console.log('~ username', username)
+	await auth.addUsername(username)
+	redirect('/reauth')
+}

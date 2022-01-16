@@ -318,7 +318,6 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 			user.credentials.push({
 				publicKey: base64PublicKey,
 				credId: base64CredentialID,
-				prevCounter: counter,
 			})
 		}
 
@@ -440,7 +439,8 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 				...credential,
 				credentialPublicKey: base64url.toBuffer(credential.publicKey),
 				credentialID: base64url.toBuffer(credential.credId),
-				counter: credential.prevCounter,
+				prevCounter: 0,
+				counter: 0,
 			},
 		})
 
@@ -451,8 +451,6 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 		if (!verified) {
 			throw 'User verification failed.'
 		}
-
-		credential.prevCounter = authenticationInfo.newCounter
 
         console.log('assign user', user)
 		db.get('users')

@@ -277,6 +277,7 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
  * }```
  **/
 router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
+	console.log('/register-response')
 	const username = req.session.username
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN
@@ -321,6 +322,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 			})
 		}
 
+        console.log('assign user', user)
 		db.get('users').find({username}).assign(user).write()
 
 		delete req.session.challenge
@@ -410,6 +412,7 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
  * }```
  **/
 router.post('/signin-response', csrfGuard, async (req, res) => {
+	console.log('/signin-response')
 	const {body} = req
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN
@@ -422,25 +425,28 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 		.value()
 
 	let credential = user.credentials.find(cred => cred.credId === req.body.id)
-
-	credential.credentialPublicKey = base64url.toBuffer(credential.publicKey)
-	credential.credentialID = base64url.toBuffer(credential.credId)
-	credential.counter = credential.prevCounter
-
 	try {
 		if (!credential) {
 			throw 'Authenticating credential not found.'
 		}
+
 
 		const verification = fido2.verifyAuthenticationResponse({
 			credential: body,
 			expectedChallenge,
 			expectedOrigin,
 			expectedRPID,
-			authenticator: credential,
+			authenticator: {
+				...credential,
+				credentialPublicKey: base64url.toBuffer(credential.publicKey),
+				credentialID: base64url.toBuffer(credential.credId),
+				counter: credential.prevCounter,
+			},
 		})
 
 		const {verified, authenticationInfo} = verification
+        console.log('~ verified', verified)
+        console.log('~ authenticationInfo', authenticationInfo)
 
 		if (!verified) {
 			throw 'User verification failed.'
@@ -448,6 +454,7 @@ router.post('/signin-response', csrfGuard, async (req, res) => {
 
 		credential.prevCounter = authenticationInfo.newCounter
 
+        console.log('assign user', user)
 		db.get('users')
 			.find({username: req.session.username})
 			.assign(user)

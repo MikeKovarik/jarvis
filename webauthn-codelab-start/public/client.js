@@ -37,7 +37,6 @@ export const registerCredential = async () => {
 	}
 
 	const options = await postJson('/auth/register-request', opts)
-	console.log('~ options', options)
 
 	options.user.id = base64url.decode(options.user.id)
 	options.challenge = base64url.decode(options.challenge)
@@ -47,6 +46,8 @@ export const registerCredential = async () => {
 			cred.id = base64url.decode(cred.id)
 		}
 	}
+
+    console.log('~ options', options)
 
 	const cred = await navigator.credentials.create({
 		publicKey: options,

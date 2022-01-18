@@ -36,106 +36,82 @@ export const registerCredential = async () => {
 		},
 	}
 
-	const options = await postJson('/auth/register-request', opts)
-
-	options.user.id = base64url.decode(options.user.id)
-	options.challenge = base64url.decode(options.challenge)
-
-	if (options.excludeCredentials) {
-		for (let cred of options.excludeCredentials) {
-			cred.id = base64url.decode(cred.id)
-		}
-	}
-
-    console.log('~ options', options)
-
-	const cred = await navigator.credentials.create({
-		publicKey: options,
-	})
-
+	let publicKey = await postJson('/auth/register-request', opts)
+	publicKey = reviveRegisterPublicKey(publicKey)
+    console.log('~ publicKey', publicKey)
+	const cred = await navigator.credentials.create({publicKey})
 	console.log('~ cred', cred)
-
-	const credential = {}
-	credential.id = cred.id
-	credential.rawId = base64url.encode(cred.rawId)
-	credential.type = cred.type
-
-	if (cred.response) {
-		const clientDataJSON = base64url.encode(cred.response.clientDataJSON)
-		const attestationObject = base64url.encode(
-			cred.response.attestationObject
-		)
-		credential.response = {
-			clientDataJSON,
-			attestationObject,
-		}
-	}
-
-	console.log('~ credential', credential)
-
-	localStorage.setItem(`credId`, credential.id)
-
-	let regRes = await postJson('/auth/register-response', credential)
+	const body = packRegisterCredential(cred)
+	console.log('~ body', body)
+	let regRes = await postJson('/auth/register-response', body)
 	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
-	localStorage.removeItem('credId')
 	return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 }
 
 export const authenticate = async () => {
 	console.log('authenticate 1')
-	const opts = {}
+	let publicKey = await postJson('/auth/login-request')
+	// No registered credentials found
+	if (publicKey.allowCredentials.length === 0) return null
+	publicKey = reviveLoginPublicKey(publicKey)
+    console.log('~ publicKey', publicKey)
+	const cred = await navigator.credentials.get({publicKey})
+    console.log('~ cred', cred)
+	const body = packLoginCredential(cred)
+    console.log('~ body', body)
+	return await postJson(`/auth/login-response`, body)
+}
 
-	let url = '/auth/login-request'
-	console.log('authenticate 2')
+const reviveRegisterPublicKey = publicKey => {
+	publicKey.user.id = base64url.decode(publicKey.user.id)
+	publicKey.challenge = base64url.decode(publicKey.challenge)
+	if (publicKey.excludeCredentials)
+		for (let cred of publicKey.excludeCredentials)
+			cred.id = base64url.decode(cred.id)
+	return publicKey
+}
 
-    console.log('url', url)
-	const options = await postJson(url, opts)
-
-	if (options.allowCredentials.length === 0) {
-		console.info('No registered credentials found.')
-		return Promise.resolve(null)
-	}
-	console.log('authenticate 3')
-
-	options.challenge = base64url.decode(options.challenge)
-
-	for (let cred of options.allowCredentials) {
+const reviveLoginPublicKey = publicKey => {
+	publicKey.challenge = base64url.decode(publicKey.challenge)
+	for (let cred of publicKey.allowCredentials)
 		cred.id = base64url.decode(cred.id)
-	}
+	return publicKey
+}
 
-    console.log('~ options', options)
-	console.log('authenticate 4')
-	const cred = await navigator.credentials.get({
-		publicKey: options,
-	})
-	console.log('authenticate 5')
+const packRegisterCredential = credential => {
+	const data = {}
+	data.id = credential.id
+	data.type = credential.type
+	data.rawId = base64url.encode(credential.rawId)
 
-	const credential = {}
-	credential.id = cred.id
-	credential.type = cred.type
-	credential.rawId = base64url.encode(cred.rawId)
-	console.log('authenticate 6')
-
-	if (cred.response) {
-		const clientDataJSON = base64url.encode(cred.response.clientDataJSON)
-		const authenticatorData = base64url.encode(
-			cred.response.authenticatorData
-		)
-		const signature = base64url.encode(cred.response.signature)
-		const userHandle = base64url.encode(cred.response.userHandle)
-		credential.response = {
-			clientDataJSON,
-			authenticatorData,
-			signature,
-			userHandle,
+	if (credential.response) {
+		data.response = {
+			clientDataJSON: base64url.encode(credential.response.clientDataJSON),
+			attestationObject: base64url.encode(credential.response.attestationObject),
 		}
 	}
-	console.log('authenticate 7')
 
-    console.log('~ credential', credential)
-	return await postJson(`/auth/login-response`, credential)
+	return data
+}
+
+const packLoginCredential = credential => {
+	const data = {}
+	data.id = credential.id
+	data.type = credential.type
+	data.rawId = base64url.encode(credential.rawId)
+
+	if (credential.response) {
+		data.response = {
+			clientDataJSON: base64url.encode(credential.response.clientDataJSON),
+			authenticatorData: base64url.encode(credential.response.authenticatorData),
+			signature: base64url.encode(credential.response.signature),
+			userHandle: base64url.encode(credential.response.userHandle),
+		}
+	}
+
+	return data
 }

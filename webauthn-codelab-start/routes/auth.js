@@ -206,7 +206,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 router.post('/login-request', csrfGuard, async (req, res) => {
 	console.log('/login-request')
 	try {
-		let options = await authlib.loginRequest(req.session.username, req.body.userVerification)
+		let options = await authlib.loginRequest(req.session.username)
         console.log('~ options', options)
 		req.session.challenge = options.challenge
 		res.json(options)

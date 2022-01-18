@@ -15,10 +15,17 @@ const RP_NAME = 'WebAuthn Codelab'
 const TIMEOUT = 30 * 1000 * 60
 
 
+const loadUser = username => db.get('users').find({username}).value()
+const saveUser = (username, user) => db.get('users').find({username}).assign(user).write()
+
+const getAllowedCredential = cred => ({
+	id: base64url.toBuffer(cred.credId),
+	type: 'public-key',
+	transports: ['internal'],
+})
+
 export async function registerRequest(username, body) {
-	const user = db.get('users')
-		.find({username})
-		.value()
+	const user = loadUser(username)
 
 	const excludeCredentials = []
 	if (user.credentials.length > 0) {
@@ -88,12 +95,12 @@ export async function registerRequest(username, body) {
 	return options
 }
 
-export async function registerResponse(expectedChallenge, username, body) {
+export async function registerResponse(expectedChallenge, username, credential) {
 	const expectedOrigin = process.env.ORIGIN
-	const expectedRPID = process.env.HOSTNAME
+	const expectedRPID   = process.env.HOSTNAME
 
 	const verification = await fido2.verifyRegistrationResponse({
-		credential: body,
+		credential,
 		expectedChallenge,
 		expectedOrigin,
 		expectedRPID,
@@ -101,36 +108,20 @@ export async function registerResponse(expectedChallenge, username, body) {
 
 	const {verified, registrationInfo} = verification
 
-	if (!verified) {
-		throw 'User verification failed.'
-	}
+	if (!verified) throw 'User verification failed.'
 
-	const {credentialPublicKey, credentialID, counter} = registrationInfo
-	const base64PublicKey = base64url.encode(credentialPublicKey)
-	const base64CredentialID = base64url.encode(credentialID)
+	// convert buffer data to http & db friendly base64 string
+	const publicKey = base64url.encode(registrationInfo.credentialPublicKey)
+	const credId    = base64url.encode(registrationInfo.credentialID)
 
-	const user = db.get('users')
-		.find({username})
-		.value()
+	const user = loadUser(username)
 
-	const existingCred = user.credentials.find(cred => cred.credID === base64CredentialID)
-
-	if (!existingCred) {
-		/**
-		 * Add the returned device to the user's list of devices
-		 */
-		user.credentials.push({
-			publicKey: base64PublicKey,
-			credId: base64CredentialID,
-		})
-	}
+	const existingCred = user.credentials.find(cred => cred.credID === credId)
+	if (!existingCred) user.credentials.push({publicKey, credId})
 
 	console.log('assign user', user)
 
-	db.get('users')
-		.find({username})
-		.assign(user)
-		.write()
+	saveUser(username, user)
 
 	return user
 }
@@ -138,10 +129,7 @@ export async function registerResponse(expectedChallenge, username, body) {
 export async function loginRequest(username, userVerification = 'required') {
 	let rpID = process.env.HOSTNAME
 	
-	const user = db
-		.get('users')
-		.find({username})
-		.value()
+	const user = loadUser(username)
 
 	// Send empty response if user is not registered yet.
 	if (!user) throw 'User not found.'
@@ -160,25 +148,21 @@ export async function loginRequest(username, userVerification = 'required') {
 	return options
 }
 
-const getAllowedCredential = cred => ({
-	id: base64url.toBuffer(cred.credId),
-	type: 'public-key',
-	transports: ['internal'],
-})
-
 export async function loginResponse(expectedChallenge, username, body) {
+    console.log('~ loginResponse')
 	const expectedOrigin = process.env.ORIGIN
 	const expectedRPID = process.env.HOSTNAME
 
-	// Query the user
-	const user = db
-		.get('users')
-		.find({username})
-		.value()
+	const user = loadUser(username)
 
+    console.log('~ body', body)
 	let credential = user.credentials.find(cred => cred.credId === body.id)
-
+    console.log('~ credential', credential)
 	if (!credential) throw 'Authenticating credential not found.'
+
+	// convert from http & db friendly base64 string to FIDO friendtly buffer data
+	const credentialPublicKey = base64url.toBuffer(credential.publicKey)
+	const credentialID        = base64url.toBuffer(credential.credId)
 
 	const verification = fido2.verifyAuthenticationResponse({
 		credential: body,
@@ -187,25 +171,18 @@ export async function loginResponse(expectedChallenge, username, body) {
 		expectedRPID,
 		authenticator: {
 			...credential,
-			credentialPublicKey: base64url.toBuffer(credential.publicKey),
-			credentialID: base64url.toBuffer(credential.credId),
+			credentialPublicKey,
+			credentialID,
 			prevCounter: 0,
 			counter: 0,
 		},
 	})
 
-	const {verified, authenticationInfo} = verification
-	console.log('~ verified', verified)
-	console.log('~ authenticationInfo', authenticationInfo)
+	const {verified} = verification
 
 	if (!verified) throw 'User verification failed.'
 
-	console.log('assign user', user)
-
-	db.get('users')
-		.find({username})
-		.assign(user)
-		.write()
+	saveUser(username, user)
 
 	return user
 }

@@ -348,7 +348,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
      }, ...]
  * }```
  **/
-router.post('/signin-request', csrfGuard, async (req, res) => {
+router.post('/login-request', csrfGuard, async (req, res) => {
 	try {
 		const user = db
 			.get('users')
@@ -362,7 +362,6 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
 		}
 
 		const credId = req.query.credId
-
 		const userVerification = req.body.userVerification || 'required'
 
 		const allowCredentials = []
@@ -410,8 +409,8 @@ router.post('/signin-request', csrfGuard, async (req, res) => {
      }
  * }```
  **/
-router.post('/signin-response', csrfGuard, async (req, res) => {
-	console.log('/signin-response')
+router.post('/login-response', csrfGuard, async (req, res) => {
+	console.log('/login-response')
 	const {body} = req
 	const expectedChallenge = req.session.challenge
 	const expectedOrigin = process.env.ORIGIN

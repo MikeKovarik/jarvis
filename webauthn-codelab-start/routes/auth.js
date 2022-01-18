@@ -350,49 +350,48 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
  **/
 router.post('/login-request', csrfGuard, async (req, res) => {
 	try {
-		const user = db
-			.get('users')
-			.find({username: req.session.username})
-			.value()
-
-		if (!user) {
-			// Send empty response if user is not registered yet.
-			res.json({error: 'User not found.'})
-			return
-		}
-
-		const credId = req.query.credId
-		const userVerification = req.body.userVerification || 'required'
-
-		const allowCredentials = []
-		for (let cred of user.credentials) {
-			// `credId` is specified and matches
-			if (credId && cred.credId === credId) {
-				allowCredentials.push({
-					id: base64url.toBuffer(cred.credId),
-					type: 'public-key',
-					transports: ['internal'],
-				})
-			}
-		}
-
-		const options = fido2.generateAuthenticationOptions({
-			timeout: TIMEOUT,
-			rpID: process.env.HOSTNAME,
-			allowCredentials,
-			/**
-			 * This optional value controls whether or not the authenticator needs be able to uniquely
-			 * identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
-			 */
-			userVerification,
-		})
+		let options = await loginRequest(req.session.username, req.query.credId, req.body.userVerification)
 		req.session.challenge = options.challenge
-
 		res.json(options)
-	} catch (e) {
-		res.status(400).json({error: e})
+	} catch (error) {
+		res.status(400).json({error})
 	}
 })
+
+async function loginRequest(username, credId, userVerification = 'required') {
+	const user = db
+		.get('users')
+		.find({username})
+		.value()
+
+	// Send empty response if user is not registered yet.
+	if (!user) throw 'User not found.'
+
+	const allowCredentials = []
+	for (let cred of user.credentials) {
+		// `credId` is specified and matches
+		if (credId && cred.credId === credId) {
+			allowCredentials.push({
+				id: base64url.toBuffer(cred.credId),
+				type: 'public-key',
+				transports: ['internal'],
+			})
+		}
+	}
+
+	const options = fido2.generateAuthenticationOptions({
+		timeout: TIMEOUT,
+		rpID: process.env.HOSTNAME,
+		allowCredentials,
+		/**
+		 * This optional value controls whether or not the authenticator needs be able to uniquely
+		 * identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
+		 */
+		userVerification,
+	})
+
+	return options
+}
 
 /**
  * Authenticate the user.
@@ -411,57 +410,57 @@ router.post('/login-request', csrfGuard, async (req, res) => {
  **/
 router.post('/login-response', csrfGuard, async (req, res) => {
 	console.log('/login-response')
-	const {body} = req
-	const expectedChallenge = req.session.challenge
+	try {
+		let user = await loginResponse(req.session.challenge, req.session.username, req.body)
+		delete req.session.challenge
+		req.session.loggedIn = true
+		res.json(user)
+	} catch (error) {
+		delete req.session.challenge
+		res.status(400).json({error})
+	}
+})
+
+async function loginResponse(expectedChallenge, username, body) {
 	const expectedOrigin = process.env.ORIGIN
 	const expectedRPID = process.env.HOSTNAME
 
 	// Query the user
 	const user = db
 		.get('users')
-		.find({username: req.session.username})
+		.find({username})
 		.value()
 
-	let credential = user.credentials.find(cred => cred.credId === req.body.id)
-	try {
-		if (!credential) {
-			throw 'Authenticating credential not found.'
-		}
+	let credential = user.credentials.find(cred => cred.credId === body.id)
 
+	if (!credential) throw 'Authenticating credential not found.'
 
-		const verification = fido2.verifyAuthenticationResponse({
-			credential: body,
-			expectedChallenge,
-			expectedOrigin,
-			expectedRPID,
-			authenticator: {
-				...credential,
-				credentialPublicKey: base64url.toBuffer(credential.publicKey),
-				credentialID: base64url.toBuffer(credential.credId),
-				prevCounter: 0,
-				counter: 0,
-			},
-		})
+	const verification = fido2.verifyAuthenticationResponse({
+		credential: body,
+		expectedChallenge,
+		expectedOrigin,
+		expectedRPID,
+		authenticator: {
+			...credential,
+			credentialPublicKey: base64url.toBuffer(credential.publicKey),
+			credentialID: base64url.toBuffer(credential.credId),
+			prevCounter: 0,
+			counter: 0,
+		},
+	})
 
-		const {verified, authenticationInfo} = verification
-        console.log('~ verified', verified)
-        console.log('~ authenticationInfo', authenticationInfo)
+	const {verified, authenticationInfo} = verification
+	console.log('~ verified', verified)
+	console.log('~ authenticationInfo', authenticationInfo)
 
-		if (!verified) {
-			throw 'User verification failed.'
-		}
+	if (!verified) throw 'User verification failed.'
 
-        console.log('assign user', user)
-		db.get('users')
-			.find({username: req.session.username})
-			.assign(user)
-			.write()
+	console.log('assign user', user)
 
-		delete req.session.challenge
-		req.session.loggedIn = true
-		res.json(user)
-	} catch (e) {
-		delete req.session.challenge
-		res.status(400).json({error: e})
-	}
-})
+	db.get('users')
+		.find({username})
+		.assign(user)
+		.write()
+
+	return user
+}

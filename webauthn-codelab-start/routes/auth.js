@@ -183,85 +183,86 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
  * }```
  **/
 router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
-
-	const username = req.session.username
-	const user = db.get('users').find({username}).value()
 	try {
-		const excludeCredentials = []
-		if (user.credentials.length > 0) {
-			for (let cred of user.credentials) {
-				excludeCredentials.push({
-					id: base64url.toBuffer(cred.credId),
-					type: 'public-key',
-					transports: ['internal'],
-				})
-			}
-		}
-		const pubKeyCredParams = []
-		// const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
-		const params = [-7, -257]
-		for (let param of params) {
-			pubKeyCredParams.push({type: 'public-key', alg: param})
-		}
-		const as = {} // authenticatorSelection
-		const aa = req.body.authenticatorSelection.authenticatorAttachment
-		const rr = req.body.authenticatorSelection.requireResidentKey
-		const uv = req.body.authenticatorSelection.userVerification
-		const cp = req.body.attestation // attestationConveyancePreference
-		let asFlag = false
-		let authenticatorSelection
-		let attestation = 'none'
-
-		if (aa && (aa === 'platform' || aa === 'cross-platform')) {
-			asFlag = true
-			as.authenticatorAttachment = aa
-		}
-		if (rr && typeof rr === 'boolean') {
-			asFlag = true
-			as.requireResidentKey = rr
-		}
-		if (
-			uv &&
-			(uv === 'required' || uv === 'preferred' || uv === 'discouraged')
-		) {
-			asFlag = true
-			as.userVerification = uv
-		}
-		if (asFlag) {
-			authenticatorSelection = as
-		}
-		if (cp && (cp === 'none' || cp === 'indirect' || cp === 'direct')) {
-			attestation = cp
-		}
-
-		const options = fido2.generateRegistrationOptions({
-			rpName: RP_NAME,
-			rpID: process.env.HOSTNAME,
-			userID: user.id,
-			userName: user.username,
-			timeout: TIMEOUT,
-			// Prompt users for additional information about the authenticator.
-			attestationType: attestation,
-			// Prevent users from re-registering existing authenticators
-			excludeCredentials,
-			authenticatorSelection,
-		})
-
+		let options = await registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
-
-		// Temporary hack until SimpleWebAuthn supports `pubKeyCredParams`
-		options.pubKeyCredParams = []
-		for (let param of params) {
-			options.pubKeyCredParams.push({type: 'public-key', alg: param})
-		}
-
 		res.json(options)
 	} catch (error) {
 		res.status(400).send({error})
 	}
 })
 
-async function registerRequest() {
+async function registerRequest(username, body) {
+	const user = db.get('users')
+		.find({username})
+		.value()
+
+	const excludeCredentials = []
+	if (user.credentials.length > 0) {
+		for (let cred of user.credentials) {
+			excludeCredentials.push({
+				id: base64url.toBuffer(cred.credId),
+				type: 'public-key',
+				transports: ['internal'],
+			})
+		}
+	}
+
+	const pubKeyCredParams = []
+	// const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
+	const params = [-7, -257]
+	for (let param of params) {
+		pubKeyCredParams.push({type: 'public-key', alg: param})
+	}
+
+	const as = {} // authenticatorSelection
+	const aa = body.authenticatorSelection.authenticatorAttachment
+	const rr = body.authenticatorSelection.requireResidentKey
+	const uv = body.authenticatorSelection.userVerification
+	const cp = body.attestation // attestationConveyancePreference
+	let asFlag = false
+	let authenticatorSelection
+	let attestation = 'none'
+
+	if (aa && (aa === 'platform' || aa === 'cross-platform')) {
+		asFlag = true
+		as.authenticatorAttachment = aa
+	}
+	if (rr && typeof rr === 'boolean') {
+		asFlag = true
+		as.requireResidentKey = rr
+	}
+	if (uv && (uv === 'required' || uv === 'preferred' || uv === 'discouraged')) {
+		asFlag = true
+		as.userVerification = uv
+	}
+	if (asFlag) {
+		authenticatorSelection = as
+	}
+	if (cp && (cp === 'none' || cp === 'indirect' || cp === 'direct')) {
+		attestation = cp
+	}
+
+	const options = fido2.generateRegistrationOptions({
+		rpName: RP_NAME,
+		rpID: process.env.HOSTNAME,
+		userID: user.id,
+		userName: user.username,
+		timeout: TIMEOUT,
+		// Prompt users for additional information about the authenticator.
+		attestationType: attestation,
+		// Prevent users from re-registering existing authenticators
+		excludeCredentials,
+		authenticatorSelection,
+	})
+
+	// Temporary hack until SimpleWebAuthn supports `pubKeyCredParams`
+	options.pubKeyCredParams = []
+	for (let param of params) {
+		options.pubKeyCredParams.push({type: 'public-key', alg: param})
+	}
+
+	return options
 }
 
 /**

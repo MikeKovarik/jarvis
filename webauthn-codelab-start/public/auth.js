@@ -5,7 +5,6 @@ import {checkBiometrics} from './util.js'
 class Auth {
 
 	loggedIn = false
-	credId = localStorage.getItem('credId')
 
 	constructor() {
 		this.init()
@@ -19,8 +18,8 @@ class Auth {
 		return postJson('/auth/username', {username})
 	}
 
-	async loginWithPassword(password, username) {
-		const body = {password, username}
+	async loginWithPassword(password) {
+		const body = {password}
 		try {
 			await postJson('/auth/password', body)
 			this.loggedIn = true

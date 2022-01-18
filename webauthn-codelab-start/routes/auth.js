@@ -183,6 +183,7 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
  * }```
  **/
 router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
+	console.log('/register-request')
 	try {
 		let options = await registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
@@ -354,8 +355,9 @@ async function registerResponse(expectedChallenge, username, body) {
  * }```
  **/
 router.post('/login-request', csrfGuard, async (req, res) => {
+	console.log('/login-request')
 	try {
-		let options = await loginRequest(req.session.username, req.query.credId, req.body.userVerification)
+		let options = await loginRequest(req.session.username, req.body.userVerification)
 		req.session.challenge = options.challenge
 		res.json(options)
 	} catch (error) {
@@ -363,7 +365,9 @@ router.post('/login-request', csrfGuard, async (req, res) => {
 	}
 })
 
-async function loginRequest(username, credId, userVerification = 'required') {
+async function loginRequest(username, userVerification = 'required') {
+	let rpID = process.env.HOSTNAME
+	
 	const user = db
 		.get('users')
 		.find({username})
@@ -372,31 +376,25 @@ async function loginRequest(username, credId, userVerification = 'required') {
 	// Send empty response if user is not registered yet.
 	if (!user) throw 'User not found.'
 
-	const allowCredentials = []
-	for (let cred of user.credentials) {
-		// `credId` is specified and matches
-		if (credId && cred.credId === credId) {
-			allowCredentials.push({
-				id: base64url.toBuffer(cred.credId),
-				type: 'public-key',
-				transports: ['internal'],
-			})
-		}
-	}
+	const allowCredentials = user.credentials.map(getAllowedCredential)
 
 	const options = fido2.generateAuthenticationOptions({
 		timeout: TIMEOUT,
-		rpID: process.env.HOSTNAME,
+		rpID,
 		allowCredentials,
-		/**
-		 * This optional value controls whether or not the authenticator needs be able to uniquely
-		 * identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
-		 */
+		// This optional value controls whether or not the authenticator needs be able to uniquely
+		// identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
 		userVerification,
 	})
 
 	return options
 }
+
+const getAllowedCredential = cred => ({
+	id: base64url.toBuffer(cred.credId),
+	type: 'public-key',
+	transports: ['internal'],
+})
 
 /**
  * Authenticate the user.

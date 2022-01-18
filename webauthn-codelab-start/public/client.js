@@ -73,15 +73,12 @@ export const registerCredential = async () => {
 
 	console.log('~ credential', credential)
 
-	localStorage.setItem(`credId`, credential.id)
-
 	let regRes = await postJson('/auth/register-response', credential)
 	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
-	localStorage.removeItem('credId')
 	return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 }
 
@@ -89,10 +86,6 @@ export const authenticate = async () => {
 	const opts = {}
 
 	let url = '/auth/login-request'
-	const credId = localStorage.getItem(`credId`)
-	if (credId) {
-		url += `?credId=${encodeURIComponent(credId)}`
-	}
 
 	const options = await postJson(url, opts)
 

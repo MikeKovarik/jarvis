@@ -54,20 +54,21 @@ app.get('/', (req, res) => {
 	console.log('GET /')
 	// Check session
 	if (req.session.username) {
-		// If user is signed in, redirect to `/reauth`.
+		// If user is logged in, redirect to `/reauth`.
 		res.redirect(307, '/reauth')
 		return
 	}
-	// If user is not signed in, show `index.html` with id/password form.
+	// If user is not logged in, show `index.html` with id/password form.
 	res.render('index.html')
 })
 
 app.get('/home', (req, res) => {
 	console.log('GET /home')
 	console.log('~ req.session.username', req.session.username)
+    console.log('~ req.session.loggedIn', req.session.loggedIn)
 	if (!req.session.username || !req.session.loggedIn) {
-		console.log('not signed in')
-		// If user is not signed in, redirect to `/`.
+		console.log('not logged in')
+		// If user is not logged in, redirect to `/`.
 		res.redirect(307, '/')
 		return
 	}

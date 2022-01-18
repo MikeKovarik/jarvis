@@ -34,7 +34,7 @@ const csrfGuard = (req, res, next) => {
  * If the session doesn't contain `signed-in`, consider the user is not authenticated.
  **/
 const signedInGuard = (req, res, next) => {
-	if (!req.session['signed-in']) {
+	if (!req.session.loggedIn) {
 		res.status(401).json({error: 'not signed in.'})
 		return
 	}
@@ -92,7 +92,7 @@ router.post('/password', (req, res) => {
 		return
 	}
 
-	req.session['signed-in'] = 'yes'
+	req.session.loggedIn = true
 	res.json(user)
 })
 
@@ -458,7 +458,7 @@ router.post('/login-response', csrfGuard, async (req, res) => {
 			.write()
 
 		delete req.session.challenge
-		req.session['signed-in'] = 'yes'
+		req.session.loggedIn = true
 		res.json(user)
 	} catch (e) {
 		delete req.session.challenge

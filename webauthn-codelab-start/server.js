@@ -22,7 +22,7 @@ app.use(session({
 
 app.use((req, res, next) => {
 	//req.session.username = 'mike'
-	//req.session['signed-in'] = 'yes'
+	//req.session.loggedIn = true
 
 	//process.env.HOSTNAME = req.headers.host
 
@@ -65,7 +65,7 @@ app.get('/', (req, res) => {
 app.get('/home', (req, res) => {
 	console.log('GET /home')
 	console.log('~ req.session.username', req.session.username)
-	if (!req.session.username || req.session['signed-in'] !== 'yes') {
+	if (!req.session.username || !req.session.loggedIn) {
 		console.log('not signed in')
 		// If user is not signed in, redirect to `/`.
 		res.redirect(307, '/')

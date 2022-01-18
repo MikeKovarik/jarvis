@@ -73,26 +73,33 @@ export const registerCredential = async () => {
 
 	console.log('~ credential', credential)
 
+	localStorage.setItem(`credId`, credential.id)
+
 	let regRes = await postJson('/auth/register-response', credential)
 	console.log('~ regRes', regRes)
 	return regRes
 }
 
 export const unregisterCredential = async credId => {
+	localStorage.removeItem('credId')
 	return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 }
 
 export const authenticate = async () => {
+	console.log('authenticate 1')
 	const opts = {}
 
 	let url = '/auth/login-request'
+	console.log('authenticate 2')
 
+    console.log('url', url)
 	const options = await postJson(url, opts)
 
 	if (options.allowCredentials.length === 0) {
 		console.info('No registered credentials found.')
 		return Promise.resolve(null)
 	}
+	console.log('authenticate 3')
 
 	options.challenge = base64url.decode(options.challenge)
 
@@ -100,14 +107,18 @@ export const authenticate = async () => {
 		cred.id = base64url.decode(cred.id)
 	}
 
+    console.log('~ options', options)
+	console.log('authenticate 4')
 	const cred = await navigator.credentials.get({
 		publicKey: options,
 	})
+	console.log('authenticate 5')
 
 	const credential = {}
 	credential.id = cred.id
 	credential.type = cred.type
 	credential.rawId = base64url.encode(cred.rawId)
+	console.log('authenticate 6')
 
 	if (cred.response) {
 		const clientDataJSON = base64url.encode(cred.response.clientDataJSON)
@@ -123,6 +134,8 @@ export const authenticate = async () => {
 			userHandle,
 		}
 	}
+	console.log('authenticate 7')
 
+    console.log('~ credential', credential)
 	return await postJson(`/auth/login-response`, credential)
 }

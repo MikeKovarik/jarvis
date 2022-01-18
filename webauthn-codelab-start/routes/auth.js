@@ -1,45 +1,14 @@
 import express from 'express'
 import crypto from 'crypto'
-import fido2 from '@simplewebauthn/server'
 import base64url from 'base64url'
-import fs from 'fs'
-import low from 'lowdb'
-import FileSync from 'lowdb/adapters/FileSync.js'
+import {db} from './authlib.js'
+import * as authlib from './authlib.js'
+import {csrfGuard, signedInGuard} from './guards.js'
 
-
-const adapter = new FileSync('./data/webauthn.json')
-const db = low(adapter)
 
 const router = express.Router()
 router.use(express.json())
 export default router
-
-const RP_NAME = 'WebAuthn Codelab'
-const TIMEOUT = 30 * 1000 * 60
-
-db.defaults({
-	users: [],
-}).write()
-
-const csrfGuard = (req, res, next) => {
-	if (req.header('X-Requested-With') !== 'XMLHttpRequest') {
-		res.status(400).json({error: 'invalid access.'})
-		return
-	}
-	next()
-}
-
-/**
- * Checks CSRF protection using custom header `X-Requested-With`
- * If the session doesn't contain `signed-in`, consider the user is not authenticated.
- **/
-const signedInGuard = (req, res, next) => {
-	if (!req.session.loggedIn) {
-		res.status(401).json({error: 'not signed in.'})
-		return
-	}
-	next()
-}
 
 /**
  * Check username, create a new account if it doesn't exist.
@@ -164,7 +133,7 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
        id: String,
        name: String
      },
-     publicKeyCredParams: [{  // @herrjemand
+     publicKeyCredParams: [{
        type: 'public-key', alg: -7
      }],
      timeout: Number,
@@ -185,86 +154,13 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 	console.log('/register-request')
 	try {
-		let options = await registerRequest(req.session.username, req.body)
+		let options = await authlib.registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
 		res.json(options)
 	} catch (error) {
 		res.status(400).send({error})
 	}
 })
-
-async function registerRequest(username, body) {
-	const user = db.get('users')
-		.find({username})
-		.value()
-
-	const excludeCredentials = []
-	if (user.credentials.length > 0) {
-		for (let cred of user.credentials) {
-			excludeCredentials.push({
-				id: base64url.toBuffer(cred.credId),
-				type: 'public-key',
-				transports: ['internal'],
-			})
-		}
-	}
-
-	const pubKeyCredParams = []
-	// const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
-	const params = [-7, -257]
-	for (let param of params) {
-		pubKeyCredParams.push({type: 'public-key', alg: param})
-	}
-
-	const as = {} // authenticatorSelection
-	const aa = body.authenticatorSelection.authenticatorAttachment
-	const rr = body.authenticatorSelection.requireResidentKey
-	const uv = body.authenticatorSelection.userVerification
-	const cp = body.attestation // attestationConveyancePreference
-	let asFlag = false
-	let authenticatorSelection
-	let attestation = 'none'
-
-	if (aa && (aa === 'platform' || aa === 'cross-platform')) {
-		asFlag = true
-		as.authenticatorAttachment = aa
-	}
-	if (rr && typeof rr === 'boolean') {
-		asFlag = true
-		as.requireResidentKey = rr
-	}
-	if (uv && (uv === 'required' || uv === 'preferred' || uv === 'discouraged')) {
-		asFlag = true
-		as.userVerification = uv
-	}
-	if (asFlag) {
-		authenticatorSelection = as
-	}
-	if (cp && (cp === 'none' || cp === 'indirect' || cp === 'direct')) {
-		attestation = cp
-	}
-
-	const options = fido2.generateRegistrationOptions({
-		rpName: RP_NAME,
-		rpID: process.env.HOSTNAME,
-		userID: user.id,
-		userName: user.username,
-		timeout: TIMEOUT,
-		// Prompt users for additional information about the authenticator.
-		attestationType: attestation,
-		// Prevent users from re-registering existing authenticators
-		excludeCredentials,
-		authenticatorSelection,
-	})
-
-	// Temporary hack until SimpleWebAuthn supports `pubKeyCredParams`
-	options.pubKeyCredParams = []
-	for (let param of params) {
-		options.pubKeyCredParams.push({type: 'public-key', alg: param})
-	}
-
-	return options
-}
 
 /**
  * Register user credential.
@@ -284,7 +180,7 @@ async function registerRequest(username, body) {
 router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
 	console.log('/register-response')
 	try {
-		let user = await registerResponse(req.session.challenge, req.session.username, req.body)
+		let user = await authlib.registerResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
 		res.json(user)
 	} catch (e) {
@@ -292,53 +188,6 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 		res.status(400).send({error: e.message})
 	}
 })
-
-async function registerResponse(expectedChallenge, username, body) {
-	const expectedOrigin = process.env.ORIGIN
-	const expectedRPID = process.env.HOSTNAME
-
-	const verification = await fido2.verifyRegistrationResponse({
-		credential: body,
-		expectedChallenge,
-		expectedOrigin,
-		expectedRPID,
-	})
-
-	const {verified, registrationInfo} = verification
-
-	if (!verified) {
-		throw 'User verification failed.'
-	}
-
-	const {credentialPublicKey, credentialID, counter} = registrationInfo
-	const base64PublicKey = base64url.encode(credentialPublicKey)
-	const base64CredentialID = base64url.encode(credentialID)
-
-	const user = db.get('users')
-		.find({username})
-		.value()
-
-	const existingCred = user.credentials.find(cred => cred.credID === base64CredentialID)
-
-	if (!existingCred) {
-		/**
-		 * Add the returned device to the user's list of devices
-		 */
-		user.credentials.push({
-			publicKey: base64PublicKey,
-			credId: base64CredentialID,
-		})
-	}
-
-	console.log('assign user', user)
-
-	db.get('users')
-		.find({username})
-		.assign(user)
-		.write()
-
-	return user
-}
 
 /**
  * Respond with required information to call navigator.credential.get()
@@ -357,43 +206,13 @@ async function registerResponse(expectedChallenge, username, body) {
 router.post('/login-request', csrfGuard, async (req, res) => {
 	console.log('/login-request')
 	try {
-		let options = await loginRequest(req.session.username, req.body.userVerification)
+		let options = await authlib.loginRequest(req.session.username, req.body.userVerification)
+        console.log('~ options', options)
 		req.session.challenge = options.challenge
 		res.json(options)
 	} catch (error) {
 		res.status(400).json({error})
 	}
-})
-
-async function loginRequest(username, userVerification = 'required') {
-	let rpID = process.env.HOSTNAME
-	
-	const user = db
-		.get('users')
-		.find({username})
-		.value()
-
-	// Send empty response if user is not registered yet.
-	if (!user) throw 'User not found.'
-
-	const allowCredentials = user.credentials.map(getAllowedCredential)
-
-	const options = fido2.generateAuthenticationOptions({
-		timeout: TIMEOUT,
-		rpID,
-		allowCredentials,
-		// This optional value controls whether or not the authenticator needs be able to uniquely
-		// identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
-		userVerification,
-	})
-
-	return options
-}
-
-const getAllowedCredential = cred => ({
-	id: base64url.toBuffer(cred.credId),
-	type: 'public-key',
-	transports: ['internal'],
 })
 
 /**
@@ -414,7 +233,7 @@ const getAllowedCredential = cred => ({
 router.post('/login-response', csrfGuard, async (req, res) => {
 	console.log('/login-response')
 	try {
-		let user = await loginResponse(req.session.challenge, req.session.username, req.body)
+		let user = await authlib.loginResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
 		req.session.loggedIn = true
 		res.json(user)
@@ -423,47 +242,3 @@ router.post('/login-response', csrfGuard, async (req, res) => {
 		res.status(400).json({error})
 	}
 })
-
-async function loginResponse(expectedChallenge, username, body) {
-	const expectedOrigin = process.env.ORIGIN
-	const expectedRPID = process.env.HOSTNAME
-
-	// Query the user
-	const user = db
-		.get('users')
-		.find({username})
-		.value()
-
-	let credential = user.credentials.find(cred => cred.credId === body.id)
-
-	if (!credential) throw 'Authenticating credential not found.'
-
-	const verification = fido2.verifyAuthenticationResponse({
-		credential: body,
-		expectedChallenge,
-		expectedOrigin,
-		expectedRPID,
-		authenticator: {
-			...credential,
-			credentialPublicKey: base64url.toBuffer(credential.publicKey),
-			credentialID: base64url.toBuffer(credential.credId),
-			prevCounter: 0,
-			counter: 0,
-		},
-	})
-
-	const {verified, authenticationInfo} = verification
-	console.log('~ verified', verified)
-	console.log('~ authenticationInfo', authenticationInfo)
-
-	if (!verified) throw 'User verification failed.'
-
-	console.log('assign user', user)
-
-	db.get('users')
-		.find({username})
-		.assign(user)
-		.write()
-
-	return user
-}

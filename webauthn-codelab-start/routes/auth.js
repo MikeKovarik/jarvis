@@ -256,10 +256,13 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 		}
 
 		res.json(options)
-	} catch (e) {
-		res.status(400).send({error: e})
+	} catch (error) {
+		res.status(400).send({error})
 	}
 })
+
+async function registerRequest() {
+}
 
 /**
  * Register user credential.
@@ -278,61 +281,62 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
  **/
 router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
 	console.log('/register-response')
-	const username = req.session.username
-	const expectedChallenge = req.session.challenge
-	const expectedOrigin = process.env.ORIGIN
-	const expectedRPID = process.env.HOSTNAME
-	const credId = req.body.id
-	const type = req.body.type
-
 	try {
-		const {body} = req
-
-		const verification = await fido2.verifyRegistrationResponse({
-			credential: body,
-			expectedChallenge,
-			expectedOrigin,
-			expectedRPID,
-		})
-
-		const {verified, registrationInfo} = verification
-
-		if (!verified) {
-			throw 'User verification failed.'
-		}
-
-		const {credentialPublicKey, credentialID, counter} = registrationInfo
-		const base64PublicKey = base64url.encode(credentialPublicKey)
-		const base64CredentialID = base64url.encode(credentialID)
-
-		const user = db.get('users').find({username}).value()
-
-		const existingCred = user.credentials.find(
-			cred => cred.credID === base64CredentialID
-		)
-
-		if (!existingCred) {
-			/**
-			 * Add the returned device to the user's list of devices
-			 */
-			user.credentials.push({
-				publicKey: base64PublicKey,
-				credId: base64CredentialID,
-			})
-		}
-
-        console.log('assign user', user)
-		db.get('users').find({username}).assign(user).write()
-
+		let user = await registerResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
-
-		// Respond with user info
 		res.json(user)
 	} catch (e) {
 		delete req.session.challenge
 		res.status(400).send({error: e.message})
 	}
 })
+
+async function registerResponse(expectedChallenge, username, body) {
+	const expectedOrigin = process.env.ORIGIN
+	const expectedRPID = process.env.HOSTNAME
+
+	const verification = await fido2.verifyRegistrationResponse({
+		credential: body,
+		expectedChallenge,
+		expectedOrigin,
+		expectedRPID,
+	})
+
+	const {verified, registrationInfo} = verification
+
+	if (!verified) {
+		throw 'User verification failed.'
+	}
+
+	const {credentialPublicKey, credentialID, counter} = registrationInfo
+	const base64PublicKey = base64url.encode(credentialPublicKey)
+	const base64CredentialID = base64url.encode(credentialID)
+
+	const user = db.get('users')
+		.find({username})
+		.value()
+
+	const existingCred = user.credentials.find(cred => cred.credID === base64CredentialID)
+
+	if (!existingCred) {
+		/**
+		 * Add the returned device to the user's list of devices
+		 */
+		user.credentials.push({
+			publicKey: base64PublicKey,
+			credId: base64CredentialID,
+		})
+	}
+
+	console.log('assign user', user)
+
+	db.get('users')
+		.find({username})
+		.assign(user)
+		.write()
+
+	return user
+}
 
 /**
  * Respond with required information to call navigator.credential.get()

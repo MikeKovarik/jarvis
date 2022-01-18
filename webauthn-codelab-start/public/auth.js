@@ -5,6 +5,7 @@ import {checkBiometrics} from './util.js'
 class Auth {
 
 	loggedIn = false
+	loggingIn = false
 
 	constructor() {
 		this.init()
@@ -20,6 +21,7 @@ class Auth {
 
 	async loginWithPassword(password) {
 		const body = {password}
+		this.loggingIn = true
 		try {
 			await postJson('/auth/password', body)
 			this.loggedIn = true
@@ -27,10 +29,12 @@ class Auth {
 			console.error(e)
 			this.loggedIn = false
 		}
+		this.loggingIn = false
 		return this.loggedIn
 	}
 
 	async loginWithBiometrics() {
+		this.loggingIn = true
 		try {
 			let user = await authenticate()
 			this.loggedIn = true
@@ -38,6 +42,7 @@ class Auth {
 			console.error(e)
 			this.loggedIn = false
 		}
+		this.loggingIn = false
 		return this.loggedIn
 	}
 

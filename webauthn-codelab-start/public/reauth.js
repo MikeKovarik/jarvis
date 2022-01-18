@@ -5,13 +5,10 @@ import auth from '/auth.js'
 let password
 
 render(html`
-	credId: ${auth.credId}
-	<br>
 	<input type="password" placeholder="Password" @change=${e => password = e.target.value} />
 	<button @click=${onSubmitPassword}>Log in with password</button>
 	<button @click=${onSubmitBiometrics}>Log in with biometrics</button>
 `, document.body)
-	//<button @click=${onSubmitBiometrics} ?disabled=${!auth.credId}>Log in with biometrics</button>
 
 const redirect = where => location.href = where
 

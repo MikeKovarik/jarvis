@@ -1,6 +1,3 @@
-import {bufferToBase64, base64ToBuffer} from './util.js'
-
-
 export const postJson = async (path, payload = '') => {
 	const headers = {
 		'X-Requested-With': 'XMLHttpRequest',
@@ -25,26 +22,21 @@ export const postJson = async (path, payload = '') => {
 	}
 }
 
-export const registerCredential = async () => {
-	console.log('registerCredential()')
-	const opts = {
-		attestation: 'none',
-		authenticatorSelection: {
-			authenticatorAttachment: 'platform',
-			userVerification: 'required',
-			requireResidentKey: false,
-		},
+const registerOptions = {
+	attestation: 'none',
+	authenticatorSelection: {
+		authenticatorAttachment: 'platform',
+		userVerification: 'required',
+		requireResidentKey: false
 	}
+}
 
-	let publicKey = await postJson('/auth/register-request', opts)
-	publicKey = reviveRegisterPublicKey(publicKey)
-    console.log('~ publicKey', publicKey)
+export const registerCredential = async () => {
+	let publicKey = await postJson('/auth/register-request', registerOptions)
+	publicKey = revivePublicKey(publicKey)
 	const cred = await navigator.credentials.create({publicKey})
-	console.log('~ cred', cred)
-	const body = packRegisterCredential(cred)
-	console.log('~ body', body)
+	const body = packCredential(cred)
 	let regRes = await postJson('/auth/register-response', body)
-	console.log('~ regRes', regRes)
 	return regRes
 }
 
@@ -53,65 +45,48 @@ export const unregisterCredential = async credId => {
 }
 
 export const authenticate = async () => {
-	console.log('authenticate 1')
 	let publicKey = await postJson('/auth/login-request')
 	// No registered credentials found
 	if (publicKey.allowCredentials.length === 0) return null
-	publicKey = reviveLoginPublicKey(publicKey)
-    console.log('~ publicKey', publicKey)
+	publicKey = revivePublicKey(publicKey)
 	const cred = await navigator.credentials.get({publicKey})
-    console.log('~ cred', cred)
-	const body = packLoginCredential(cred)
-    console.log('~ body', body)
+	const body = packCredential(cred)
 	return await postJson(`/auth/login-response`, body)
 }
 
-const reviveRegisterPublicKey = publicKey => {
-	publicKey.user.id = base64url.decode(publicKey.user.id)
+const revivePublicKey = publicKey => {
 	publicKey.challenge = base64url.decode(publicKey.challenge)
+
+	if (publicKey.user?.id)
+		publicKey.user.id = base64url.decode(publicKey.user.id)
+
 	if (publicKey.excludeCredentials)
 		for (let cred of publicKey.excludeCredentials)
 			cred.id = base64url.decode(cred.id)
+
+	if (publicKey.allowCredentials)
+		for (let cred of publicKey.allowCredentials)
+			cred.id = base64url.decode(cred.id)
+
 	return publicKey
 }
 
-const reviveLoginPublicKey = publicKey => {
-	publicKey.challenge = base64url.decode(publicKey.challenge)
-	for (let cred of publicKey.allowCredentials)
-		cred.id = base64url.decode(cred.id)
-	return publicKey
-}
-
-const packRegisterCredential = credential => {
+const packCredential = credential => {
 	const data = {}
 	data.id = credential.id
 	data.type = credential.type
 	data.rawId = base64url.encode(credential.rawId)
-
-	if (credential.response) {
-		data.response = {
-			clientDataJSON: base64url.encode(credential.response.clientDataJSON),
-			attestationObject: base64url.encode(credential.response.attestationObject),
-		}
-	}
-
+	if (credential.response)
+		data.response = packResponseObject(credential.response)
 	return data
 }
 
-const packLoginCredential = credential => {
-	const data = {}
-	data.id = credential.id
-	data.type = credential.type
-	data.rawId = base64url.encode(credential.rawId)
-
-	if (credential.response) {
-		data.response = {
-			clientDataJSON: base64url.encode(credential.response.clientDataJSON),
-			authenticatorData: base64url.encode(credential.response.authenticatorData),
-			signature: base64url.encode(credential.response.signature),
-			userHandle: base64url.encode(credential.response.userHandle),
-		}
+const packResponseObject = response => {
+	// note: cannot use Object.entries() or Object.keys() because webauthn object are weird instances.
+	let out = {}
+	for (let key in response) {
+		let val = response[key]
+		out[key] = val instanceof ArrayBuffer ? base64url.encode(val) : val
 	}
-
-	return data
+	return out
 }

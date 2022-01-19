@@ -18,32 +18,19 @@ const TIMEOUT = 30 * 1000 * 60
 const loadUser = username => db.get('users').find({username}).value()
 const saveUser = (username, user) => db.get('users').find({username}).assign(user).write()
 
-const getAllowedCredential = cred => ({
+const getAllowedOrExcludedCredential = cred => ({
 	id: base64url.toBuffer(cred.credId),
 	type: 'public-key',
 	transports: ['internal'],
 })
 
+// const regParams = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
+const regParams = [-7, -257]
+
 export async function registerRequest(username, body) {
 	const user = loadUser(username)
 
-	const excludeCredentials = []
-	if (user.credentials.length > 0) {
-		for (let cred of user.credentials) {
-			excludeCredentials.push({
-				id: base64url.toBuffer(cred.credId),
-				type: 'public-key',
-				transports: ['internal'],
-			})
-		}
-	}
-
-	const pubKeyCredParams = []
-	// const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
-	const params = [-7, -257]
-	for (let param of params) {
-		pubKeyCredParams.push({type: 'public-key', alg: param})
-	}
+	const excludeCredentials = user.credentials.map(getAllowedOrExcludedCredential)
 
 	const as = {} // authenticatorSelection
 	const aa = body.authenticatorSelection.authenticatorAttachment
@@ -87,10 +74,7 @@ export async function registerRequest(username, body) {
 	})
 
 	// Temporary hack until SimpleWebAuthn supports `pubKeyCredParams`
-	options.pubKeyCredParams = []
-	for (let param of params) {
-		options.pubKeyCredParams.push({type: 'public-key', alg: param})
-	}
+	options.pubKeyCredParams = regParams.map(param => ({type: 'public-key', alg: param}))
 
 	return options
 }
@@ -134,7 +118,7 @@ export async function loginRequest(username, userVerification = 'required') {
 	// Send empty response if user is not registered yet.
 	if (!user) throw 'User not found.'
 
-	const allowCredentials = user.credentials.map(getAllowedCredential)
+	const allowCredentials = user.credentials.map(getAllowedOrExcludedCredential)
 
 	const options = fido2.generateAuthenticationOptions({
 		timeout: TIMEOUT,

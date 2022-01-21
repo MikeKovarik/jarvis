@@ -36,8 +36,8 @@ app.get('/', (req, res) => {
 	console.log('GET /')
 	// Check session
 	if (req.session.username) {
-		// If user is logged in, redirect to `/reauth`.
-		res.redirect(307, '/reauth')
+		// If user is logged in, redirect to `/login`.
+		res.redirect(307, '/login')
 		return
 	}
 	// If user is not logged in, show `index.html` with id/password form.
@@ -58,18 +58,18 @@ app.get('/home', (req, res) => {
 	res.render('home.html', {username: req.session.username})
 })
 
-app.get('/reauth', (req, res) => {
-	console.log('GET /reauth')
+app.get('/login', (req, res) => {
+	console.log('GET /login')
 	const username = req.session.username
     console.log('~ req.session.username', req.session.username)
 	if (!username) {
 		res.redirect(302, '/')
 		return
 	}
-	// Show `reauth.html`.
+	// Show `login.html`.
 	// User is supposed to enter a password (which will be ignored)
 	// Make XHR POST to `/signin`
-	res.render('reauth.html', {username})
+	res.render('login.html', {username})
 })
 
 const listener = app.listen(port, () => {

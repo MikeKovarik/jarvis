@@ -7,7 +7,7 @@ render(html`
 	<h3>Your registered credentials:</h3>
 	<div id="list"></div>
 	<button @click=${addCredential}>Add credential</button>
-	<button @click=${() => redirect('/reauth')}>Try reauth</button>
+	<button @click=${() => redirect('/login')}>Try reauth</button>
 	<button @click=${() => redirect('/auth/signout')}>Sign out</button>
 `, document.body)
 

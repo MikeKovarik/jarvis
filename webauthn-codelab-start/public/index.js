@@ -14,5 +14,5 @@ const redirect = where => location.href = where
 async function onSubmit() {
     console.log('~ username', username)
 	await auth.addUsername(username)
-	redirect('/reauth')
+	redirect('/login')
 }

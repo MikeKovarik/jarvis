@@ -15,8 +15,10 @@ const RP_NAME = 'WebAuthn Codelab'
 const TIMEOUT = 30 * 1000 * 60
 
 
-const loadUser = username => db.get('users').find({username}).value()
-const saveUser = (username, user) => db.get('users').find({username}).assign(user).write()
+export const loadUser = username => db.get('users').find({username}).value()
+export const addUser = (username, user) => db.get('users').push({username, ...user}).write()
+// updates existing user with new fields. i.e. It does Object.assign internally
+export const updateUser = (username, user) => db.get('users').find({username}).assign(user).write()
 
 const getAllowedOrExcludedCredential = cred => ({
 	id: base64url.toBuffer(cred.credId),
@@ -105,7 +107,7 @@ export async function registerResponse(expectedChallenge, username, credential) 
 
 	console.log('assign user', user)
 
-	saveUser(username, user)
+	updateUser(username, user)
 
 	return user
 }
@@ -166,7 +168,7 @@ export async function loginResponse(expectedChallenge, username, body) {
 
 	if (!verified) throw 'User verification failed.'
 
-	saveUser(username, user)
+	updateUser(username, user)
 
 	return user
 }

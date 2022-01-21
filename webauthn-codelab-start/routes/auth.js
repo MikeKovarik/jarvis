@@ -2,8 +2,9 @@ import express from 'express'
 import crypto from 'crypto'
 import base64url from 'base64url'
 import {db} from './authlib.js'
-import * as authlib from './authlib.js'
 import {csrfGuard, signedInGuard} from './guards.js'
+import * as authlib from './authlib.js'
+import {loadUser, updateUser, addUser} from './authlib.js'
 
 
 const router = express.Router()
@@ -17,22 +18,19 @@ export default router
 router.post('/username', (req, res) => {
     console.log('~ req.body', req.body)
 	const username = req.body.username
-    console.log('~ username', username)
 	// Only check username, no need to check password as this is a mock
 	if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
 		res.status(400).send({error: 'Bad request'})
 		return
 	} else {
 		// See if account already exists
-		let user = db.get('users').find({username}).value()
+		let user = loadUser(username)
 		// If user entry is not created yet, create one
 		if (!user) {
-			user = {
-				username,
+			addUser(username, {
 				id: base64url.encode(crypto.randomBytes(32)),
 				credentials: [],
-			}
-			db.get('users').push(user).write()
+			})
 		}
 		// Set username in the session
 		req.session.username = username
@@ -51,10 +49,7 @@ router.post('/password', (req, res) => {
 		res.status(401).json({error: 'Enter at least one random letter.'})
 		return
 	}
-	const user = db
-		.get('users')
-		.find({username: req.session.username})
-		.value()
+	const user = loadUser(req.session.username)
 
 	if (!user) {
 		res.status(401).json({error: 'Enter username first.'})
@@ -92,10 +87,7 @@ router.get('/signout', (req, res) => {
  ```
  **/
 router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
-	const user = db
-		.get('users')
-		.find({username: req.session.username})
-		.value()
+	const user = loadUser(req.session.username)
 	res.json(user || {})
 })
 
@@ -106,16 +98,9 @@ router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
 router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 	const credId = req.query.credId
 	const username = req.session.username
-	const user = db.get('users').find({username}).value()
-
-	// Leave credential ids that do not match
-	const newCreds = user.credentials.filter(cred => cred.credId !== credId)
-
-	db.get('users')
-		.find({username})
-		.assign({credentials: newCreds})
-		.write()
-
+	const user = loadUser(username)
+	const credentials = user.credentials.filter(cred => cred.credId !== credId)
+	updateUser(username, {credentials})
 	res.json({})
 })
 

@@ -1,5 +1,4 @@
 import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
-import {postJson, registerCredential, unregisterCredential} from './client.js'
 import auth from './auth.js'
 
 
@@ -13,25 +12,25 @@ render(html`
 `, document.body)
 
 const $list = document.querySelector('#list')
-getCredentials()
+loadCredentials()
 
 const redirect = where => location.href = where
 
 async function removeCredential(credId) {
 	console.log('removeCredential()', credId)
-	await unregisterCredential(credId)
-	await getCredentials()
+	await auth.unregisterCredential(credId)
+	await loadCredentials()
 }
 
 async function addCredential() {
 	console.log('addCredential()')
-	await registerCredential()
-	await getCredentials()
+	await auth.registerCredential()
+	await loadCredentials()
 }
 
-async function getCredentials() {
-	console.log('getCredentials()')
-	const {credentials} = await postJson('/auth/get-keys')
+async function loadCredentials() {
+	console.log('loadCredentials()')
+	const credentials = await auth.getCredentials()
 	renderCredentials(credentials)
 }
 

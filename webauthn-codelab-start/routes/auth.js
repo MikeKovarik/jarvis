@@ -2,7 +2,7 @@ import express from 'express'
 import crypto from 'crypto'
 import base64url from 'base64url'
 import {loadUser, addUser, updateUser} from './db.js'
-import {csrfGuard, signedInGuard} from './guards.js'
+import {csrfGuard, loggedInGuard} from './guards.js'
 import WebAuthn from './webauthn.js'
 
 
@@ -20,8 +20,6 @@ const webauthn = new WebAuthn({
 })
 
 router.use((req, res, next) => {
-	//req.session.username = 'mike'
-	//req.session.loggedIn = true
 	if (webauthn.rpID === undefined) {
 		webauthn.rpID   = req.headers.host.split(':')[0] // remove port
 		webauthn.origin = req.headers.origin // full url with protocol and port
@@ -105,7 +103,7 @@ router.get('/signout', (req, res) => {
  };
  ```
  **/
-router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
+router.post('/get-keys', csrfGuard, loggedInGuard, (req, res) => {
 	const user = loadUser(req.session.username)
 	res.json(user || {})
 })
@@ -114,7 +112,7 @@ router.post('/get-keys', csrfGuard, signedInGuard, (req, res) => {
  * Removes a credential id attached to the user
  * Responds with empty JSON `{}`
  **/
-router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
+router.post('/remove-key', csrfGuard, loggedInGuard, (req, res) => {
 	const credId = req.query.credId
 	const username = req.session.username
 	const user = loadUser(username)
@@ -155,7 +153,7 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
      attestation: ('none'|'indirect'|'direct')
  * }```
  **/
-router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
+router.post('/register-request', csrfGuard, loggedInGuard, async (req, res) => {
 	console.log('/register-request')
 	try {
 		let options = await webauthn.registerRequest(req.session.username, req.body)
@@ -181,7 +179,7 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
      }
  * }```
  **/
-router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
+router.post('/register-response', csrfGuard, loggedInGuard, async (req, res) => {
 	console.log('/register-response')
 	try {
 		let user = await webauthn.registerResponse(req.session.challenge, req.session.username, req.body)

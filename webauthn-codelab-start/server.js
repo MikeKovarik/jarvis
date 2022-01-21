@@ -4,6 +4,10 @@ import hbs from 'hbs'
 import auth from './routes/auth.js'
 const app = express()
 
+
+const port = 8080
+const secret = 'TODO'
+
 app.set('view engine', 'html')
 app.engine('html', hbs.__express)
 app.set('views', './views')
@@ -11,13 +15,21 @@ app.use(express.json())
 app.use(express.static('public'))
 
 app.use(session({
-    secret: 'TODO', // TODO
+    secret,
 	resave: true,
 	saveUninitialized: false,
     cookie: {
 		secure: false,
 	}
 }))
+/*
+app.use((req, res, next) => {
+	req.session.username = 'mike'
+	req.session.loggedIn = true
+	next()
+})
+*/
+app.use('/auth', auth)
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get('/', (req, res) => {
@@ -57,13 +69,9 @@ app.get('/reauth', (req, res) => {
 	// Show `reauth.html`.
 	// User is supposed to enter a password (which will be ignored)
 	// Make XHR POST to `/signin`
-	res.render('reauth.html', {username: username})
+	res.render('reauth.html', {username})
 })
 
-app.use('/auth', auth)
-
-// listen for req :)
-const port = process.env.GLITCH_DEBUGGER ? null : 8080
-const listener = app.listen(port || process.env.PORT, () => {
+const listener = app.listen(port, () => {
 	console.log('Your app is listening on port ' + listener.address().port)
 })

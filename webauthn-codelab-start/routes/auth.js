@@ -1,15 +1,17 @@
 import express from 'express'
 import crypto from 'crypto'
 import base64url from 'base64url'
-import {db} from './authlib.js'
+import {setDbMethods} from './authlib.js'
+import {loadUser, addUser, updateUser} from './db.js'
 import {csrfGuard, signedInGuard} from './guards.js'
 import * as authlib from './authlib.js'
-import {loadUser, updateUser, addUser} from './authlib.js'
 
 
 const router = express.Router()
 router.use(express.json())
 export default router
+
+setDbMethods({loadUser, updateUser})
 
 /**
  * Check username, create a new account if it doesn't exist.
@@ -142,8 +144,8 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 		let options = await authlib.registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
 		res.json(options)
-	} catch (error) {
-		res.status(400).send({error})
+	} catch ({message}) {
+		res.status(400).json({message})
 	}
 })
 
@@ -168,9 +170,9 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 		let user = await authlib.registerResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
 		res.json(user)
-	} catch (e) {
+	} catch ({message}) {
 		delete req.session.challenge
-		res.status(400).send({error: e.message})
+		res.status(400).json({message})
 	}
 })
 
@@ -195,8 +197,8 @@ router.post('/login-request', csrfGuard, async (req, res) => {
         console.log('~ options', options)
 		req.session.challenge = options.challenge
 		res.json(options)
-	} catch (error) {
-		res.status(400).json({error})
+	} catch ({message}) {
+		res.status(400).json({message})
 	}
 })
 
@@ -222,8 +224,8 @@ router.post('/login-response', csrfGuard, async (req, res) => {
 		delete req.session.challenge
 		req.session.loggedIn = true
 		res.json(user)
-	} catch (error) {
+	} catch ({message}) {
 		delete req.session.challenge
-		res.status(400).json({error})
+		res.status(400).json({message})
 	}
 })

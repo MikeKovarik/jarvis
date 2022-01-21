@@ -1,38 +1,24 @@
 import fido2 from '@simplewebauthn/server'
 import base64url from 'base64url'
-import low from 'lowdb'
-import FileSync from 'lowdb/adapters/FileSync.js'
 
 
-const adapter = new FileSync('./data/webauthn.json')
-export const db = low(adapter)
-
-db.defaults({
-	users: [],
-}).write()
+let loadUser
+let updateUser
+export const setDbMethods = arg => {
+	loadUser = arg.loadUser
+	updateUser = arg.updateUser
+}
 
 const RP_NAME = 'WebAuthn Codelab'
 const TIMEOUT = 30 * 1000 * 60
-
-
-export const loadUser = username => db.get('users').find({username}).value()
-export const addUser = (username, user) => db.get('users').push({username, ...user}).write()
-// updates existing user with new fields. i.e. It does Object.assign internally
-export const updateUser = (username, user) => db.get('users').find({username}).assign(user).write()
-
-const getAllowedOrExcludedCredential = cred => ({
-	id: base64url.toBuffer(cred.credId),
-	type: 'public-key',
-	transports: ['internal'],
-})
 
 // const regParams = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
 const regParams = [-7, -257]
 
 export async function registerRequest(username, body) {
-	const user = loadUser(username)
+	const user = await loadUser(username)
 
-	const excludeCredentials = user.credentials.map(getAllowedOrExcludedCredential)
+	const excludeCredentials = user.credentials.map(credToPublicKeyDescriptor)
 
 	const as = {} // authenticatorSelection
 	const aa = body.authenticatorSelection.authenticatorAttachment
@@ -96,33 +82,29 @@ export async function registerResponse(expectedChallenge, username, credential) 
 
 	if (!verified) throw 'User verification failed.'
 
-	// convert buffer data to http & db friendly base64 string
-	const publicKey = base64url.encode(registrationInfo.credentialPublicKey)
-	const credId    = base64url.encode(registrationInfo.credentialID)
-
-	const user = loadUser(username)
+	const user = await loadUser(username)
 
 	const existingCred = user.credentials.find(cred => cred.credID === credId)
-	if (!existingCred) user.credentials.push({publicKey, credId})
 
-	console.log('assign user', user)
+	if (!existingCred) {
+		// convert buffer data to http & db friendly base64 string
+		let newCred = packCredential(registrationInfo)
+		user.credentials.push(newCred)
+	}
 
-	updateUser(username, user)
+	await updateUser(username, user)
 
 	return user
 }
 
 export async function loginRequest(username, userVerification = 'required') {
-	let rpID = process.env.HOSTNAME
-	
-	const user = loadUser(username)
-
-	// Send empty response if user is not registered yet.
+	const user = await loadUser(username)
 	if (!user) throw 'User not found.'
 
-	const allowCredentials = user.credentials.map(getAllowedOrExcludedCredential)
+	let rpID = process.env.HOSTNAME
+	const allowCredentials = user.credentials.map(credToPublicKeyDescriptor)
 
-	const options = fido2.generateAuthenticationOptions({
+	return fido2.generateAuthenticationOptions({
 		timeout: TIMEOUT,
 		rpID,
 		allowCredentials,
@@ -130,8 +112,6 @@ export async function loginRequest(username, userVerification = 'required') {
 		// identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
 		userVerification,
 	})
-
-	return options
 }
 
 export async function loginResponse(expectedChallenge, username, body) {
@@ -139,7 +119,7 @@ export async function loginResponse(expectedChallenge, username, body) {
 	const expectedOrigin = process.env.ORIGIN
 	const expectedRPID = process.env.HOSTNAME
 
-	const user = loadUser(username)
+	const user = await loadUser(username)
 
     console.log('~ body', body)
 	let credential = user.credentials.find(cred => cred.credId === body.id)
@@ -147,28 +127,42 @@ export async function loginResponse(expectedChallenge, username, body) {
 	if (!credential) throw 'Authenticating credential not found.'
 
 	// convert from http & db friendly base64 string to FIDO friendtly buffer data
-	const credentialPublicKey = base64url.toBuffer(credential.publicKey)
-	const credentialID        = base64url.toBuffer(credential.credId)
+	const authenticator = reviveCredential(credential)
 
 	const verification = fido2.verifyAuthenticationResponse({
 		credential: body,
 		expectedChallenge,
 		expectedOrigin,
 		expectedRPID,
-		authenticator: {
-			...credential,
-			credentialPublicKey,
-			credentialID,
-			prevCounter: 0,
-			counter: 0,
-		},
+		authenticator,
 	})
 
 	const {verified} = verification
 
 	if (!verified) throw 'User verification failed.'
 
-	updateUser(username, user)
+	await updateUser(username, user)
 
 	return user
 }
+
+function packCredential({credentialPublicKey, credentialID, counter}) {
+	return {
+		publicKey: base64url.encode(credentialPublicKey),
+		credId:    base64url.encode(credentialID),
+	}
+}
+
+function reviveCredential({publicKey, credId}) {
+	return {
+		credentialPublicKey: base64url.toBuffer(publicKey),
+		credentialID:        base64url.toBuffer(credId),
+		counter: 0,
+	}
+}
+
+const credToPublicKeyDescriptor = cred => ({
+	id: base64url.toBuffer(cred.credId),
+	type: 'public-key',
+	transports: ['internal'],
+})

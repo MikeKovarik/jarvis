@@ -7,6 +7,7 @@ let password
 render(html`
 	<input type="password" placeholder="Password" @change=${e => password = e.target.value} />
 	<button @click=${onSubmitPassword}>Log in with password</button>
+	<br>or<br>
 	<button @click=${onSubmitBiometrics}>Log in with biometrics</button>
 `, document.body)
 

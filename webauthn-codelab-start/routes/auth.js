@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import base64url from 'base64url'
 import {loadUser, addUser, updateUser} from './db.js'
 import {csrfGuard, signedInGuard} from './guards.js'
-import WebAuthn from './authlib.js'
+import WebAuthn from './webauthn.js'
 
 
 const router = express.Router()

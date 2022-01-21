@@ -39,11 +39,11 @@ function renderCredentials(credentials) {
 	console.log('renderCredentials()', credentials)
 	const creds = html`${credentials.length > 0
 		? credentials.map(cred => html`
-				<div>
-					${cred.credId}</span
-					<pre>${cred.publicKey}</pre>
-					<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">Remove</button>
-				</div>
+			<div class="credential">
+				<span class="credential-id">${cred.credId}</span>
+				<pre class="credential-key">${cred.publicKey}</pre>
+				<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">Remove</button>
+			</div>
 		`)
 		: html` <p>No credentials found.</p> `}`
 	render(creds, $list)

@@ -19,36 +19,6 @@ app.use(session({
 	}
 }))
 
-
-app.use((req, res, next) => {
-	//req.session.username = 'mike'
-	//req.session.loggedIn = true
-
-	//process.env.HOSTNAME = req.headers.host
-
-	//process.env.HOSTNAME = req.headers.host.split(':')[0]
-    //console.log('~ process.env.HOSTNAME', process.env.HOSTNAME)
-	//const protocol = /^localhost/.test(process.env.HOSTNAME) ? 'http' : 'https'
-	//process.env.ORIGIN = `${protocol}://${process.env.HOSTNAME}`
-    //console.log('~ process.env.ORIGIN', process.env.ORIGIN)
-
-	let protocol = /^localhost/.test(process.env.HOSTNAME) ? 'http' : 'https'
-	process.env.HOSTNAME = req.headers.host.split(':')[0]
-	process.env.ORIGIN = `${protocol}://${req.headers.host}`
-
-
-	/*
-	if (
-		req.get('x-forwarded-proto') &&
-		req.get('x-forwarded-proto').split(',')[0] !== 'https'
-	) {
-		return res.redirect(301, process.env.ORIGIN)
-	}
-	req.schema = 'https'
-	*/
-	next()
-})
-
 // http://expressjs.com/en/starter/basic-routing.html
 app.get('/', (req, res) => {
 	console.log('GET /')

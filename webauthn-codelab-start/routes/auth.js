@@ -1,17 +1,34 @@
 import express from 'express'
 import crypto from 'crypto'
 import base64url from 'base64url'
-import {setDbMethods} from './authlib.js'
 import {loadUser, addUser, updateUser} from './db.js'
 import {csrfGuard, signedInGuard} from './guards.js'
-import * as authlib from './authlib.js'
+import WebAuthn from './authlib.js'
 
 
 const router = express.Router()
 router.use(express.json())
 export default router
 
-setDbMethods({loadUser, updateUser})
+const webauthn = new WebAuthn({
+	loadUser,
+	updateUser,
+	rpName: 'WebAuthn Codelab',
+	// origin and rpID will be resolved at runtime
+	//rpID: process.env.HOSTNAME,
+	//origin: process.env.ORIGIN,
+})
+
+router.use((req, res, next) => {
+	//req.session.username = 'mike'
+	//req.session.loggedIn = true
+	if (webauthn.rpID === undefined) {
+		webauthn.rpID   = req.headers.host.split(':')[0] // remove port
+		webauthn.origin = req.headers.origin // full url with protocol and port
+	}
+	next()
+})
+
 
 /**
  * Check username, create a new account if it doesn't exist.
@@ -141,7 +158,7 @@ router.post('/remove-key', csrfGuard, signedInGuard, (req, res) => {
 router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 	console.log('/register-request')
 	try {
-		let options = await authlib.registerRequest(req.session.username, req.body)
+		let options = await webauthn.registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
 		res.json(options)
 	} catch ({message}) {
@@ -167,7 +184,7 @@ router.post('/register-request', csrfGuard, signedInGuard, async (req, res) => {
 router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => {
 	console.log('/register-response')
 	try {
-		let user = await authlib.registerResponse(req.session.challenge, req.session.username, req.body)
+		let user = await webauthn.registerResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
 		res.json(user)
 	} catch ({message}) {
@@ -193,7 +210,7 @@ router.post('/register-response', csrfGuard, signedInGuard, async (req, res) => 
 router.post('/login-request', csrfGuard, async (req, res) => {
 	console.log('/login-request')
 	try {
-		let options = await authlib.loginRequest(req.session.username)
+		let options = await webauthn.loginRequest(req.session.username)
         console.log('~ options', options)
 		req.session.challenge = options.challenge
 		res.json(options)
@@ -220,7 +237,7 @@ router.post('/login-request', csrfGuard, async (req, res) => {
 router.post('/login-response', csrfGuard, async (req, res) => {
 	console.log('/login-response')
 	try {
-		let user = await authlib.loginResponse(req.session.challenge, req.session.username, req.body)
+		let user = await webauthn.loginResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
 		req.session.loggedIn = true
 		res.json(user)

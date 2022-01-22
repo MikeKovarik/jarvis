@@ -20,11 +20,17 @@ const webauthn = new WebAuthn({
 })
 
 router.use((req, res, next) => {
-	if (webauthn.rpID === undefined) {
+	if ((!webauthn.rpID || !webauthn.origin) && req.headers.origin) {
 		webauthn.rpID   = req.headers.host.split(':')[0] // remove port
 		webauthn.origin = req.headers.origin // full url with protocol and port
 	}
 	next()
+})
+
+router.get('/', (req, res) => {
+	let {username, loggedIn} = req.session
+	loggedIn = !!loggedIn
+	res.json({username, loggedIn})
 })
 
 
@@ -77,11 +83,9 @@ router.post('/password', (req, res) => {
 	res.json(user)
 })
 
-router.get('/signout', (req, res) => {
-	// Remove the session
+router.get('/logout', (req, res) => {
 	req.session.destroy()
-	// Redirect to `/`
-	res.redirect(307, '/')
+	res.json({})
 })
 
 /**

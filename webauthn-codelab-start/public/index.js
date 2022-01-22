@@ -1,18 +1,21 @@
 import {html, render} from 'https://unpkg.com/lit-html@1.0.0/lit-html.js?module'
 import auth from '/auth.js'
+import {goTo} from './util.js'
 
 
 let username
 
-render(html`
-	<input type="text" placeholder="Username" @change=${e => username = e.target.value} />
-	<button @click=${onSubmit}>Next</button>
-`, document.body)
+export default () => {
+	if (auth.username) goTo('/login')
 
-const redirect = where => location.href = where
+	render(html`
+		<input type="text" placeholder="Username" @change=${e => username = e.target.value} />
+		<button @click=${onSubmit}>Next</button>
+	`, document.body)
+}
 
 async function onSubmit() {
     console.log('~ username', username)
 	await auth.addUsername(username)
-	redirect('/login')
+	goTo('/login')
 }

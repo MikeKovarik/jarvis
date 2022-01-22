@@ -14,44 +14,55 @@ class Auth {
 
 	loggedIn = false
 	loggingIn = false
+	username = undefined
+	credentials = []
 
 	constructor() {
 		checkBiometrics().then(val => this.hasBiometrics = val)
+		this.ready = this.getInfo()
+	}
+
+	async getInfo() {
+		let info = await getJson('/auth')
+		this.username = info.username
+		this.loggedIn = info.loggedIn
 	}
 
 	async addUsername(username) {
-		return postJson('/auth/username', {username})
-	}
-
-	async loginWithPassword(password) {
-		const body = {password}
-		this.loggingIn = true
 		try {
-			await postJson('/auth/password', body)
-			this.loggedIn = true
-		} catch(e) {
-			console.error(e)
-			this.loggedIn = false
+			await postJson('/auth/username', {username})
+			this.username = username
+		} catch {
+			this.username = undefined
 		}
-		this.loggingIn = false
-		return this.loggedIn
 	}
 
-	async loginWithBiometrics() {
+	loginWithPassword(password) {
+		let handler = () => postJson('/auth/password', {password})
+		return this.loginWrapper(handler)
+	}
+
+	loginWithBiometrics() {
+		let handler = () => this.login()
+		return this.loginWrapper(handler)
+	}
+
+	async loginWrapper(loginHandler) {
 		this.loggingIn = true
 		try {
-			let user = await this.login()
-			this.loggedIn = true
+			let user = await loginHandler()
+			this._setLoggedIn(user)
 		} catch(e) {
 			console.error(e)
-			this.loggedIn = false
+			this._setLoggedOut()
 		}
 		this.loggingIn = false
 		return this.loggedIn
 	}
 
 	async getCredentials() {
-		const {credentials} = await postJson('/auth/get-keys')
+		let {credentials} = await postJson('/auth/get-keys')
+		this.credentials = credentials
 		return credentials
 	}
 
@@ -63,8 +74,8 @@ class Auth {
 	async registerCredential() {
 		let publicKey = await postJson('/auth/register-request', registerOptions)
 		publicKey = revivePublicKey(publicKey)
-		const cred = await navigator.credentials.create({publicKey})
-		const body = packCredential(cred)
+		let cred = await navigator.credentials.create({publicKey})
+		let body = packCredential(cred)
 		let regRes = await postJson('/auth/register-response', body)
 		return regRes
 	}
@@ -74,36 +85,67 @@ class Auth {
 		// No registered credentials found
 		if (publicKey.allowCredentials.length === 0) return null
 		publicKey = revivePublicKey(publicKey)
-		const cred = await navigator.credentials.get({publicKey})
-		const body = packCredential(cred)
-		return await postJson(`/auth/login-response`, body)
+		let cred = await navigator.credentials.get({publicKey})
+		let body = packCredential(cred)
+		return postJson('/auth/login-response', body)
+	}
+
+	async logout() {
+		try {
+			await getJson('/auth/logout')
+			this._setLoggedOut()
+		} catch {}
+	}
+
+	_setLoggedIn({username, credentials}) {
+		this.loggedIn = true
+		this.username = username
+		this.credentials = credentials
+	}
+
+	_setLoggedOut() {
+		this.loggedIn = false
+		this.username = undefined
+		this.credentials = []
 	}
 
 }
 
-export const postJson = async (path, payload = '') => {
-	const headers = {
+export const postJson = async (url, payload = '') => {
+	let headers = {
 		'X-Requested-With': 'XMLHttpRequest',
 	}
 	if (payload && !(payload instanceof FormData)) {
 		headers['Content-Type'] = 'application/json'
 		payload = JSON.stringify(payload)
 	}
-	const res = await fetch(path, {
+	let res = await fetch(url, {
 		method: 'POST',
 		credentials: 'same-origin',
 		headers: headers,
 		body: payload,
 	})
+	return await handleFetchRes(res)
+}
+
+export const getJson = async (url) => {
+	let res = await fetch(url, {
+		method: 'GET',
+		credentials: 'same-origin',
+	})
+	return await handleFetchRes(res)
+}
+
+async function handleFetchRes(res) {
 	if (res.status === 200) {
 		return res.json()
 	} else {
-		const {message} = await res.json()
+		let {message} = await res.json()
 		throw message
 	}
 }
 
-const revivePublicKey = publicKey => {
+let revivePublicKey = publicKey => {
 	publicKey.challenge = base64url.decode(publicKey.challenge)
 
 	if (publicKey.user?.id)
@@ -120,8 +162,8 @@ const revivePublicKey = publicKey => {
 	return publicKey
 }
 
-const packCredential = credential => {
-	const data = {}
+let packCredential = credential => {
+	let data = {}
 	data.id = credential.id
 	data.type = credential.type
 	data.rawId = base64url.encode(credential.rawId)
@@ -130,7 +172,7 @@ const packCredential = credential => {
 	return data
 }
 
-const packResponseObject = response => {
+let packResponseObject = response => {
 	// note: cannot use Object.entries() or Object.keys() because webauthn object are weird instances.
 	let out = {}
 	for (let key in response) {

@@ -22,54 +22,11 @@ app.use(session({
 		secure: false,
 	}
 }))
-/*
-app.use((req, res, next) => {
-	req.session.username = 'mike'
-	req.session.loggedIn = true
-	next()
-})
-*/
+
 app.use('/auth', auth)
 
-// http://expressjs.com/en/starter/basic-routing.html
 app.get('/', (req, res) => {
-	console.log('GET /')
-	// Check session
-	if (req.session.username) {
-		// If user is logged in, redirect to `/login`.
-		res.redirect(307, '/login')
-		return
-	}
-	// If user is not logged in, show `index.html` with id/password form.
 	res.render('index.html')
-})
-
-app.get('/home', (req, res) => {
-	console.log('GET /home')
-	console.log('~ req.session.username', req.session.username)
-    console.log('~ req.session.loggedIn', req.session.loggedIn)
-	if (!req.session.username || !req.session.loggedIn) {
-		console.log('not logged in')
-		// If user is not logged in, redirect to `/`.
-		res.redirect(307, '/')
-		return
-	}
-	// `home.html` shows sign-out link
-	res.render('home.html', {username: req.session.username})
-})
-
-app.get('/login', (req, res) => {
-	console.log('GET /login')
-	const username = req.session.username
-    console.log('~ req.session.username', req.session.username)
-	if (!username) {
-		res.redirect(302, '/')
-		return
-	}
-	// Show `login.html`.
-	// User is supposed to enter a password (which will be ignored)
-	// Make XHR POST to `/signin`
-	res.render('login.html', {username})
 })
 
 const listener = app.listen(port, () => {

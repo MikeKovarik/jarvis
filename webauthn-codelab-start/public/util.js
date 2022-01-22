@@ -4,3 +4,5 @@ export async function checkBiometrics() {
 		?.isUserVerifyingPlatformAuthenticatorAvailable()
 	?? false
 }
+
+export const goTo = route => location.href = '#' + route

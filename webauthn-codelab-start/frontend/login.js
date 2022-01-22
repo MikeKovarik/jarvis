@@ -23,8 +23,6 @@ async function onSubmitPassword() {
 }
 
 async function onSubmitBiometrics() {
-    console.log('~ onSubmitBiometrics')
 	let loggedIn = await auth.loginWithBiometrics()
-    console.log('~ loggedIn', loggedIn)
 	if (loggedIn) goTo('/home')
 }

@@ -22,31 +22,26 @@ export default () => {
 }
 
 async function removeCredential(credId) {
-	console.log('removeCredential()', credId)
 	await auth.unregisterCredential(credId)
 	await loadCredentials()
 }
 
 async function addCredential() {
-	console.log('addCredential()')
 	await auth.registerCredential()
 	await loadCredentials()
 }
 
 async function loadCredentials() {
-	console.log('loadCredentials()')
 	const credentials = await auth.getCredentials()
 	renderCredentials(credentials)
 }
 
 async function logout() {
-	console.log('logout()')
 	await auth.logout()
 	goTo('/')
 }
 
 function renderCredentials(credentials) {
-	console.log('renderCredentials()', credentials)
 	const creds = html`${credentials.length > 0
 		? credentials.map(cred => html`
 			<div class="credential">

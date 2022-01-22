@@ -15,7 +15,6 @@ export default () => {
 }
 
 async function onSubmit() {
-    console.log('~ username', username)
 	await auth.addUsername(username)
 	goTo('/login')
 }

@@ -34,12 +34,8 @@ router.get('/', (req, res) => {
 })
 
 
-/**
- * Check username, create a new account if it doesn't exist.
- * Set a `username` in the session.
- **/
+// Check username, create a new account if it doesn't exist.
 router.post('/username', (req, res) => {
-    console.log('~ req.body', req.body)
 	const username = req.body.username
 	// Only check username, no need to check password as this is a mock
 	if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
@@ -62,11 +58,8 @@ router.post('/username', (req, res) => {
 	}
 })
 
-/**
- * Verifies user credential and let the user sign-in.
- * No preceding registration required.
- * This only checks if `username` is not empty string and ignores the password.
- **/
+// Verifies user credential and let the user sign-in. No preceding registration required.
+// This only checks if `username` is not empty string and ignores the password.
 router.post('/password', (req, res) => {
 	if (!req.body.password) {
 		res.status(401).json({error: 'Enter at least one random letter.'})
@@ -88,34 +81,13 @@ router.get('/logout', (req, res) => {
 	res.json({})
 })
 
-/**
- * Returns a credential id
- * (This server only stores one key per username.)
- * Response format:
- * ```{
- *   username: String,
- *   credentials: [Credential]
- * }```
-
- Credential
- ```
- {
-   credId: String,
-   publicKey: String,
-   aaguid: ??,
-   prevCounter: Int
- };
- ```
- **/
+// Returns a credential id. (This server only stores one key per username.)
 router.post('/get-keys', csrfGuard, loggedInGuard, (req, res) => {
 	const user = loadUser(req.session.username)
 	res.json(user || {})
 })
 
-/**
- * Removes a credential id attached to the user
- * Responds with empty JSON `{}`
- **/
+// Removes a credential id attached to the user
 router.post('/remove-key', csrfGuard, loggedInGuard, (req, res) => {
 	const credId = req.query.credId
 	const username = req.session.username
@@ -125,40 +97,8 @@ router.post('/remove-key', csrfGuard, loggedInGuard, (req, res) => {
 	res.json({})
 })
 
-/**
- * Respond with required information to call navigator.credential.create()
- * Input is passed via `req.body` with similar format as output
- * Output format:
- * ```{
-     rp: {
-       id: String,
-       name: String
-     },
-     user: {
-       displayName: String,
-       id: String,
-       name: String
-     },
-     publicKeyCredParams: [{
-       type: 'public-key', alg: -7
-     }],
-     timeout: Number,
-     challenge: String,
-     excludeCredentials: [{
-       id: String,
-       type: 'public-key',
-       transports: [('ble'|'nfc'|'usb'|'internal'), ...]
-     }, ...],
-     authenticatorSelection: {
-       authenticatorAttachment: ('platform'|'cross-platform'),
-       requireResidentKey: Boolean,
-       userVerification: ('required'|'preferred'|'discouraged')
-     },
-     attestation: ('none'|'indirect'|'direct')
- * }```
- **/
+// Respond with required information to call navigator.credential.create()
 router.post('/register-request', csrfGuard, loggedInGuard, async (req, res) => {
-	console.log('/register-request')
 	try {
 		let options = await webauthn.registerRequest(req.session.username, req.body)
 		req.session.challenge = options.challenge
@@ -168,23 +108,8 @@ router.post('/register-request', csrfGuard, loggedInGuard, async (req, res) => {
 	}
 })
 
-/**
- * Register user credential.
- * Input format:
- * ```{
-     id: String,
-     type: 'public-key',
-     rawId: String,
-     response: {
-       clientDataJSON: String,
-       attestationObject: String,
-       signature: String,
-       userHandle: String
-     }
- * }```
- **/
+// Register user credential.
 router.post('/register-response', csrfGuard, loggedInGuard, async (req, res) => {
-	console.log('/register-response')
 	try {
 		let user = await webauthn.registerResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge
@@ -195,25 +120,10 @@ router.post('/register-response', csrfGuard, loggedInGuard, async (req, res) => 
 	}
 })
 
-/**
- * Respond with required information to call navigator.credential.get()
- * Input is passed via `req.body` with similar format as output
- * Output format:
- * ```{
-     challenge: String,
-     userVerification: ('required'|'preferred'|'discouraged'),
-     allowCredentials: [{
-       id: String,
-       type: 'public-key',
-       transports: [('ble'|'nfc'|'usb'|'internal'), ...]
-     }, ...]
- * }```
- **/
+// Respond with required information to call navigator.credential.get()
 router.post('/login-request', csrfGuard, async (req, res) => {
-	console.log('/login-request')
 	try {
 		let options = await webauthn.loginRequest(req.session.username)
-        console.log('~ options', options)
 		req.session.challenge = options.challenge
 		res.json(options)
 	} catch ({message}) {
@@ -221,23 +131,8 @@ router.post('/login-request', csrfGuard, async (req, res) => {
 	}
 })
 
-/**
- * Authenticate the user.
- * Input format:
- * ```{
-     id: String,
-     type: 'public-key',
-     rawId: String,
-     response: {
-       clientDataJSON: String,
-       authenticatorData: String,
-       signature: String,
-       userHandle: String
-     }
- * }```
- **/
+// Authenticate the user.
 router.post('/login-response', csrfGuard, async (req, res) => {
-	console.log('/login-response')
 	try {
 		let user = await webauthn.loginResponse(req.session.challenge, req.session.username, req.body)
 		delete req.session.challenge

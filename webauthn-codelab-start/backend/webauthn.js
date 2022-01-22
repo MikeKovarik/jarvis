@@ -110,12 +110,9 @@ export default class WebAuthn {
 	}
 
 	async loginResponse(expectedChallenge, username, body) {
-		console.log('~ loginResponse')
 		const user = await this.loadUser(username)
 
-		console.log('~ body', body)
 		let credential = user.credentials.find(cred => cred.credId === body.id)
-		console.log('~ credential', credential)
 		if (!credential) throw 'Authenticating credential not found.'
 
 		// convert from http & db friendly base64 string to FIDO friendtly buffer data

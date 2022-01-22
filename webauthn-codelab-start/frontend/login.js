@@ -4,6 +4,7 @@ import {goTo} from './util.js'
 
 
 let password
+let $status
 
 export default () => {
 	//if (auth.loggedIn) goTo('/home') // disabled due to "try reauth" button
@@ -14,15 +15,27 @@ export default () => {
 		<button @click=${onSubmitPassword}>Log in with password</button>
 		<br>or<br>
 		<button @click=${onSubmitBiometrics}>Log in with biometrics</button>
+		<br>
+		<div id="status"></div>
 	`, document.body)
+
+	$status = document.querySelector('#status')
+}
+
+async function renderStatus(status = '') {
+	$status.innerHTML = status
 }
 
 async function onSubmitPassword() {
+	renderStatus('logging in')
 	let loggedIn = await auth.loginWithPassword(password)
+	renderStatus('')
 	if (loggedIn) goTo('/home')
 }
 
 async function onSubmitBiometrics() {
+	renderStatus('logging in')
 	let loggedIn = await auth.loginWithBiometrics()
+	renderStatus('')
 	if (loggedIn) goTo('/home')
 }

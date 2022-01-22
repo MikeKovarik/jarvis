@@ -4,6 +4,7 @@ import {goTo} from './util.js'
 
 
 let $list
+let $status
 
 export default () => {
 	if (!auth.loggedIn) goTo('/')
@@ -15,29 +16,42 @@ export default () => {
 		<button @click=${addCredential}>Add credential</button>
 		<button @click=${() => goTo('/login')}>Try reauth</button>
 		<button @click=${() => logout()}>Sign out</button>
+		<br>
+		<div id="status"></div>
 	`, document.body)
 
 	$list = document.querySelector('#list')
+	$status = document.querySelector('#status')
 	loadCredentials()
 }
 
+async function renderStatus(status = '') {
+	$status.innerHTML = status
+}
+
 async function removeCredential(credId) {
+	renderStatus('deleting')
 	await auth.unregisterCredential(credId)
 	await loadCredentials()
 }
 
 async function addCredential() {
+	renderStatus('adding')
 	await auth.registerCredential()
 	await loadCredentials()
 }
 
 async function loadCredentials() {
+	renderStatus('loading')
 	const credentials = await auth.getCredentials()
 	renderCredentials(credentials)
+	renderStatus()
 }
 
 async function logout() {
+	renderStatus('logging out')
 	await auth.logout()
+	renderStatus()
 	goTo('/')
 }
 

@@ -51,7 +51,10 @@ class Auth {
 		this.loggingIn = true
 		try {
 			let user = await loginHandler()
-			this._setLoggedIn(user)
+			if (user)
+				this._setLoggedIn(user)
+			else
+				this._setLoggedOut()
 		} catch(e) {
 			console.error(e)
 			this._setLoggedOut()

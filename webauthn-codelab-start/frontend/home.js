@@ -25,9 +25,7 @@ export default () => {
 	loadCredentials()
 }
 
-async function renderStatus(status = '') {
-	$status.innerHTML = status
-}
+const renderStatus = (status = '') => render(status, $status)
 
 async function removeCredential(credId) {
 	renderStatus('deleting')

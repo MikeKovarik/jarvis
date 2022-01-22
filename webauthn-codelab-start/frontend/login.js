@@ -22,9 +22,7 @@ export default () => {
 	$status = document.querySelector('#status')
 }
 
-async function renderStatus(status = '') {
-	$status.innerHTML = status
-}
+const renderStatus = (status = '') => render(status, $status)
 
 async function onSubmitPassword() {
 	renderStatus('logging in')

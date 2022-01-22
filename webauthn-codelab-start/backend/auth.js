@@ -4,6 +4,7 @@ import base64url from 'base64url'
 import {loadUser, addUser, updateUser} from './db.js'
 import {csrfGuard, loggedInGuard} from './guards.js'
 import WebAuthn from './webauthn.js'
+import {rpName} from './config.js'
 
 
 const router = express.Router()
@@ -13,7 +14,7 @@ export default router
 const webauthn = new WebAuthn({
 	loadUser,
 	updateUser,
-	rpName: 'WebAuthn Codelab',
+	rpName,
 	// origin and rpID will be resolved at runtime
 	//rpID: process.env.HOSTNAME,
 	//origin: process.env.ORIGIN,
@@ -46,10 +47,12 @@ router.post('/username', (req, res) => {
 		let user = loadUser(username)
 		// If user entry is not created yet, create one
 		if (!user) {
-			addUser(username, {
+			user = {
+				username,
 				id: base64url.encode(crypto.randomBytes(32)),
 				credentials: [],
-			})
+			}
+			addUser(username, user)
 		}
 		// Set username in the session
 		req.session.username = username

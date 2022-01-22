@@ -2,10 +2,8 @@ import express from 'express'
 import session from 'express-session'
 import auth from './auth.js'
 const app = express()
+import {port, secret} from './config.js'
 
-
-const port = 8080
-const secret = 'TODO'
 
 app.use(express.json())
 app.use(express.static('frontend'))

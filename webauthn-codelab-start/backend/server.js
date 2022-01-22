@@ -1,6 +1,6 @@
 import express from 'express'
 import session from 'express-session'
-import auth from './routes/auth.js'
+import auth from './auth.js'
 const app = express()
 
 
@@ -8,7 +8,7 @@ const port = 8080
 const secret = 'TODO'
 
 app.use(express.json())
-app.use(express.static('public'))
+app.use(express.static('frontend'))
 
 app.use(session({
     secret,

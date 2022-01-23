@@ -1,17 +1,30 @@
-import low from 'lowdb'
-import FileSync from 'lowdb/adapters/FileSync.js'
+import fs from 'fs'
 
 
-const adapter = new FileSync('./data/webauthn.json')
-export const db = low(adapter)
+const credentialsPath = './data/webauthn-credentials.json'
 
-const defaultDbStructure = {
-	users: []
+export const defaultId = 'jarvis'
+export const defaultName = 'jarvis'
+
+let data
+try {
+	let buffer = fs.readFileSync(credentialsPath)
+	let json = buffer.toString() ?? '[]'
+	data = JSON.parse(json)
+} catch {
+	data = []
 }
 
-db.defaults(defaultDbStructure).write()
+export const loadCredentials = () => {
+	return {
+		id: defaultId,
+		username: defaultName,
+		credentials: JSON.parse(JSON.stringify(data)),
+	}
+}
 
-export const loadUser = username => db.get('users').find({username}).value()
-export const addUser = (username, user) => db.get('users').push({username, ...user}).write()
-// updates existing user with new fields. i.e. It does Object.assign internally
-export const updateUser = (username, user) => db.get('users').find({username}).assign(user).write()
+export const saveCredentials = (username, {credentials}) => {
+	let json = JSON.stringify(credentials, null, 4)
+	data = JSON.parse(json)
+	fs.writeFileSync(credentialsPath, json)
+}

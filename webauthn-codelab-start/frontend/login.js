@@ -7,9 +7,6 @@ let password
 let $status
 
 export default () => {
-	//if (auth.loggedIn) goTo('/home') // disabled due to "try reauth" button
-	if (!auth.username) goTo('/')
-
 	render(html`
 		<input type="password" placeholder="Password" @change=${e => password = e.target.value} />
 		<button @click=${onSubmitPassword}>Log in with password</button>
@@ -27,6 +24,7 @@ const renderStatus = (status = '') => render(status, $status)
 async function onSubmitPassword() {
 	renderStatus('logging in')
 	let loggedIn = await auth.loginWithPassword(password)
+    console.log('~ loggedIn', loggedIn)
 	renderStatus('')
 	if (loggedIn) goTo('/home')
 }
@@ -34,6 +32,7 @@ async function onSubmitPassword() {
 async function onSubmitBiometrics() {
 	renderStatus('logging in')
 	let loggedIn = await auth.loginWithBiometrics()
+    console.log('~ loggedIn', loggedIn)
 	renderStatus('')
 	if (loggedIn) goTo('/home')
 }

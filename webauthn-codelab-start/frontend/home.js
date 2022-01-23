@@ -5,15 +5,17 @@ import {goTo} from './util.js'
 
 let $list
 let $status
+let credentialName
 
 export default () => {
 	if (!auth.loggedIn) goTo('/')
 
 	render(html`
-		<h2>Welcome, ${auth.username}!</h2>
-		<h3>Your registered credentials:</h3>
+		<h3>Credentials</h3>
 		<div id="list"></div>
+		<input placeholder="Credential name" @change=${e => credentialName = e.target.value} />
 		<button @click=${addCredential}>Add credential</button>
+		<br>
 		<button @click=${() => goTo('/login')}>Try reauth</button>
 		<button @click=${() => logout()}>Sign out</button>
 		<br>
@@ -35,7 +37,8 @@ async function removeCredential(credId) {
 
 async function addCredential() {
 	renderStatus('adding')
-	await auth.registerCredential()
+	await auth.registerCredential(credentialName)
+	credentialName = undefined
 	await loadCredentials()
 }
 
@@ -57,11 +60,12 @@ function renderCredentials(credentials) {
 	const creds = html`${credentials.length > 0
 		? credentials.map(cred => html`
 			<div class="credential">
+				<span class="credential-name">${cred.name}</span>
 				<span class="credential-id">${cred.credId}</span>
-				<pre class="credential-key">${cred.publicKey}</pre>
-				<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">Remove</button>
+				<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">X</button>
 			</div>
 		`)
 		: html` <p>No credentials found.</p> `}`
 	render(creds, $list)
+				//<pre class="credential-key">${cred.publicKey}</pre>
 }

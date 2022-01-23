@@ -14,7 +14,6 @@ class Auth {
 
 	loggedIn = false
 	loggingIn = false
-	username = undefined
 	credentials = []
 
 	constructor() {
@@ -24,17 +23,7 @@ class Auth {
 
 	async getInfo() {
 		let info = await getJson('/auth')
-		this.username = info.username
 		this.loggedIn = info.loggedIn
-	}
-
-	async addUsername(username) {
-		try {
-			await postJson('/auth/username', {username})
-			this.username = username
-		} catch {
-			this.username = undefined
-		}
 	}
 
 	loginWithPassword(password) {
@@ -74,20 +63,22 @@ class Auth {
 		return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
 	}
 
-	async registerCredential() {
+	async registerCredential(name) {
 		let publicKey = await postJson('/auth/register-request', registerOptions)
 		publicKey = revivePublicKey(publicKey)
 		let cred = await navigator.credentials.create({publicKey})
-		let body = packCredential(cred)
-		let regRes = await postJson('/auth/register-response', body)
-		return regRes
+		let credential = packCredential(cred)
+		credential.name = name
+		return postJson('/auth/register-response', credential)
 	}
 
 	async login() {
 		let publicKey = await postJson('/auth/login-request')
-		// No registered credentials found
-		if (publicKey.allowCredentials.length === 0) return null
 		publicKey = revivePublicKey(publicKey)
+		if (publicKey.allowCredentials.length === 0) {
+			console.error(`No credentials to log in with`)
+			return null
+		}
 		let cred = await navigator.credentials.get({publicKey})
 		let body = packCredential(cred)
 		return postJson('/auth/login-response', body)
@@ -100,15 +91,13 @@ class Auth {
 		} catch {}
 	}
 
-	_setLoggedIn({username, credentials}) {
+	_setLoggedIn({credentials}) {
 		this.loggedIn = true
-		this.username = username
 		this.credentials = credentials
 	}
 
 	_setLoggedOut() {
 		this.loggedIn = false
-		this.username = undefined
 		this.credentials = []
 	}
 

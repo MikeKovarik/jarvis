@@ -1,13 +1,11 @@
-import renderIndex from './index.js'
 import renderHome from './home.js'
 import renderLogin from './login.js'
 import auth from './auth.js'
 
 
 let routes = {
-	'/index': renderIndex,
-	'/home':  renderHome,
 	'/login': renderLogin,
+	'/home':  renderHome,
 }
 
 function handleRoute() {
@@ -16,7 +14,7 @@ function handleRoute() {
 		let url = window.location.pathname + window.location.search
 		history.replaceState('', document.title, url)
 	}
-	let render = routes[route] || renderIndex
+	let render = routes[route] || renderLogin
 	render()
 }
 

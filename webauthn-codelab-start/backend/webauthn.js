@@ -84,7 +84,7 @@ export default class WebAuthn {
 
 		if (!existingCred) {
 			// convert buffer data to http & db friendly base64 string
-			let newCred = this.packCredential(verification.registrationInfo)
+			let newCred = this.packCredential(verification.registrationInfo, credential)
 			user.credentials.push(newCred)
 		}
 
@@ -133,8 +133,9 @@ export default class WebAuthn {
 		return user
 	}
 
-	packCredential({credentialID, credentialPublicKey, counter}) {
+	packCredential({credentialID, credentialPublicKey, counter}, {name}) {
 		return {
+			name,
 			credId:    base64url.encode(credentialID),
 			publicKey: base64url.encode(credentialPublicKey),
 		}

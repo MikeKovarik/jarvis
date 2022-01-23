@@ -6,14 +6,21 @@ body {
 	display: flex;
 	align-items: center;
 }
+.credential-name {
+	font-size: 15px;
+	flex-shrink: 0;
+}
 .credential-id {
-	font-family: monospace;
 	font-size: 11px;
-	margin-right: 8px;
+	font-family: monospace;
 }
 .credential-key {
-	font-family: monospace;
 	font-size: 9px;
+	font-family: monospace;
+}
+.credential-name,
+.credential-id,
+.credential-key {
 	margin-right: 8px;
 }
 .credential-id,

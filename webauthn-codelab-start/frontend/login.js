@@ -24,7 +24,6 @@ const renderStatus = (status = '') => render(status, $status)
 async function onSubmitPassword() {
 	renderStatus('logging in')
 	let loggedIn = await auth.loginWithPassword(password)
-    console.log('~ loggedIn', loggedIn)
 	renderStatus('')
 	if (loggedIn) goTo('/home')
 }
@@ -32,7 +31,6 @@ async function onSubmitPassword() {
 async function onSubmitBiometrics() {
 	renderStatus('logging in')
 	let loggedIn = await auth.loginWithBiometrics()
-    console.log('~ loggedIn', loggedIn)
 	renderStatus('')
 	if (loggedIn) goTo('/home')
 }

@@ -26,7 +26,6 @@ router.post('/password', (req, res) => {
 		return
 	}
 	let user = loadCredentials()
-    console.log('~ user', user)
 	req.session.loggedIn = true
 	res.json(user)
 })
@@ -36,14 +35,14 @@ router.get('/logout', (req, res) => {
 	res.json({})
 })
 
-router.post('/get-keys', csrfGuard, loggedInGuard, (req, res) => {
-	let user = loadCredentials()
-	res.json(user || {})
+router.get('/credentials', csrfGuard, loggedInGuard, (req, res) => {
+	let {credentials} = loadCredentials()
+	credentials = credentials.map(({publicKey, ...cred}) => cred)
+	res.json(credentials)
 })
 
-// Removes a credential id attached to the user
-router.post('/remove-key', csrfGuard, loggedInGuard, (req, res) => {
-	let credId = req.query.credId
+router.delete('/credentials/:credId', csrfGuard, loggedInGuard, (req, res) => {
+	let {credId} = req.params
 	let {credentials} = loadCredentials()
 	credentials = credentials.filter(cred => cred.credId !== credId)
 	saveCredentials(undefined, {credentials})
@@ -66,7 +65,6 @@ router.post('/register-request', csrfGuard, loggedInGuard, wrapWebAuthnReq(async
 		headers,
 		credential: body,
 	})
-    console.log('~ options', options)
 	session.expectedChallenge = options.challenge
 	return options
 }))

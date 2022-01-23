@@ -22,12 +22,12 @@ class Auth {
 	}
 
 	async getInfo() {
-		let info = await getJson('/auth')
+		let info = await api.get('/auth')
 		this.loggedIn = info.loggedIn
 	}
 
 	loginWithPassword(password) {
-		let handler = () => postJson('/auth/password', {password})
+		let handler = () => api.post('/auth/password', {password})
 		return this.loginWrapper(handler)
 	}
 
@@ -53,27 +53,24 @@ class Auth {
 	}
 
 	async getCredentials() {
-		let {credentials} = await postJson('/auth/get-keys')
-		this.credentials = credentials
-		return credentials
+		return this.credentials = await api.get('/auth/credentials')
 	}
 
 	async unregisterCredential(credId) {
-		//return postJson(`/auth/remove-key/${encodeURIComponent(credId)}`)
-		return postJson(`/auth/remove-key?credId=${encodeURIComponent(credId)}`)
+		return api.delete(`/auth/credentials/${encodeURIComponent(credId)}`)
 	}
 
 	async registerCredential(name) {
-		let publicKey = await postJson('/auth/register-request', registerOptions)
+		let publicKey = await api.post('/auth/register-request', registerOptions)
 		publicKey = revivePublicKey(publicKey)
 		let credential = await navigator.credentials.create({publicKey})
 		credential = packCredential(credential)
 		credential.name = name
-		return postJson('/auth/register-response', credential)
+		return api.post('/auth/register-response', credential)
 	}
 
 	async login() {
-		let publicKey = await postJson('/auth/login-request')
+		let publicKey = await api.post('/auth/login-request')
 		publicKey = revivePublicKey(publicKey)
 		if (publicKey.allowCredentials.length === 0) {
 			console.error(`No credentials to log in with`)
@@ -81,12 +78,12 @@ class Auth {
 		}
 		let cred = await navigator.credentials.get({publicKey})
 		let body = packCredential(cred)
-		return postJson('/auth/login-response', body)
+		return api.post('/auth/login-response', body)
 	}
 
 	async logout() {
 		try {
-			await getJson('/auth/logout')
+			await api.get('/auth/logout')
 			this._setLoggedOut()
 		} catch {}
 	}
@@ -103,38 +100,30 @@ class Auth {
 
 }
 
-export const postJson = async (url, payload = '') => {
-	let headers = {
-		'X-Requested-With': 'XMLHttpRequest',
-	}
-	if (payload && !(payload instanceof FormData)) {
+export const customFetch = async (url, method, body, headers = {}) => {
+	headers['X-Requested-With'] = 'XMLHttpRequest'
+	if (body && !(body instanceof FormData)) {
 		headers['Content-Type'] = 'application/json'
-		payload = JSON.stringify(payload)
+		body = JSON.stringify(body)
 	}
 	let res = await fetch(url, {
-		method: 'POST',
+		method,
 		credentials: 'same-origin',
-		headers: headers,
-		body: payload,
+		headers,
+		body,
 	})
-	return await handleFetchRes(res)
-}
-
-export const getJson = async (url) => {
-	let res = await fetch(url, {
-		method: 'GET',
-		credentials: 'same-origin',
-	})
-	return await handleFetchRes(res)
-}
-
-async function handleFetchRes(res) {
 	if (res.status === 200) {
 		return res.json()
 	} else {
 		let {message} = await res.json()
 		throw message
 	}
+}
+
+export const api = {
+	post: async (url, body = '') => customFetch(url, 'POST', body),
+	get: async url => customFetch(url, 'GET'),
+	delete: async url => customFetch(url, 'DELETE'),
 }
 
 let revivePublicKey = publicKey => {

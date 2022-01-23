@@ -10,6 +10,7 @@ body {
 	font-size: 15px;
 	flex-shrink: 0;
 }
+.credential-rpid,
 .credential-id {
 	font-size: 11px;
 	font-family: monospace;
@@ -19,10 +20,12 @@ body {
 	font-family: monospace;
 }
 .credential-name,
+.credential-rpid,
 .credential-id,
 .credential-key {
 	margin-right: 8px;
 }
+.credential-rpid,
 .credential-id,
 .credential-key {
 	white-space: unset;

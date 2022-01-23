@@ -66,8 +66,8 @@ class Auth {
 	async registerCredential(name) {
 		let publicKey = await postJson('/auth/register-request', registerOptions)
 		publicKey = revivePublicKey(publicKey)
-		let cred = await navigator.credentials.create({publicKey})
-		let credential = packCredential(cred)
+		let credential = await navigator.credentials.create({publicKey})
+		credential = packCredential(credential)
 		credential.name = name
 		return postJson('/auth/register-response', credential)
 	}

@@ -61,6 +61,7 @@ function renderCredentials(credentials) {
 		? credentials.map(cred => html`
 			<div class="credential">
 				<span class="credential-name">${cred.name}</span>
+				<span class="credential-rpid">${cred.rpID}</span>
 				<span class="credential-id">${cred.credId}</span>
 				<button id="${cred.credId}" @click="${() => removeCredential(cred.credId)}">X</button>
 			</div>

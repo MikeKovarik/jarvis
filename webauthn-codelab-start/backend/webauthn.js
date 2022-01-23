@@ -14,18 +14,22 @@ export default class WebAuthn {
 		this.rpID       = arg.rpID
 		this.rpName     = arg.rpName
 		this.timeout    = arg.timeout ?? 30 * 1000 * 60
+		this.multipleCredentialsPerDevice = true
 	}
 
-	async registerRequest(username, body) {
+	async registerRequest({headers, username, credential}) {
+		const {rpID} = this.getRpInfo(headers)
 		const user = await this.loadUser(username)
 
-		const excludeCredentials = user.credentials.map(this.credToPublicKeyDescriptor)
+		const excludeCredentials = this.multipleCredentialsPerDevice
+			? []
+			: user.credentials.map(this.credToPublicKeyDescriptor)
 
 		const as = {} // authenticatorSelection
-		const aa = body.authenticatorSelection.authenticatorAttachment
-		const rr = body.authenticatorSelection.requireResidentKey
-		const uv = body.authenticatorSelection.userVerification
-		const cp = body.attestation // attestationConveyancePreference
+		const aa = credential.authenticatorSelection.authenticatorAttachment
+		const rr = credential.authenticatorSelection.requireResidentKey
+		const uv = credential.authenticatorSelection.userVerification
+		const cp = credential.attestation // attestationConveyancePreference
 		let asFlag = false
 		let authenticatorSelection
 		let attestation = 'none'
@@ -51,7 +55,7 @@ export default class WebAuthn {
 
 		const options = fido2.generateRegistrationOptions({
 			rpName: this.rpName,
-			rpID: this.rpID,
+			rpID,
 			userID: user.id,
 			userName: user.username,
 			timeout: this.timeout,
@@ -68,12 +72,13 @@ export default class WebAuthn {
 		return options
 	}
 
-	async registerResponse(expectedChallenge, username, credential) {
+	async registerResponse({headers, expectedChallenge, username, credential}) {
+		const {rpID, origin} = this.getRpInfo(headers)
 		const verification = await fido2.verifyRegistrationResponse({
 			credential,
 			expectedChallenge,
-			expectedOrigin: this.origin,
-			expectedRPID: this.rpID,
+			expectedOrigin: origin,
+			expectedRPID: rpID,
 		})
 
 		if (!verification.verified) throw 'User verification failed.'
@@ -84,7 +89,7 @@ export default class WebAuthn {
 
 		if (!existingCred) {
 			// convert buffer data to http & db friendly base64 string
-			let newCred = this.packCredential(verification.registrationInfo, credential)
+			let newCred = this.packCredential(verification.registrationInfo, credential, rpID)
 			user.credentials.push(newCred)
 		}
 
@@ -93,7 +98,8 @@ export default class WebAuthn {
 		return user
 	}
 
-	async loginRequest(username, userVerification = 'required') {
+	async loginRequest({headers, username, userVerification = 'required'} = {}) {
+		const {rpID} = this.getRpInfo(headers)
 		const user = await this.loadUser(username)
 		if (!user) throw 'User not found.'
 
@@ -101,7 +107,7 @@ export default class WebAuthn {
 
 		return fido2.generateAuthenticationOptions({
 			timeout: this.timeout,
-			rpID: this.rpID,
+			rpID,
 			allowCredentials,
 			// This optional value controls whether or not the authenticator needs be able to uniquely
 			// identify the user interacting with it (via built-in PIN pad, fingerprint scanner, etc...)
@@ -109,21 +115,20 @@ export default class WebAuthn {
 		})
 	}
 
-	async loginResponse(expectedChallenge, username, body) {
+	async loginResponse({headers, expectedChallenge, username, credential}) {
+		const {rpID, origin} = this.getRpInfo(headers)
 		const user = await this.loadUser(username)
 
-		let credential = user.credentials.find(cred => cred.credId === body.id)
-		if (!credential) throw 'Authenticating credential not found.'
-
-		// convert from http & db friendly base64 string to FIDO friendtly buffer data
-		const authenticator = this.reviveCredential(credential)
+		let publicKey = user.credentials.find(cred => cred.credId === credential.id)
+		if (!publicKey) throw 'Authenticating publicKey not found.'
+		publicKey = this.reviveCredential(publicKey)
 
 		const verification = fido2.verifyAuthenticationResponse({
-			credential: body,
+			credential,
 			expectedChallenge,
-			expectedOrigin: this.origin,
-			expectedRPID: this.rpID,
-			authenticator,
+			expectedOrigin: origin,
+			expectedRPID: rpID,
+			authenticator: publicKey,
 		})
 
 		if (!verification.verified) throw 'User verification failed.'
@@ -133,8 +138,16 @@ export default class WebAuthn {
 		return user
 	}
 
-	packCredential({credentialID, credentialPublicKey, counter}, {name}) {
+	getRpInfo(headers) {
 		return {
+			rpID:   this.rpID   ?? headers.host.split(':')[0], // remove port
+			origin: this.origin ?? headers.origin, // full url with protocol and port
+		}
+	}
+
+	packCredential({credentialID, credentialPublicKey, counter}, {name}, rpID) {
+		return {
+			rpID,
 			name,
 			credId:    base64url.encode(credentialID),
 			publicKey: base64url.encode(credentialPublicKey),

@@ -39,11 +39,8 @@ class Auth {
 	async loginWrapper(loginHandler) {
 		this.loggingIn = true
 		try {
-			let user = await loginHandler()
-			if (user)
-				this._setLoggedIn(user)
-			else
-				this._setLoggedOut()
+			await loginHandler()
+			this._setLoggedIn()
 		} catch(e) {
 			console.error(e)
 			this._setLoggedOut()
@@ -66,7 +63,7 @@ class Auth {
 		let credential = await navigator.credentials.create({publicKey})
 		credential = packCredential(credential)
 		credential.name = name
-		return api.post('/auth/register-response', credential)
+		await api.post('/auth/register-response', credential)
 	}
 
 	async login() {
@@ -78,7 +75,7 @@ class Auth {
 		}
 		let cred = await navigator.credentials.get({publicKey})
 		let body = packCredential(cred)
-		return api.post('/auth/login-response', body)
+		await api.post('/auth/login-response', body)
 	}
 
 	async logout() {
@@ -88,9 +85,8 @@ class Auth {
 		} catch {}
 	}
 
-	_setLoggedIn({credentials}) {
+	_setLoggedIn() {
 		this.loggedIn = true
-		this.credentials = credentials
 	}
 
 	_setLoggedOut() {
@@ -113,7 +109,10 @@ export const customFetch = async (url, method, body, headers = {}) => {
 		body,
 	})
 	if (res.status === 200) {
-		return res.json()
+		let type = res.headers.get('content-type') ?? ''
+		return type.includes('application/json')
+			? res.json()
+			: res.text()
 	} else {
 		let {message} = await res.json()
 		throw message

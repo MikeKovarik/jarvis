@@ -51,7 +51,11 @@ router.delete('/credentials/:credId', csrfGuard, loggedInGuard, (req, res) => {
 
 const wrapWebAuthnReq = handler => async (req, res) => {
 	try {
-		res.json(await handler(req, res))
+		let data = await handler(req, res)
+		if (data)
+			res.json(data)
+		else
+			res.end()
 	} catch ({message}) {
 		delete req.session.expectedChallenge
 		res.status(400).json({message})
@@ -72,13 +76,12 @@ router.post('/register-request', csrfGuard, loggedInGuard, wrapWebAuthnReq(async
 // Register user credential.
 router.post('/register-response', csrfGuard, loggedInGuard, wrapWebAuthnReq(async req => {
 	const {headers, session, body} = req
-	let user = await webauthn.registerResponse({
+	await webauthn.registerResponse({
 		headers,
 		credential: body,
 		expectedChallenge: session.expectedChallenge,
 	})
 	delete session.expectedChallenge
-	return user
 }))
 
 // Respond with required information to call navigator.credential.get()
@@ -92,12 +95,11 @@ router.post('/login-request', csrfGuard, wrapWebAuthnReq(async req => {
 // Authenticate the user.
 router.post('/login-response', csrfGuard, wrapWebAuthnReq(async req => {
 	const {headers, session, body} = req
-	let user = await webauthn.loginResponse({
+	await webauthn.loginResponse({
 		headers,
 		credential: body,
 		expectedChallenge: session.expectedChallenge,
 	})
 	session.loggedIn = true
 	delete session.expectedChallenge
-	return user
 }))

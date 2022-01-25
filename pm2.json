@@ -15,9 +15,16 @@
 		"env": {
 			"NODE_ENV": "prod"
 		}
-	}, {   
+	}, {
 		"name"           : "proxy",
 		"script"         : "internet-proxy/proxytunnel.cjs",
+		"log_date_format": "DD.MM. HH:mm:ss",
+		"env": {
+			"NODE_ENV": "prod"
+		}
+	}, {
+		"name"           : "proxy-test",
+		"script"         : "internet-proxy-test/proxytunnel.cjs",
 		"log_date_format": "DD.MM. HH:mm:ss",
 		"env": {
 			"NODE_ENV": "prod"

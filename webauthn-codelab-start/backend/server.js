@@ -2,14 +2,15 @@ import express from 'express'
 import session from 'express-session'
 import auth from './auth.js'
 const app = express()
-import {port, secret} from './config.js'
+import config from './config.js'
+import {exposeThroughProxy, DEBUG} from 'lan-tunnel'
 
 
 app.use(express.json())
 app.use(express.static('frontend'))
 
 app.use(session({
-    secret,
+    secret: config.secret,
 	resave: true,
 	saveUninitialized: false,
     cookie: {
@@ -19,6 +20,22 @@ app.use(session({
 
 app.use('/auth', auth)
 
-const listener = app.listen(port, () => {
-	console.log('Your app is listening on port ' + listener.address().port)
+app.use((req, res, next) => {
+	console.log(req.method, req.url)
+	next()
+})
+
+app.get('/hello', (req, res) => {
+	console.log('handling /hello')
+	res.json({hello: 'world'})
+})
+
+app.listen(config.appPort, () => {
+	console.log('Your app is listening on port ' + config.appPort)
+	config.tunnelEncryption.key = undefined
+	config.tunnelEncryption.iv  = undefined
+	exposeThroughProxy({
+		log: DEBUG,
+		...config
+	})
 })

@@ -2,7 +2,7 @@ import express from 'express'
 import {loadCredentials, saveCredentials} from './db.js'
 import {csrfGuard, loggedInGuard} from './guards.js'
 import WebAuthn from './webauthn.js'
-import {rpName} from './config.js'
+import config from './config.js'
 
 
 const router = express.Router()
@@ -12,7 +12,7 @@ export default router
 const webauthn = new WebAuthn({
 	loadUser: loadCredentials,
 	updateUser: saveCredentials,
-	rpName,
+	rpName: config.rpName,
 })
 
 router.get('/', (req, res) => {

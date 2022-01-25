@@ -22,3 +22,4 @@
 /node_modules
 /.env
 /webauthn-skeleton/keys
+/data/config-test.json

@@ -73,9 +73,13 @@ class Auth {
 			console.error(`No credentials to log in with`)
 			return null
 		}
+        console.log('~ publicKey', publicKey)
 		let cred = await navigator.credentials.get({publicKey})
+        console.log('~ cred', cred)
 		let body = packCredential(cred)
+		console.log('posting')
 		await api.post('/auth/login-response', body)
+		console.log('done')
 	}
 
 	async logout() {

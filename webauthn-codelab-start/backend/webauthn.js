@@ -84,14 +84,9 @@ export default class WebAuthn {
 		if (!verification.verified) throw 'User verification failed.'
 
 		const user = await this.loadUser(username)
-
-		const existingCred = user.credentials.find(cred => cred.credID === credId)
-
-		if (!existingCred) {
-			// convert buffer data to http & db friendly base64 string
-			let newCred = this.packCredential(verification.registrationInfo, credential, rpID)
-			user.credentials.push(newCred)
-		}
+		// convert buffer data to http & db friendly base64 string
+		let newCred = this.packCredential(verification.registrationInfo, credential, rpID)
+		user.credentials.push(newCred)
 
 		await this.updateUser(username, user)
 

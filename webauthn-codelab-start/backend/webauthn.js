@@ -17,8 +17,7 @@ export default class WebAuthn {
 		this.multipleCredentialsPerDevice = true
 	}
 
-	async registerRequest({headers, username, credential}) {
-		const {rpID} = this.getRpInfo(headers)
+	async registerRequest({username, rpID, credential}) {
 		const user = await this.loadUser(username)
 
 		const excludeCredentials = this.multipleCredentialsPerDevice
@@ -72,8 +71,7 @@ export default class WebAuthn {
 		return options
 	}
 
-	async registerResponse({headers, expectedChallenge, username, credential}) {
-		const {rpID, origin} = this.getRpInfo(headers)
+	async registerResponse({username, rpID, origin, expectedChallenge, credential}) {
 		const verification = await fido2.verifyRegistrationResponse({
 			credential,
 			expectedChallenge,
@@ -85,7 +83,7 @@ export default class WebAuthn {
 
 		const user = await this.loadUser(username)
 		// convert buffer data to http & db friendly base64 string
-		let newCred = this.packCredential(verification.registrationInfo, credential, rpID)
+		let newCred = this.packCredential(verification.registrationInfo, credential)
 		user.credentials.push(newCred)
 
 		await this.updateUser(username, user)
@@ -93,8 +91,7 @@ export default class WebAuthn {
 		return user
 	}
 
-	async loginRequest({headers, username, userVerification = 'required'} = {}) {
-		const {rpID} = this.getRpInfo(headers)
+	async loginRequest({username, rpID, userVerification = 'required'} = {}) {
 		const user = await this.loadUser(username)
 		if (!user) throw 'User not found.'
 
@@ -110,8 +107,7 @@ export default class WebAuthn {
 		})
 	}
 
-	async loginResponse({headers, expectedChallenge, username, credential}) {
-		const {rpID, origin} = this.getRpInfo(headers)
+	async loginResponse({username, rpID, origin, expectedChallenge, credential}) {
 		const user = await this.loadUser(username)
 
 		let publicKey = user.credentials.find(cred => cred.credId === credential.id)
@@ -133,16 +129,15 @@ export default class WebAuthn {
 		return user
 	}
 
-	getRpInfo(headers) {
+	getRpFromHeaders(headers) {
 		return {
 			rpID:   this.rpID   ?? headers.host.split(':')[0], // remove port
 			origin: this.origin ?? headers.origin, // full url with protocol and port
 		}
 	}
 
-	packCredential({credentialID, credentialPublicKey, counter}, {name}, rpID) {
+	packCredential({credentialID, credentialPublicKey, counter}, {name}) {
 		return {
-			rpID,
 			name,
 			credId:    base64url.encode(credentialID),
 			publicKey: base64url.encode(credentialPublicKey),

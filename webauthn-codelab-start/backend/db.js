@@ -3,9 +3,6 @@ import fs from 'fs'
 
 const credentialsPath = './data/webauthn-credentials.json'
 
-export const defaultId = 'jarvis'
-export const defaultName = 'jarvis'
-
 let data
 try {
 	let buffer = fs.readFileSync(credentialsPath)
@@ -15,16 +12,27 @@ try {
 	data = []
 }
 
-export const loadCredentials = () => {
+export const clone = arg => JSON.parse(JSON.stringify(arg))
+
+export const getAll = () => clone(data)
+
+export const loadCredentials = username => {
+	let credentials = data.filter(cred => cred.rpID === username)
 	return {
-		id: defaultId,
-		username: defaultName,
-		credentials: JSON.parse(JSON.stringify(data)),
+		id: username,
+		username: username,
+		credentials: clone(credentials),
 	}
 }
 
 export const saveCredentials = (username, {credentials}) => {
-	let json = JSON.stringify(credentials, null, 4)
+	let otherCredentials = data.filter(cred => cred.rpID !== username)
+	let userCredentials = credentials.map(cred => ({...cred, rpID: username}))
+	let combinedCredentials = [
+		...otherCredentials,
+		...userCredentials
+	]
+	let json = JSON.stringify(combinedCredentials, null, 4)
 	data = JSON.parse(json)
 	fs.writeFileSync(credentialsPath, json)
 }

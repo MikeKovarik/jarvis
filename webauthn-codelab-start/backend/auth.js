@@ -1,5 +1,5 @@
 import express from 'express'
-import {loadCredentials, saveCredentials} from './db.js'
+import {getAll, loadCredentials, saveCredentials} from './db.js'
 import {csrfGuard, loggedInGuard} from './guards.js'
 import WebAuthn from './webauthn.js'
 import config from './config.js'
@@ -36,16 +36,19 @@ router.get('/logout', (req, res) => {
 })
 
 router.get('/credentials', csrfGuard, loggedInGuard, (req, res) => {
-	let {credentials} = loadCredentials()
-	credentials = credentials.map(({publicKey, ...cred}) => cred)
+	//let username = getUsername(req)
+	//let {credentials} = loadCredentials(username)
+	//credentials = credentials.map(({publicKey, ...cred}) => cred)
+	let credentials = getAll()
 	res.json(credentials)
 })
 
 router.delete('/credentials/:credId', csrfGuard, loggedInGuard, (req, res) => {
+	let username = getUsername(req)
+	let {credentials} = loadCredentials(username)
 	let {credId} = req.params
-	let {credentials} = loadCredentials()
 	credentials = credentials.filter(cred => cred.credId !== credId)
-	saveCredentials(undefined, {credentials})
+	saveCredentials(username, {credentials})
 	res.json({})
 })
 
@@ -62,44 +65,47 @@ const wrapWebAuthnReq = handler => async (req, res) => {
 	}
 }
 
+const preProcessParams = req => {
+	const {rpID, origin} = webauthn.getRpFromHeaders(req.headers)
+	return {
+		username: rpID,
+		rpID,
+		origin,
+		credential: req.body,
+	}
+}
+
+const getUsername = req => webauthn.getRpFromHeaders(req.headers).rpID
+
 // Respond with required information to call navigator.credential.create()
 router.post('/register-request', csrfGuard, loggedInGuard, wrapWebAuthnReq(async req => {
-	const {headers, session, body} = req
-	let options = await webauthn.registerRequest({
-		headers,
-		credential: body,
-	})
-	session.expectedChallenge = options.challenge
+	let options = await webauthn.registerRequest(preProcessParams(req))
+	req.session.expectedChallenge = options.challenge
 	return options
 }))
 
 // Register user credential.
 router.post('/register-response', csrfGuard, loggedInGuard, wrapWebAuthnReq(async req => {
-	const {headers, session, body} = req
 	await webauthn.registerResponse({
-		headers,
-		credential: body,
-		expectedChallenge: session.expectedChallenge,
+		...preProcessParams(req),
+		expectedChallenge: req.session.expectedChallenge,
 	})
-	delete session.expectedChallenge
+	delete req.session.expectedChallenge
 }))
 
 // Respond with required information to call navigator.credential.get()
 router.post('/login-request', csrfGuard, wrapWebAuthnReq(async req => {
-	const {headers, session} = req
-	let options = await webauthn.loginRequest({headers})
-	session.expectedChallenge = options.challenge
+	let options = await webauthn.loginRequest(preProcessParams(req))
+	req.session.expectedChallenge = options.challenge
 	return options
 }))
 
 // Authenticate the user.
 router.post('/login-response', csrfGuard, wrapWebAuthnReq(async req => {
-	const {headers, session, body} = req
 	await webauthn.loginResponse({
-		headers,
-		credential: body,
-		expectedChallenge: session.expectedChallenge,
+		...preProcessParams(req),
+		expectedChallenge: req.session.expectedChallenge,
 	})
-	session.loggedIn = true
-	delete session.expectedChallenge
+	req.session.loggedIn = true
+	delete req.session.expectedChallenge
 }))

@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node backend/server.js"
+    "start": "cls && node backend/server.js"
   },
   "dependencies": {
     "@simplewebauthn/server": "^4.1.0",

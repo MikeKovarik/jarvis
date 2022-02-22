@@ -2,7 +2,6 @@
 	"apps" : [{
 		"name"           : "hub",
 		"script"         : "lan-hub/index.js",
-		"node_args"      : "--no-expose-wasm",
 		"log_date_format": "DD.MM. HH:mm:ss",
 		"env": {
 			"NODE_ENV": "prod"
@@ -10,7 +9,6 @@
 	}, {
 		"name"           : "z2m",
 		"script"         : "lan-hub/zigbee2mqtt.js",
-		"node_args"      : "--no-expose-wasm",
 		"log_date_format": "DD.MM. HH:mm:ss",
 		"env": {
 			"NODE_ENV": "prod"

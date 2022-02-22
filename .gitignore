@@ -10,6 +10,7 @@
 /data/coordinator_backup.json
 /data/ghome-key.json
 /data/config.json
+/data/config-test.json
 /data/ssl.cert
 /data/ssl.key
 /ssl.key
@@ -22,4 +23,4 @@
 /node_modules
 /.env
 /webauthn-skeleton/keys
-/data/config-test.json
+/flower/PlantDB_5335_U0.csv

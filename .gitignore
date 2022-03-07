@@ -11,6 +11,8 @@
 /data/ghome-key.json
 /data/config.json
 /data/config-test.json
+/data/config-dev.json
+/data/config-prod.json
 /data/ssl.cert
 /data/ssl.key
 /ssl.key

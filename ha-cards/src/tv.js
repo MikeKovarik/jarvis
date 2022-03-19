@@ -239,10 +239,10 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 				<div>
 					<awesome-slider
 					id="volume-slider"
-					orientation="vertical"
+					vertical inverted
 					value=${state.media_player?.attributes?.volume_level}
 					min="0"
-					max="0.25"
+					max="0.15"
 					step="0.01"
 					></awesome-slider>
 				</div>

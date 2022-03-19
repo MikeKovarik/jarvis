@@ -7,7 +7,7 @@ const clamp = (num, min, max) => Math.min(Math.max(num, min), max)
 
 const sliderCore = Base => class extends Base {
 
-	orientation = 'horizontal'
+	vertical = false
 	inverted = false
 	min = 0
 	max = 100
@@ -18,20 +18,12 @@ const sliderCore = Base => class extends Base {
 	}
 
 	static properties = {
-		orientation: {type: String},
+		vertical: {type: Boolean},
 		inverted: {type: Boolean},
 		value: {type: Number},
 		min: {type: Number},
 		max: {type: Number},
 		step: {type: Number},
-	}
-
-	get horizontal() {
-		return this.orientation !== 'vertical'
-	}
-
-	get vertical() {
-		return this.orientation === 'vertical'
 	}
 
 }
@@ -55,7 +47,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 			width: 200px;
 			height: 32px;
 		}
-		:host([orientation="vertical"]) {
+		:host([vertical]) {
 			width: 32px;
 			height: 200px;
 		}
@@ -112,7 +104,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 		this.bbox = this.getBoundingClientRect()
 		clearTimeout(this.pointerHoldTimeout)
 		this.dragValidating = false
-		this.dragValueBase = this.horizontal
+		this.dragValueBase = !this.vertical
 			? this.initX - this.bbox.x
 			: this.initY - this.bbox.y
 	}
@@ -122,7 +114,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 	}
 
 	onPointerMove = e => {
-		let diffPx = this.horizontal
+		let diffPx = !this.vertical
 			? e.x - this.initX
 			: e.y - this.initY
 		if (this.dragValidating) {
@@ -131,10 +123,9 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 			else
 				this.validatePointer(e)
 		}
-		const containerSize = this.horizontal ? this.bbox.width : this.bbox.height
+		const containerSize = !this.vertical ? this.bbox.width : this.bbox.height
 		let dragPx = this.dragValueBase + diffPx
 		if (this.inverted) dragPx = containerSize - dragPx
-        console.log('~ dragPx', dragPx)
 		this.ratio = dragPx / containerSize
 	}
 
@@ -163,14 +154,14 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 
 	get style() {
 		return {
-			touchAction: this.horizontal ? 'pan-y' : 'pan-x'
+			touchAction: !this.vertical ? 'pan-y' : 'pan-x'
 		}
 	}
 
 	get statusStyle() {
 		return {
 			transformOrigin: this.inverted ? 'bottom right' : 'top left',
-			transform: this.horizontal
+			transform: !this.vertical
 				? `scale(${this.ratio}, 1)`
 				: `scale(1, ${this.ratio})`
 		}
@@ -186,6 +177,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 			>
 				<div id="status" style=${styleMap(this.statusStyle)}></div>
 				<div id="value">${this.value}</div>
+				<div>${this.vertical}</div>
 			</div>
 		`
 	}
@@ -223,11 +215,12 @@ class AwesomeSliderCard extends mixin(LitElement, sliderCore) {
 		return html`
 			<ha-card>
 				<awesome-slider
-				orientation="${this.orientation}"
-				value=${this.value}
-				min="${this.min}"
-				max="${this.max}"
-				step="${this.step}"
+				.vertical="${this.vertical}"
+				.inverted="${this.inverted}"
+				.value=${this.value}
+				.min="${this.min}"
+				.max="${this.max}"
+				.step="${this.step}"
 				></awesome-slider>
 			</ha-card>
 		`

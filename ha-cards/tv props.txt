@@ -1,0 +1,92 @@
+- type: 'custom:my-tv-card'
+  entity: media_player.lg_webos_tv_oled48a13la
+  mac: xx:xx:xx:xx:xx:xx
+
+# explicit wanted channels & sources with icons, images & channel numbers where needed
+
+  sources:
+    - name: Netflix
+      icon: 'mdi:netflix'
+    - name: Xbox ONE
+      pretty_name: Xbox
+      image: /local/images/xbox.png
+    - name: YouTube
+      icon: 'mdi:youtube-tv'
+      image: /local/images/youtube.png
+    - name: HDMI 1
+      pretty_name: Raspberry
+      icon: 'mdi:video-input-hdmi'
+    - name: HDMI 2
+      pretty_name: PC
+      icon: 'mdi:video-input-hdmi'
+  channels:
+    - name: CT 24
+      image: /local/images/tv_logo/channel_24.png
+    - name: 'CT 2 '
+      image: /local/images/tv_logo/channel_2.png
+    - number: 2
+      image: /local/images/tv_logo/channel_2.png
+    - image: /local/images/tv_logo/channel_2.png
+      number: '1'
+
+# explicit wanted channels & sources based on those fetched from TV
+
+  sources:
+   - Xbox
+   - YouTube
+   - HDMI 2
+  channels:
+   - CT 1
+   - CT 2
+   - CT 24
+   - CNN
+   - Nova
+   - Prima
+   - Prima COOL
+
+# list of excluded fetched channels & sources form the list fetched from TV
+
+  excludedChannels:
+    - CT 3
+    - TV Morava
+  excludedSources:
+    - Browser
+    - Amazon
+
+
+
+
+
+
+
+
+
+
+type: grid
+square: false
+columns: 3
+cards:
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: CT 21
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: 'CT 2 '
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: CT 24
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: CNN
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: Nova
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: Nova Cinema
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: Prima
+  - type: custom:my-tv-button-card
+    entity: media_player.lg_webos_tv_oled48a13la
+    name: Prima COOL

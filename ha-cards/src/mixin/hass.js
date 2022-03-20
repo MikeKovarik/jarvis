@@ -1,7 +1,7 @@
-import {LitElement, html, css} from 'lit'
+import {css} from 'lit'
 
 
-export class AwesomeCardBase extends LitElement {
+export const hassData = Base => class extends Base {
 
 	async setConfig(config) {
 		if (!config.entity)
@@ -36,6 +36,15 @@ export class AwesomeCardBase extends LitElement {
 
 	state = {}
 
+	get entity() {
+		const {entityType} = this.constructor
+		return this.state[entityType]
+	}
+
+	get entity_id() {
+		return this.entity.entity_id
+	}
+
 	set hass(hass) {
 		this._hass = hass
 		const {states} = hass
@@ -61,19 +70,5 @@ export class AwesomeCardBase extends LitElement {
 	}
 
 	getCardSize = () => 3
-
-}
-
-export class AwesomeToggleCard extends AwesomeCardBase {
-
-	turnOn = (data = {}) => {
-		const {entity_id} = this.state.fan
-		this._hass.callService('homeassistant', 'turn_on', {entity_id, ...data})
-	}
-
-	turnOff = () => {
-		const {entity_id} = this.state.fan
-		this._hass.callService('homeassistant', 'turn_off', {entity_id})
-	}
 
 }

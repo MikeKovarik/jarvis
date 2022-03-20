@@ -1,6 +1,6 @@
-import {LitElement, html, css, render} from 'lit'
+import {LitElement, html, css} from 'lit'
 import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin, eventEmitter} from './util.js'
+import {mixin, eventEmitter} from './mixin/mixin.js'
 
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max)
@@ -22,6 +22,7 @@ const sliderCore = Base => class extends Base {
 	static properties = {
 		vertical: {type: Boolean},
 		inverted: {type: Boolean},
+		disabled: {type: Boolean},
 		value: {type: Number},
 		min: {type: Number},
 		max: {type: Number},
@@ -49,6 +50,10 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		:host {
 			display: block;
 			position: relative;
+		}
+		:host([disabled]) {
+			opacity: 0.4;
+			pointer-events: none;
 		}
 		#value {
 			pointer-events: none;

@@ -1,8 +1,8 @@
 import {LitElement, html, css} from 'lit'
-import {AwesomeCardBase, AwesomeToggleCard} from './base.js'
+import {mixin, hassData, onOffControls} from './mixin/mixin.js'
 
 
-class AirPurifierCard extends AwesomeToggleCard {
+class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	static entityType = 'fan'
 

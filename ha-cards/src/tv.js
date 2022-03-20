@@ -1,7 +1,6 @@
 import {LitElement, html, css} from 'lit'
-import {AwesomeCardBase, AwesomeToggleCard} from './base.js'
 import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin} from './util'
+import {mixin, hassData} from './mixin/mixin'
 
 
 function sanitizeNums(string) {
@@ -89,6 +88,12 @@ const tvControls = Base => class extends Base {
         this._hass.callService('media_player', 'select_source', {entity_id, source})
     }
 
+    setVolume(volume_level) {
+		volume_level = Number(volume_level.toFixed(2))
+		const {entity_id} = this.state.media_player
+        this._hass.callService('media_player', 'volume_set', {entity_id, volume_level})
+    }
+
 	runCommand = async (command, payload) => {
 		const {entity_id} = this.state.media_player
 		return this._hass.callService('webostv', 'command', {
@@ -98,11 +103,9 @@ const tvControls = Base => class extends Base {
 		})
 	}
 
-	foo() {}
-
 }
 
-class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
+class MyTvCard extends mixin(LitElement, hassData, tvControls) {
 
 	//listenToGlobalKeyboardEvents = true
 	listenToGlobalKeyboardEvents = false
@@ -156,6 +159,8 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 
 	render() {
 		const {state} = this
+		const {volume_level, is_volume_muted, sound_output, friendly_name, source, media_title} = state.media_player?.attributes ?? {}
+
         console.log('~ state', state)
 		return html`
 			<ha-card>
@@ -167,13 +172,22 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 							: html`<button @click=${() => this.turnOn()}>ON</button>`}
 					</div>
 					<div>
-						volume_level: ${state.media_player?.attributes?.volume_level}
+						volume_level: ${volume_level}
 					</div>
 					<div>
-						input source: ${state.media_player?.attributes?.source}
+						is_volume_muted: ${is_volume_muted}
 					</div>
 					<div>
-						TV station: ${state.media_player?.attributes?.media_title}
+						sound_output: ${sound_output}
+					</div>
+					<div>
+						friendly_name: ${friendly_name}
+					</div>
+					<div>
+						input source: ${source}
+					</div>
+					<div>
+						TV station: ${media_title}
 					</div>
 					${this.inputSources.map(source => html`<div>
 						<button @click=${() => this.setSource(source)}>${source}</button>
@@ -240,13 +254,17 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 					<awesome-slider
 					id="volume-slider"
 					vertical inverted
-					value=${state.media_player?.attributes?.volume_level}
+					value=${volume_level}
 					min="0"
 					max="0.15"
 					step="0.01"
-					></awesome-slider>
-					<awesome-button icon="mdi:plus"></awesome-button>
-					<awesome-button icon="mdi:minus"></awesome-button>
+					.displayValue="${val => (val * 100).toFixed(0)}"
+					@input="${e => this.setVolume(e.detail)}"
+					>
+						<awesome-button slot="end"   icon="mdi:plus"  @click="${() => this.setVolume(volume_level + 0.01)}"></awesome-button>
+						<awesome-button slot="start" icon="mdi:minus" @click="${() => this.setVolume(volume_level - 0.01)}"></awesome-button>
+					</awesome-slider>
+					<button @click="${() => console.log('mute')}">mute</button>
 				</div>
 			</ha-card>
 		`
@@ -254,7 +272,7 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 
 }
 
-class MyTvButtonCard extends mixin(AwesomeToggleCard, tvControls) {
+class MyTvButtonCard extends mixin(LitElement, hassData, tvControls) {
 
 	static entityType = 'media_player'
 

@@ -245,6 +245,8 @@ class MyTvCard extends mixin(AwesomeToggleCard, tvControls) {
 					max="0.15"
 					step="0.01"
 					></awesome-slider>
+					<awesome-button icon="mdi:plus"></awesome-button>
+					<awesome-button icon="mdi:minus"></awesome-button>
 				</div>
 			</ha-card>
 		`

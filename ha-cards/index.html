@@ -39,59 +39,22 @@
 	</head>
 	<body>
 
-		<!--
-		<air-purifier-card></air-purifier-card>
-		-->
 
-		<br><br><br><br><br><br>
-
-		<div class="layout-vertical padded">
-			<awesome-slider-card value="0"></awesome-slider-card>
-			<awesome-slider-card value="20"></awesome-slider-card>
-			<awesome-slider-card value="60"></awesome-slider-card>
-			<awesome-slider-card value="100"></awesome-slider-card>
-		</div>
-
-		<div class="layout-horizontal padded">
-			<awesome-slider vertical  value="60"  min="20"  max="80"></awesome-slider>
-			<awesome-slider vertical  value="40"   min="0"  max="60"></awesome-slider>
-			<awesome-slider vertical  value="20" min="-20"  max="40"></awesome-slider>
-			<awesome-slider vertical   value="0" min="-40"  max="20"></awesome-slider>
-			<awesome-slider vertical value="-20" min="-60"   max="0"></awesome-slider>
-			<awesome-slider vertical value="-40" min="-80" max="-20"></awesome-slider>
-			<awesome-slider vertical value="-40"   min="0" max="-60"></awesome-slider>
-		</div>
-
-		<div class="layout-horizontal padded">
-			<awesome-slider inverted vertical  value="60"  min="20"  max="80"></awesome-slider>
-			<awesome-slider inverted vertical  value="40"   min="0"  max="60"></awesome-slider>
-			<awesome-slider inverted vertical  value="20" min="-20"  max="40"></awesome-slider>
-			<awesome-slider inverted vertical   value="0" min="-40"  max="20"></awesome-slider>
-			<awesome-slider inverted vertical value="-20" min="-60"   max="0"></awesome-slider>
-			<awesome-slider inverted vertical value="-40" min="-80" max="-20"></awesome-slider>
-			<awesome-slider inverted vertical value="-40"   min="0" max="-60"></awesome-slider>
-		</div>
-
-		<div class="layout-horizontal padded">
-			<awesome-slider vertical value="20"></awesome-slider>
-			<awesome-slider vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider>
-			<awesome-slider-card vertical value="20"></awesome-slider-card>
-			<awesome-slider-card vertical value="70" min="20" max="80"></awesome-slider-card>
-			<awesome-slider-card vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider-card>
-		</div>
-
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
-		<br><br><br><br><br><br>
+		<script type="importmap">
+		{
+			"imports": {
+				"lit": "/node_modules/lit/index.js",
+				"lit/": "/node_modules/lit/",
+				"lit-element": "/node_modules/lit-element/index.js",
+				"lit-element/": "/node_modules/lit-element/",
+				"lit-html": "/node_modules/lit-html/lit-html.js",
+				"lit-html/": "/node_modules/lit-html/",
+				"@lit/": "/node_modules/@lit/",
+				"@lit/reactive-element/": "/node_modules/@lit/reactive-element/",
+				"@lit/reactive-element": "/node_modules/@lit/reactive-element/reactive-element.js"
+			}
+		}
+		</script>
 
 		<script src="./lit.umd.js"></script>
 		<script src="./ha-card.js"></script>
@@ -99,9 +62,98 @@
 		<script src="./air-purifier-card.js"></script>
 		-->
 		<script src="./dist/my-awesome-cards.js"></script>
-		<script>
+		<script type="module">
+			import {html, render} from 'lit'
+
+			render(html`
+
+				<!--
+				<air-purifier-card></air-purifier-card>
+				-->
+
+				<br><br><br><br><br><br>
+
+				<div class="layout-vertical padded">
+					<awesome-slider value="0"></awesome-slider>
+					<awesome-slider value="20"></awesome-slider>
+					<awesome-slider value="60"></awesome-slider>
+					<awesome-slider value="100"></awesome-slider>
+				</div>
+
+				<div class="layout-vertical padded">
+					<awesome-slider-card value="0"></awesome-slider-card>
+					<awesome-slider-card value="20"></awesome-slider-card>
+					<awesome-slider-card value="60"></awesome-slider-card>
+					<awesome-slider-card value="100"></awesome-slider-card>
+				</div>
+
+				<h2>vertical</h2>
+
+				<div class="layout-horizontal padded">
+					<awesome-slider vertical  value="60"  min="20"  max="80"></awesome-slider>
+					<awesome-slider vertical  value="40"   min="0"  max="60"></awesome-slider>
+					<awesome-slider vertical  value="20" min="-20"  max="40"></awesome-slider>
+					<awesome-slider vertical   value="0" min="-40"  max="20"></awesome-slider>
+					<awesome-slider vertical value="-20" min="-60"   max="0"></awesome-slider>
+					<awesome-slider vertical value="-40" min="-80" max="-20"></awesome-slider>
+					<awesome-slider vertical value="-40"   min="0" max="-60"></awesome-slider>
+				</div>
+
+				<h2>vertical inverted</h2>
+
+				<div class="layout-horizontal padded">
+					<awesome-slider inverted vertical  value="60"  min="20"  max="80"></awesome-slider>
+					<awesome-slider inverted vertical  value="40"   min="0"  max="60"></awesome-slider>
+					<awesome-slider inverted vertical  value="20" min="-20"  max="40"></awesome-slider>
+					<awesome-slider inverted vertical   value="0" min="-40"  max="20"></awesome-slider>
+					<awesome-slider inverted vertical value="-20" min="-60"   max="0"></awesome-slider>
+					<awesome-slider inverted vertical value="-40" min="-80" max="-20"></awesome-slider>
+					<awesome-slider inverted vertical value="-40"   min="0" max="-60"></awesome-slider>
+				</div>
+
+				<h2>vertical inverted with content</h2>
+
+				<div class="layout-horizontal padded">
+					<awesome-slider inverted vertical value="0.03" min="0" max="0.15" step="0.01" .displayValue="${val => (val * 100).toFixed(0)}">
+						<awesome-button slot="end" icon="add" @click="${() => console.log('add')}"></awesome-button>
+						<awesome-button slot="start" icon="remove" @click="${() => console.log('remove')}"></awesome-button>
+					</awesome-slider>
+				</div>
+
+				<div class="layout-horizontal padded">
+					<awesome-slider vertical value="20"></awesome-slider>
+					<awesome-slider vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider>
+					<awesome-slider-card vertical value="20"></awesome-slider-card>
+					<awesome-slider-card vertical value="70" min="20" max="80"></awesome-slider-card>
+					<awesome-slider-card vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider-card>
+				</div>
+
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+				<br><br><br><br><br><br>
+			`, document.body)
+
 			const slider = document.querySelector('awesome-slider')
+
+			slider.on('input', e => console.log('input', e))
+			slider.on('change', e => console.log('change', e))
+
 			/*
+			slider.addEventListener('drag-start', () => console.log('drag-start'))
+			slider.addEventListener('drag-move', () => console.log('drag-move'))
+			slider.addEventListener('drag-end', () => console.log('drag-end'))
+			slider.addEventListener('tap', () => console.log('tap'))
+			slider.addEventListener('hold', () => console.log('hold'))
+
             console.log('~ slider.value', slider.value)
 			setTimeout(() => {
 				slider.value = 30

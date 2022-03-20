@@ -1,6 +1,6 @@
 import {LitElement, html, css, render} from 'lit'
 import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin} from './util.js'
+import {mixin, eventEmitter} from './util.js'
 
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max)
@@ -12,6 +12,8 @@ const sliderCore = Base => class extends Base {
 	min = 0
 	max = 100
 	step = 1
+	suffix = '%'
+	showValue = true
 
 	get maxFromZero() {
 		return this.max - this.min
@@ -24,17 +26,22 @@ const sliderCore = Base => class extends Base {
 		min: {type: Number},
 		max: {type: Number},
 		step: {type: Number},
+		suffix: {type: String},
+		showValue: {type: Boolean},
+		displayValue: {type: Function},
 	}
 
 }
 
-class AwesomeSlider extends mixin(LitElement, sliderCore) {
+class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	constructor() {
 		super()
 		setTimeout(() => {
 			this.$status = this.renderRoot?.querySelector('#status')
 			this.$value = this.renderRoot?.querySelector('#value')
+			this.$slotStart = this.renderRoot?.querySelector('slot[name="start"]')
+			this.$slotEnd   = this.renderRoot?.querySelector('slot[name="end"]')
 		})
 	}
 
@@ -42,6 +49,9 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 		:host {
 			display: block;
 			position: relative;
+		}
+		#value {
+			pointer-events: none;
 		}
 		:host {
 			width: 200px;
@@ -52,76 +62,85 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 			height: 200px;
 		}
 		#container,
-		#status {
+		#status,
+		#inside {
 			position: absolute;
 			inset: 0;
 		}
 		#container {
-			background-color: rgba(var(--color), 0.1);
+			background-color: rgba(var(--color), 0.08);
 			overflow: hidden;
 		}
 		#status {
-			background-color: rgba(var(--color), 0.1);
+			background-color: rgba(var(--color), 0.08);
 			will-change: transform;
+		}
+		#inside {
+			padding: 0.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.flex {
+			flex: 1;
 		}
 	`
 
 	initX = undefined
 	initY = undefined
-	lastPointerDown = undefined
-	pointerHoldTimeout = undefined
-	pointerHoldTime = 1000
 
 	onPointerDown = e => {
 		e.preventDefault()
+		if (e.path.includes(this.$slotStart) || e.path.includes(this.$slotEnd)) return
 		this.initX = e.x
 		this.initY = e.y
-		this.startPointer()
-	}
-
-	startPointer = () => {
-		document.addEventListener('pointermove', this.onPointerMove)
-		document.addEventListener('pointerup', this.onPointerUp)
-		this.pointerHoldTimeout = setTimeout(this.onHoldTimeout, this.pointerHoldTime)
-		this.lastPointerDown = Date.now()
-		this.dragValidating = true
-	}
-
-	onHoldTimeout = () => {
-		this.resetPointer()
-		this.onHold()
-	}
-
-	resetPointer = () => {
-		document.removeEventListener('pointermove', this.onPointerMove)
-		document.removeEventListener('pointerup', this.onPointerUp)
-		clearTimeout(this.pointerHoldTimeout)
-		this.lastPointerDown = undefined
-		this.dragValidating = undefined
-	}
-
-	validatePointer = e => {
+		this.initValue = this.value
 		this.bbox = this.getBoundingClientRect()
-		clearTimeout(this.pointerHoldTimeout)
-		this.dragValidating = false
 		this.dragValueBase = !this.vertical
 			? this.initX - this.bbox.x
 			: this.initY - this.bbox.y
-	}
-
-	onPointerCancel = e => {
-		this.resetPointer()
+		document.addEventListener('pointermove', this.onPointerMove)
+		document.addEventListener('pointerup', this.onPointerUp)
+		if (e.pointerType === 'touch') {
+			this.dragValidating = true
+		} else {
+			this.startDrag()
+			this.applyDrag(e)
+		}
 	}
 
 	onPointerMove = e => {
+		this.applyDrag(e)
+		this.emit('drag-move')
+	}
+
+	onPointerUp = e => {
+		this.applyDrag(e, true)
+		this.emit('drag-end')
+		if (this.initValue !== this.value) this.emit('change', this.value)
+		this.resetDrag()
+	}
+
+	resetDrag = () => {
+		document.removeEventListener('pointermove', this.onPointerMove)
+		document.removeEventListener('pointerup', this.onPointerUp)
+		this.dragValidating = undefined
+	}
+
+	startDrag = () => {
+		this.dragValidating = false
+		this.emit('drag-start')
+	}
+
+	applyDrag = (e, force = false) => {
 		let diffPx = !this.vertical
 			? e.x - this.initX
 			: e.y - this.initY
-		if (this.dragValidating) {
+		if (this.dragValidating && !force) {
 			if (Math.abs(diffPx) < 15)
 				return
 			else
-				this.validatePointer(e)
+				this.startDrag(e)
 		}
 		const containerSize = !this.vertical ? this.bbox.width : this.bbox.height
 		let dragPx = this.dragValueBase + diffPx
@@ -136,21 +155,10 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 	set ratio(newRatio) {
 		const clampedRatio = clamp(newRatio, 0, 1)
 		const rawValue = this.min + (clampedRatio * this.maxFromZero)
+		const oldValue = this.value
 		this.value = Math.round(rawValue / this.step) * this.step
+		if (oldValue !== this.value) this.emit('input', this.value)
 	}
-
-	onPointerUp = e => {
-		const diff = Date.now() - this.lastPointerDown
-		this.resetPointer()
-		if (diff < 100) this.onTap()
-		this.onMoveEnd(this.value)
-	}
-
-	onHold = () => {}
-
-	onTap = () => {}
-
-	onMoveEnd = () => {}
 
 	get style() {
 		return {
@@ -167,17 +175,28 @@ class AwesomeSlider extends mixin(LitElement, sliderCore) {
 		}
 	}
 
+	get insideStyle() {
+		return {
+			flexDirection: (this.vertical ? 'column' : 'row') + (this.inverted ? '-reverse' : '')
+		}
+	}
+
 	render() {
 		return html`
 			<div
 			id="container"
 			style=${styleMap(this.style)}
 			@pointerdown="${this.onPointerDown}"
-			@pointercancel="${this.onPointerCancel}"
+			@pointercancel="${this.resetDrag}"
 			>
 				<div id="status" style=${styleMap(this.statusStyle)}></div>
-				<div id="value">${this.value}</div>
-				<div>${this.vertical}</div>
+				<div id="inside" style=${styleMap(this.insideStyle)}>
+					<slot name="start"></slot>
+					<div class="flex"></div>
+					${this.showValue && html`<span id="value">${this.displayValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
+					<div class="flex"></div>
+					<slot name="end"></slot>
+				</div>
 			</div>
 		`
 	}
@@ -228,5 +247,45 @@ class AwesomeSliderCard extends mixin(LitElement, sliderCore) {
 
 }
 
+class AwesomeButton extends mixin(LitElement) {
+
+	static properties = {
+		icon: {type: String},
+	}
+
+	static styles = css`
+		:host {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			width: 3rem;
+			height: 3rem;
+			border-radius: 0.5rem;
+			border: 1px solid rgba(var(--color), 0.2);
+			background-color: rgba(var(--color), 0.04);
+		}
+		mwc-ripple {
+			position: absolute;
+			inset: 0;
+		}
+		mwc-icon {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
+	`
+
+	render() {
+		return html`
+			<mwc-ripple></mwc-ripple>
+			<ha-icon icon="${this.icon}"></ha-icon>
+		`
+	}
+
+}
+
 customElements.define('awesome-slider', AwesomeSlider)
 customElements.define('awesome-slider-card', AwesomeSliderCard)
+customElements.define('awesome-button', AwesomeButton)

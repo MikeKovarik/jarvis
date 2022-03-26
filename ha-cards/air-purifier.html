@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body {
+				background-color: #222;
+				font-family: Roboto;
+				font-size: 16px;
+				color: #FFF;
+			}
+			air-purifier-card {
+				margin-bottom: 0.5rem;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="automated"></div>
+		<air-purifier-card size="small"></air-purifier-card>
+		<air-purifier-card size="large"></air-purifier-card>
+
+		<script type="importmap">
+		{
+			"imports": {
+				"lit": "/node_modules/lit/index.js",
+				"lit/": "/node_modules/lit/",
+				"lit-element": "/node_modules/lit-element/index.js",
+				"lit-element/": "/node_modules/lit-element/",
+				"lit-html": "/node_modules/lit-html/lit-html.js",
+				"lit-html/": "/node_modules/lit-html/",
+				"@lit/": "/node_modules/@lit/",
+				"@lit/reactive-element/": "/node_modules/@lit/reactive-element/",
+				"@lit/reactive-element": "/node_modules/@lit/reactive-element/reactive-element.js"
+			}
+		}
+		</script>
+
+		<script src="./lit.umd.js"></script>
+		<script src="./ha-card.js"></script>
+		<script src="./dist/my-awesome-cards.js"></script>
+		<script type="module">
+			import {html, render} from 'lit'
+
+			const config = {"type":"custom:air-purifier-card","entity":"fan.mi_air_purifier_3c","some_other_arg":123}
+			const baseState = {
+				"fan":{"entity_id":"fan.mi_air_purifier_3c","state":"on","attributes":{"preset_modes":["Auto","Silent","Favorite"],"preset_mode":"Auto","friendly_name":"Mi Air Purifier 3C","supported_features":8},"last_changed":"2022-03-22T18:01:33.511388+00:00","last_updated":"2022-03-22T22:24:33.255148+00:00","context":{"id":"c687724ab62a11732158b78370f702a9","parent_id":null,"user_id":"bf4261b893ef4dcebafd918baa751736"}},
+				"motor_speed":{"entity_id":"sensor.mi_air_purifier_3c_motor_speed","state":"392","attributes":{"state_class":"measurement","unit_of_measurement":"rpm","icon":"mdi:fast-forward","friendly_name":"Mi Air Purifier 3C Motor Speed"},"last_changed":"2022-03-23T16:57:07.422347+00:00","last_updated":"2022-03-23T16:57:07.422347+00:00","context":{"id":"9eb2fc0d4d4dd312da4f34e95f06a931","parent_id":null,"user_id":null}},
+				"pm2_5":{"entity_id":"sensor.mi_air_purifier_3c_pm2_5","state":"4","attributes":{"state_class":"measurement","unit_of_measurement":"µg/m³","device_class":"pm25","friendly_name":"Mi Air Purifier 3C PM2.5"},"last_changed":"2022-03-23T16:57:52.443840+00:00","last_updated":"2022-03-23T16:57:52.443840+00:00","context":{"id":"4c1b6ba93aae0fdb51bd48312b063aed","parent_id":null,"user_id":null}},
+				"filter_life_remaining":{"entity_id":"sensor.mi_air_purifier_3c_filter_life_remaining","state":"85","attributes":{"state_class":"measurement","unit_of_measurement":"%","icon":"mdi:air-filter","friendly_name":"Mi Air Purifier 3C Filter Life Remaining"},"last_changed":"2022-03-22T18:01:33.383866+00:00","last_updated":"2022-03-22T18:01:33.383866+00:00","context":{"id":"62f1ec9c8e2a51b45994b311289e851e","parent_id":null,"user_id":null}},
+				"filter_use":{"entity_id":"sensor.mi_air_purifier_3c_filter_use","state":"536","attributes":{"state_class":"measurement","unit_of_measurement":"h","icon":"mdi:clock-outline","friendly_name":"Mi Air Purifier 3C Filter Use"},"last_changed":"2022-03-23T16:43:52.390822+00:00","last_updated":"2022-03-23T16:43:52.390822+00:00","context":{"id":"e9678a39ad42471a6eea84655ca1a8d3","parent_id":null,"user_id":null}},
+				"led_brightness":{"entity_id":"number.mi_air_purifier_3c_led_brightness","state":"3","attributes":{"min":0,"max":8,"step":1,"mode":"auto","icon":"mdi:brightness-6","friendly_name":"Mi Air Purifier 3C Led Brightness"},"last_changed":"2022-03-22T22:27:36.580792+00:00","last_updated":"2022-03-22T22:27:36.580792+00:00","context":{"id":"44fa587d422d82234fbad50b1d76b4eb","parent_id":null,"user_id":null}},
+				"favorite_motor_speed":{"entity_id":"number.mi_air_purifier_3c_favorite_motor_speed","state":"520","attributes":{"min":300,"max":2200,"step":10,"mode":"auto","unit_of_measurement":"rpm","icon":"mdi:star-cog","friendly_name":"Mi Air Purifier 3C Favorite Motor Speed"},"last_changed":"2022-03-22T18:01:33.512629+00:00","last_updated":"2022-03-22T18:01:33.512629+00:00","context":{"id":"a921c22cb00e15fde4b05d4f501fa9ac","parent_id":null,"user_id":null}},
+				"buzzer":{"entity_id":"switch.mi_air_purifier_3c_buzzer","state":"off","attributes":{"icon":"mdi:volume-high","friendly_name":"Mi Air Purifier 3C Buzzer"},"last_changed":"2022-03-22T18:01:33.513256+00:00","last_updated":"2022-03-22T18:01:33.513256+00:00","context":{"id":"b3666d6d0516e5e2b63241184f98a88a","parent_id":null,"user_id":null}},
+				"child_lock":{"entity_id":"switch.mi_air_purifier_3c_child_lock","state":"off","attributes":{"icon":"mdi:lock","friendly_name":"Mi Air Purifier 3C Child Lock"},"last_changed":"2022-03-22T18:01:33.513736+00:00","last_updated":"2022-03-22T18:01:33.513736+00:00","context":{"id":"daa40ff48357bb2049e382497032f1cc","parent_id":null,"user_id":null}}
+			}
+
+			const demoStates = [
+				s => s.fan.state = 'off',
+				s => s.fan.attributes.preset_mode = 'Silent',
+				s => s,
+				s => {
+					s.pm2_5.state = 75
+					s.motor_speed.state = 762
+				},
+				s => {
+					s.pm2_5.state = 220
+					s.motor_speed.state = 1240
+				},
+			]
+
+			const cards = new Array(demoStates.length).fill(0).map(a => html`<air-purifier-card></air-purifier-card>`)
+			render(cards, window.automated)
+			//render(cards, document.body)
+
+			const cardNodes = Array.from(document.querySelectorAll('air-purifier-card'))
+			
+			demoStates.forEach((cb, i) => {
+				const card = cardNodes[i]
+				let newState = JSON.parse(JSON.stringify(baseState))
+				cb(newState)
+				card.setConfig({...config})
+				card.state = newState
+				setTimeout(() => card.requestUpdate())
+			})
+
+		</script>
+	</body>
+</html>

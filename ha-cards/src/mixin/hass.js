@@ -66,9 +66,17 @@ export const hassData = Base => class extends Base {
 		if (updatedProps.size) {
 			this.requestUpdate()
 			this.onStateUpdate?.(updatedProps)
+			//console.log('-'.repeat(100))
+        	//console.log('config', JSON.stringify(this.config))
+        	//console.log('state', JSON.stringify(this.state))
 		}
 	}
 
 	getCardSize = () => 3
+
+	callService(domain, name, data = {}) {
+		const {entity_id} = this
+        this._hass.callService(domain, name, {entity_id, ...data})
+	}
 
 }

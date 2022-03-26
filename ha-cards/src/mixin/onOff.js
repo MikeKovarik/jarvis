@@ -10,4 +10,11 @@ export const onOffControls = Base => class extends Base {
 		this._hass.callService('homeassistant', 'turn_off', {entity_id})
 	}
 
+	toggleOnOff = () => {
+		if (this.on)
+			this.turnOff()
+		else
+			this.turnOn()
+	}
+
 }

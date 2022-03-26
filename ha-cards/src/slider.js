@@ -13,7 +13,7 @@ const sliderCore = Base => class extends Base {
 	max = 100
 	step = 1
 	suffix = '%'
-	showValue = true
+	hideValue = false
 
 	get maxFromZero() {
 		return this.max - this.min
@@ -28,8 +28,8 @@ const sliderCore = Base => class extends Base {
 		max: {type: Number},
 		step: {type: Number},
 		suffix: {type: String},
-		showValue: {type: Boolean},
-		displayValue: {type: Function},
+		hideValue: {type: Boolean},
+		formatValue: {type: Function},
 	}
 
 }
@@ -50,12 +50,13 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		:host {
 			display: block;
 			position: relative;
+			overflow: hidden;
+		}
+		:host, * {
+			box-sizing: border-box;
 		}
 		:host([disabled]) {
 			opacity: 0.4;
-			pointer-events: none;
-		}
-		#value {
 			pointer-events: none;
 		}
 		:host {
@@ -80,15 +81,18 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			background-color: rgba(var(--color), 0.08);
 			will-change: transform;
 		}
+		#container,
 		#inside {
-			padding: 0.5rem;
+			padding: inherit;
+		}
+		#inside {
 			display: flex;
 			align-items: center;
-			justify-content: center;
+			justify-content: space-between;
 		}
-		.flex {
-			flex: 1;
-		}
+			#value {
+				pointer-events: none;
+			}
 	`
 
 	initX = undefined
@@ -116,12 +120,12 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	onPointerMove = e => {
 		this.applyDrag(e)
-		this.emit('drag-move')
+		this.emit('drag-move', this.value)
 	}
 
 	onPointerUp = e => {
 		this.applyDrag(e, true)
-		this.emit('drag-end')
+		this.emit('drag-end', this.value)
 		if (this.initValue !== this.value) this.emit('change', this.value)
 		this.resetDrag()
 	}
@@ -197,9 +201,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 				<div id="status" style=${styleMap(this.statusStyle)}></div>
 				<div id="inside" style=${styleMap(this.insideStyle)}>
 					<slot name="start"></slot>
-					<div class="flex"></div>
-					${this.showValue && html`<span id="value">${this.displayValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
-					<div class="flex"></div>
+					${this.hideValue ? '' : html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
 					<slot name="end"></slot>
 				</div>
 			</div>
@@ -252,45 +254,6 @@ class AwesomeSliderCard extends mixin(LitElement, sliderCore) {
 
 }
 
-class AwesomeButton extends mixin(LitElement) {
-
-	static properties = {
-		icon: {type: String},
-	}
-
-	static styles = css`
-		:host {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			position: relative;
-			width: 3rem;
-			height: 3rem;
-			border-radius: 0.5rem;
-			border: 1px solid rgba(var(--color), 0.2);
-			background-color: rgba(var(--color), 0.04);
-		}
-		mwc-ripple {
-			position: absolute;
-			inset: 0;
-		}
-		mwc-icon {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
-		}
-	`
-
-	render() {
-		return html`
-			<mwc-ripple></mwc-ripple>
-			<ha-icon icon="${this.icon}"></ha-icon>
-		`
-	}
-
-}
 
 customElements.define('awesome-slider', AwesomeSlider)
 customElements.define('awesome-slider-card', AwesomeSliderCard)
-customElements.define('awesome-button', AwesomeButton)

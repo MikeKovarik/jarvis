@@ -1,4 +1,7 @@
 export * from './slider.js'
+export * from './button.js'
+export * from './grid.js'
+export * from './title.js'
 export * from './tv.js'
 export * from './air-humidifier.js'
 export * from './air-purifier.js'

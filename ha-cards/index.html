@@ -71,6 +71,53 @@
 				<air-purifier-card></air-purifier-card>
 				-->
 
+				<div class="layout-vertical padded">
+
+					<awesome-slider value="62" style="padding: 0.5rem;">
+						<div slot="start">
+							<strong>Start aligned</strong>
+							<div>Custom children</div>
+						</div>
+						<button slot="end">end</button>
+					</awesome-slider>
+
+					<awesome-slider value="62" style="padding: 0.5rem">
+						<div>
+							<strong>Start aligned</strong>
+							<div>Custom children</div>
+						</div>
+					</awesome-slider>
+
+					<awesome-slider value="62">
+						<button slot="start">start</button>
+					</awesome-slider>
+
+					<awesome-slider value="62">
+						<button slot="start">start</button>
+						<button slot="end">end</button>
+					</awesome-slider>
+
+					<awesome-slider
+					hideValue
+					>
+						<div slot="start">
+						start slot
+						</div>
+						<awesome-button slot="end" icon="mdi:fan-auto" style="color: green"></awesome-button>
+					</awesome-slider>
+
+					<awesome-slider
+					hideValue
+					>
+						<div slot="start">
+						start slot
+						</div>
+						<awesome-button slot="end" icon="mdi:fan-auto" style="color: white"></awesome-button>
+					</awesome-slider>
+
+				</div>
+
+					<!--
 				<br><br><br><br><br><br>
 
 				<div class="layout-vertical padded">
@@ -79,6 +126,13 @@
 					<awesome-slider value="60"></awesome-slider>
 					<awesome-slider value="100"></awesome-slider>
 					<awesome-slider value="100" disabled></awesome-slider>
+					<awesome-slider value="62" style="padding: 0.5rem">Custom children</awesome-slider>
+					<awesome-slider value="62" style="padding: 0.5rem; justify-content: flex-end">
+						<div>
+							<strong>End aligned</strong>
+							<div>Custom children</div>
+						</div>
+					</awesome-slider>
 				</div>
 
 				<div class="layout-vertical padded">
@@ -115,7 +169,7 @@
 				<h2>vertical inverted with content</h2>
 
 				<div class="layout-horizontal padded">
-					<awesome-slider inverted vertical value="0.03" min="0" max="0.15" step="0.01" .displayValue="${val => (val * 100).toFixed(0)}">
+					<awesome-slider inverted vertical value="0.03" min="0" max="0.15" step="0.01" .formatValue="${val => (val * 100).toFixed(0)}">
 						<awesome-button slot="end" icon="add" @click="${() => console.log('add')}"></awesome-button>
 						<awesome-button slot="start" icon="remove" @click="${() => console.log('remove')}"></awesome-button>
 					</awesome-slider>
@@ -128,6 +182,7 @@
 					<awesome-slider-card vertical value="70" min="20" max="80"></awesome-slider-card>
 					<awesome-slider-card vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider-card>
 				</div>
+					-->
 
 				<br><br><br><br><br><br>
 				<br><br><br><br><br><br>

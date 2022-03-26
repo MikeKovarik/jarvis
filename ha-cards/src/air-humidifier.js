@@ -53,6 +53,8 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	static entityType = 'humidifier'
 
+	getCardSize = () => 1
+
 	get offline() {
 		return this.state.humidifier?.state === 'unavailable'
 	}

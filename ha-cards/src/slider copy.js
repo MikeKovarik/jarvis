@@ -1,8 +1,9 @@
 import {LitElement, html, css} from 'lit'
 import {styleMap} from 'lit-html/directives/style-map.js'
 import {mixin, eventEmitter} from './mixin/mixin.js'
-import {clamp} from './util/util.js'
 
+
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max)
 
 const sliderCore = Base => class extends Base {
 
@@ -12,8 +13,7 @@ const sliderCore = Base => class extends Base {
 	max = 100
 	step = 1
 	suffix = '%'
-	hideValue = false
-	haptic = true
+	showValue = true
 
 	get maxFromZero() {
 		return this.max - this.min
@@ -28,9 +28,8 @@ const sliderCore = Base => class extends Base {
 		max: {type: Number},
 		step: {type: Number},
 		suffix: {type: String},
-		hideValue: {type: Boolean},
+		showValue: {type: Boolean},
 		formatValue: {type: Function},
-		haptic: {type: Boolean},
 	}
 
 }
@@ -51,13 +50,17 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		:host {
 			display: block;
 			position: relative;
-			overflow: hidden;
+			justify-content: space-around;
 		}
 		:host, * {
 			box-sizing: border-box;
 		}
 		:host([disabled]) {
 			opacity: 0.4;
+			pointer-events: none;
+		}
+		slot#default,
+		#value {
 			pointer-events: none;
 		}
 		:host {
@@ -77,28 +80,19 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		#container {
 			background-color: rgba(var(--color), 0.08);
 			overflow: hidden;
+			padding: inherit;
+			justify-content: inherit;
 		}
 		#status {
 			background-color: rgba(var(--color), 0.08);
 			will-change: transform;
 		}
-		#container,
-		#inside {
-			padding: inherit;
-		}
 		#inside {
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
+			justify-content: inherit;
 		}
-			#value {
-				pointer-events: none;
-			}
 	`
-
-	updated(changedProperties) {
-		console.log('updated', changedProperties)
-	}
 
 	initX = undefined
 	initY = undefined
@@ -125,12 +119,12 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	onPointerMove = e => {
 		this.applyDrag(e)
-		this.emit('drag-move', this.value)
+		this.emit('drag-move')
 	}
 
 	onPointerUp = e => {
 		this.applyDrag(e, true)
-		this.emit('drag-end', this.value)
+		this.emit('drag-end')
 		if (this.initValue !== this.value) this.emit('change', this.value)
 		this.resetDrag()
 	}
@@ -195,6 +189,11 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		}
 	}
 
+	hasChildren = false
+	requestUpdate = () => {
+		this.hasChildren = (this.children.length || this.textContent.length) > 0
+	}
+
 	render() {
 		return html`
 			<div
@@ -206,7 +205,10 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 				<div id="status" style=${styleMap(this.statusStyle)}></div>
 				<div id="inside" style=${styleMap(this.insideStyle)}>
 					<slot name="start"></slot>
-					${this.hideValue ? '' : html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
+					<!--
+					<slot id="default" @slotchange="${this.requestUpdate}" style="display: ${this.hasChildren ? '' : 'none'}"></slot>
+					-->
+					${(this.showValue && !this.hasChildren) ? html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>` : ''}
 					<slot name="end"></slot>
 				</div>
 			</div>

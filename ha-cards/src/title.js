@@ -14,6 +14,7 @@ class AwesomeCardTitle extends mixin(LitElement) {
 			font-weight: 500;
 			display: flex;
 			align-items: center;
+			text-transform: capitalize;
 		}
 		ha-icon {
 			margin-right: 0.25rem;

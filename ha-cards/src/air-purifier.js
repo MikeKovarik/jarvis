@@ -6,6 +6,8 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	static entityType = 'fan'
 
+	getCardSize = () => 1
+
 	get on() {
 		return this.state.fan?.state === 'on'
 	}

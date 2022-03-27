@@ -7,6 +7,11 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	static entityType = 'fan'
 
+	static defaultConfig = {
+		showModeLabel: true,
+		showOtherInfo: false,
+	}
+
 	getCardSize = () => 1
 
 	get on() {
@@ -26,8 +31,10 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	get speed() {
-		const {state} = this
-		return this.auto
+		const {state, dragValue, auto, on} = this
+		if (dragValue !== undefined) return dragValue
+		if (!on) return 0
+		return auto
 			? Number(state.motor_speed?.state)
 			: Number(state.favorite_motor_speed?.state)
 	}
@@ -51,21 +58,31 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 		this.speed = detail
 	}
 
-	get colorClass() {
+	get level() {
 		const value = Number(this.state.pm2_5?.state)
 		if (!this.on || value === null || value === undefined)
-			return 'neutral'
+			return 0
 		else if (value >= 200)
-			return 'red'
+			return 3
 		else if (value >= 75)
-			return 'orange'
+			return 2
 		else
-			return 'green'
+			return 1
+	}
+
+	get colorClass() {
+		switch (this.level) {
+			case 3: return 'red'
+			case 2: return 'orange'
+			case 1: return 'green'
+			case 0: return 'neutral'
+		}
 	}
 
 	static styles = [
 		styles.sliderCardSizes,
 		styles.sliderCard,
+		styles.sliderCard2,
 		styles.sliderCardButtons,
 		css`
 			.green   {--color-rgb: 50, 205, 50}
@@ -80,11 +97,10 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 	]
 
 	render() {
-		const {state} = this
+		const {state, mode} = this
 
-		// @hold="${this.turnOff}" // todo
 		return html`
-			<ha-card class="${this.colorClass}">
+			<ha-card class="${this.colorClass} ${this.on ? 'on' : 'off'}">
 				<awesome-slider
 				value="${this.speed}"
 				min="${state.favorite_motor_speed?.attributes?.min}"
@@ -92,6 +108,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 				step="${state.favorite_motor_speed?.attributes?.step}"
 				@drag-move="${this.onDragMove}"
 				@drag-end="${this.onDragEnd}"
+				@toggle="${this.toggleOnOff}"
 				hideValue
 				>
 					<div slot="start">
@@ -100,18 +117,23 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 						title="${state.fan?.attributes?.friendly_name}"
 						>
 							${!this.on ? 'Off' : html`
+								${this.config.showModeLabel ? html`
+									<strong class="value-label">${mode === 'Favorite' ? 'Custom' : mode}</strong>
+								` : ''}
 								<span class="value-label">
-									<strong>${state.pm2_5?.state}</strong> µg/m³
+									<strong>${state.pm2_5?.state}</strong>
+									µg/m³
 								</span>
-								<span class="value-label">
-									<strong>${this.dragValue ?? this.speed}</strong> rpm
-								</span>
+								${this.config.showOtherInfo ? html`
+									<span class="value-label">
+										<strong>${this.speed}</strong> rpm
+									</span>
+								` : ''}
 							`}
 						</awesome-card-title>
 					</div>
 					<div slot="end">
 						<awesome-button @click=${() => this.mode = 'Auto'} icon="mdi:fan-auto" ?selected="${state.fan?.attributes?.preset_mode === 'Auto'}"></awesome-button>
-						<awesome-button @click=${this.toggleOnOff} icon="mdi:power"></awesome-button>
 					</div>
 				</awesome-slider>
 			</ha-card>

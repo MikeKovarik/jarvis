@@ -56,6 +56,11 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	getCardSize = () => 1
 
+	static defaultConfig = {
+		showModeLabel: true,
+		showOtherInfo: false,
+	}
+
 	get offline() {
 		return this.state.humidifier?.state === 'unavailable'
 	}
@@ -85,12 +90,12 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	get targetHumidity() {
-		return this.state.humidifier.attributes.humidity
-	}
-
-	get targetHumidity2() {
-		return this.dragValue
-			?? this.state.humidifier.attributes.humidity
+		const {state, dragValue, auto, on} = this
+		if (dragValue !== undefined) return dragValue
+		if (!on) return 0
+		return auto
+			? state.humidifier.attributes.humidity
+			: 0
 	}
 
 	set targetHumidity(humidity) {
@@ -169,6 +174,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 	static styles = [
 		styles.sliderCardSizes,
 		styles.sliderCard,
+		styles.sliderCard2,
 		styles.sliderCardButtons,
 		css`
 			.cyan    {--color-rgb: 70, 180, 255}
@@ -182,7 +188,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 	]
 
 	render() {
-		const {state, errorMessage} = this
+		const {state, errorMessage, targetHumidity} = this
 
 		/*
 			<div class="header">
@@ -204,16 +210,16 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 				</div>
 			</div>
 		*/
-		// @hold="${this.turnOff}" // todo
 		return html`
-			<ha-card class="${this.colorClass}">
+			<ha-card class="${this.colorClass} ${this.on ? 'on' : 'off'}">
 				<awesome-slider
-				value="${this.auto ? this.targetHumidity : 0}"
+				value="${targetHumidity}"
 				min="${state.humidifier?.attributes?.min_humidity}"
 				max="${state.humidifier?.attributes?.max_humidity}"
 				step="${1}"
 				@drag-move="${this.onDragMove}"
 				@drag-end="${this.onDragEnd}"
+				@toggle="${this.toggleOnOff}"
 				hideValue
 				>
 					<div slot="start">
@@ -222,16 +228,21 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 						title="${state.humidifier?.attributes?.friendly_name}"
 						>
 							${!this.on ? 'Off' : html`
+								${this.config.showModeLabel ? html`
+									<strong class="value-label">${this.auto ? 'Auto' : this.mode}</strong>
+								` : ''}
 								<span class="value-label">
 									<strong>${this.currentHumidity}</strong> %
-									${(this.auto || this.dragValue) ? html`
+									${(this.auto && targetHumidity) ? html`
 										/
-										<strong>${this.targetHumidity2}</strong> %
+										<strong>${targetHumidity}</strong> %
 									` : ''}
 								</span>
-								<span class="value-label">
-									<strong>${state.temperature?.state}</strong> °C
-								</span>
+								${this.config.showOtherInfo ? html`
+									<span class="value-label">
+										<strong>${state.temperature?.state}</strong> °C
+									</span>
+								` : ''}
 							`}
 
 						</awesome-card-title>
@@ -239,7 +250,6 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 					</div>
 					<div slot="end">
 						<awesome-button @click=${this.toggleMode} icon="${this.presetIcon}" style="display: ${this.offline ? 'none' : ''}"></awesome-button>
-						<awesome-button @click=${this.toggleOnOff} icon="mdi:power"></awesome-button>
 					</div>
 				</awesome-slider>
 			</ha-card>

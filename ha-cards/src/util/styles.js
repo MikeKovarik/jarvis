@@ -46,6 +46,21 @@ export const sliderCard = css`
 	}
 `
 
+export const sliderCard2 = css`
+	.off {
+		--color-fg-rgb: 230, 230, 230;
+		--color-fg-opacity: 0.6;
+	}
+	.on {
+		--color-fg-opacity: 1;
+	}
+	
+	ha-card {
+		--color-fg: rgb(var(--color-fg-rgb), var(--color-fg-opacity));
+		background-color: transparent;
+	}
+`
+
 export const sliderCardButtons = css`
 	awesome-slider awesome-button {
 		width: var(--button-size);

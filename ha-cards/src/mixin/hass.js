@@ -6,16 +6,16 @@ export const hassData = Base => class extends Base {
 	state = {}
 	config = {}
 
-	async setConfig(config) {
-		if (!config.entity)
+	async setConfig(newConfig) {
+		if (!newConfig.entity)
 			throw new Error('You need to define an entity')
 		const allowedTypes = [this.constructor.entityType].flat()
-		const [entityType, entityId] = config.entity.split('.')
+		const [entityType, entityId] = newConfig.entity.split('.')
 		if (!allowedTypes.includes(entityType))
 			throw new Error(`only supported entities are ${allowedTypes.join(', ')}`)
 		this.entityType = entityType
 		this.entityId = entityId
-		this.config = config
+		this.config = Object.assign(this.config, this.constructor.defaultConfig, newConfig)
 	}
 
 	static styles = css`

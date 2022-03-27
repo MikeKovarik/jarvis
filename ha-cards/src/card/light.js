@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit'
 import {mixin, hassData, onOffControls} from '../mixin/mixin.js'
 import {tempToRgb} from './../util/temp-to-rgb'
+import * as styles from '../util/styles.js'
 
 
 /*
@@ -112,7 +113,9 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		}
 	}
 
-	static styles = css`
+	static styles = [
+	styles.sliderCard2,
+	css`
 		.light,
 		.switch {
 			/* looks good on #000 background, but not on gray
@@ -137,24 +140,11 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 			--slider-status-color-opacity: 0.12;
 		}
 
-		.off {
-			--color-fg-rgb: 230, 230, 230;
-			--color-fg-opacity: 0.6;
-		}
-		.on {
-			--color-fg-opacity: 1;
-		}
-
 		:host {
 			--gap: 1rem;
 			display: block;
 			min-height: 8rem;
 			position: relative;
-		}
-
-		ha-card {
-			--color-fg: rgb(var(--color-fg-rgb), var(--color-fg-opacity));
-			background-color: transparent;
 		}
 
 		ha-card,
@@ -178,7 +168,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		awesome-card-title {
 			color: var(--color-fg);
 		}
-	`
+	`]
 
 	get icon() {
 		const {config, entityType, on} = this

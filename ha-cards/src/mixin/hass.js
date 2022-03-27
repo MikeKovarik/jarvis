@@ -3,6 +3,9 @@ import {css} from 'lit'
 
 export const hassData = Base => class extends Base {
 
+	state = {}
+	config = {}
+
 	async setConfig(config) {
 		if (!config.entity)
 			throw new Error('You need to define an entity')
@@ -36,8 +39,6 @@ export const hassData = Base => class extends Base {
 			opacity: 0.6;
 		}
 	`
-
-	state = {}
 
 	get entity() {
 		const {entityType} = this

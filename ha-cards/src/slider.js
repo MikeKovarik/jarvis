@@ -34,6 +34,8 @@ const sliderCore = Base => class extends Base {
 
 }
 
+const clickThreshold = 300
+
 class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	constructor() {
@@ -139,8 +141,12 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 	initX = undefined
 	initY = undefined
 
+	pointerDownTime
+	isDragging = undefined
+
 	onPointerDown = e => {
 		e.preventDefault()
+		this.pointerDownTime = Date.now()
 		if (e.path.includes(this.$slotStart) || e.path.includes(this.$slotEnd)) return
 		this.initX = e.x
 		this.initY = e.y
@@ -151,23 +157,19 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			: this.initY - this.bbox.y
 		document.addEventListener('pointermove', this.onPointerMove)
 		document.addEventListener('pointerup', this.onPointerUp)
-		if (e.pointerType === 'touch') {
-			this.dragValidating = true
-		} else {
-			this.startDrag()
-			this.applyDrag(e)
-		}
-	}
-
-	onPointerMove = e => {
-		this.applyDrag(e)
-		this.emit('drag-move', this.value)
+		this.dragValidating = true
+		this.isDragging = false
 	}
 
 	onPointerUp = e => {
-		this.applyDrag(e, true)
-		this.emit('drag-end', this.value)
-		if (this.initValue !== this.value) this.emit('change', this.value)
+		const timeDiff = Date.now() - this.pointerDownTime
+		if (!this.isDragging && timeDiff < clickThreshold) {
+			this.emit('toggle')
+		} else if (this.isDragging) {
+			this.onPointerMove(e, true)
+			this.emit('drag-end', this.value)
+			if (this.initValue !== this.value) this.emit('change', this.value)
+		}
 		this.resetDrag()
 	}
 
@@ -175,27 +177,25 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		document.removeEventListener('pointermove', this.onPointerMove)
 		document.removeEventListener('pointerup', this.onPointerUp)
 		this.dragValidating = undefined
+		this.isDragging = undefined
+		this.pointerDownTime = undefined
 	}
 
-	startDrag = () => {
-		this.dragValidating = false
-		this.emit('drag-start')
-	}
-
-	applyDrag = (e, force = false) => {
+	onPointerMove = (e, force = false) => {
 		let diffPx = !this.vertical
 			? e.x - this.initX
 			: e.y - this.initY
 		if (this.dragValidating && !force) {
-			if (Math.abs(diffPx) < 15)
-				return
-			else
-				this.startDrag(e)
+			if (Math.abs(diffPx) < 15) return
+			this.isDragging = true
+			this.dragValidating = false
+			this.emit('drag-start')
 		}
 		const containerSize = !this.vertical ? this.bbox.width : this.bbox.height
 		let dragPx = this.dragValueBase + diffPx
 		if (this.inverted) dragPx = containerSize - dragPx
 		this.ratio = dragPx / containerSize
+		this.emit('drag-move', this.value)
 	}
 
 	get ratio() {

@@ -24,7 +24,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 
 	static entityType = ['light', 'switch']
 
-	transition = 0.3
+	transition = 0.3 // seconds
 
 	static properties = {
 		transition: {type: Number},
@@ -37,6 +37,18 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		const {r, g, b} = tempToRgb(this.kelvin)
 		this.style.setProperty('--color-rgb', [r, g, b].join(', '))
 		*/
+	}
+
+	get error() {
+		//return !this.entity
+		return !!this.errorMessage
+	}
+
+	get errorMessage() {
+		if (!this.entity)
+			return 'Not found'
+		if ('linkquality' in this.entity.attributes && this.entity.attributes.linkquality === null)
+			return 'Offline'
 	}
 
 	get on() {
@@ -67,31 +79,37 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		this.brightness = detail
 	}
 
+	onToggle = () => {
+		this.toggleOnOff()
+	}
+
 	// State changes a couple of times during transition. Here we store desired target value
 	// to be shown during transition. This prevents the slider to chaoticaly jump between values.
 	transitionOverrideState
 	clearTransitionOverrideState = () => this.transitionOverrideState = undefined
 
 	turnOn = (data = {}) => {
-		const {transition} = this
-		this.callService('light', 'turn_on', {transition, ...data})
-		this.transitionOverrideState = {...data, on: true}
-		clearTimeout(this.overrideValueTimeout)
-		this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)
+		if (this.entityType === 'light') {
+			const {transition} = this
+			this.callService('light', 'turn_on', {transition, ...data})
+			this.transitionOverrideState = {...data, on: true}
+			clearTimeout(this.overrideValueTimeout)
+			this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)
+		} else {
+			this.callService('switch', 'turn_on', data)
+		}
 	}
 
 	turnOff = (data = {}) => {
-		const {transition} = this
-		this.callService('light', 'turn_off', {transition, ...data})
-		this.transitionOverrideState = {...data, on: false}
-		clearTimeout(this.overrideValueTimeout)
-		this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)
-	}
-
-	get icon() {
-		return this.entityType === 'light'
-			? (this.on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline')
-			: (this.on ? 'mdi:toggle-switch-variant' : 'mdi:toggle-switch-variant-of')
+		if (this.entityType === 'light') {
+			const {transition} = this
+			this.callService('light', 'turn_off', {transition, ...data})
+			this.transitionOverrideState = {...data, on: false}
+			clearTimeout(this.overrideValueTimeout)
+			this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)
+		} else {
+			this.callService('switch', 'turn_off', data)
+		}
 	}
 
 	static styles = css`
@@ -130,8 +148,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		:host {
 			--gap: 1rem;
 			display: block;
-			width: 200px;
-			height: 80px;
+			min-height: 8rem;
 			position: relative;
 		}
 
@@ -163,18 +180,41 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		}
 	`
 
+	get icon() {
+		const {config, entityType, on} = this
+		if (config.icon || config.iconOn || config.iconOff) {
+			return config.icon ?? (on ? config.iconOn : config.iconOff)
+		} else {
+			return entityType === 'light'
+				? (on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline')
+				: (on ? 'mdi:power-plug' : 'mdi:power-plug-outline')
+		}
+	}
+
+	get titleValue() {
+		if (!this.on) return
+		return this.hasBrightness && this.dragBrightness !== undefined
+			? formatBrightness(this.brightness)
+			: formatWattage(this.state.power?.state)
+	}
+
 	render() {
-		const {entity, state} = this
+		const {entity, config, state} = this
+
+		const safeValue = this.hasBrightness
+			? this.on ? this.brightness : 0
+			: this.on ? 1 : 0
 
 		return html`
 			<ha-card class="${this.entityType} ${this.on ? 'on' : 'off'}">
 				<awesome-slider
-				value="${this.hasBrightness ? this.brightness : this.on ? 1 : 0}"
+				value="${safeValue}"
 				min="0"
 				max="${this.hasBrightness ? 255 : 1}"
 				step="${1}"
 				@drag-move="${this.onDragMove}"
 				@drag-end="${this.onDragEnd}"
+				@toggle="${this.onToggle}"
 				hideValue
 				>
 					<div slot="start">
@@ -182,10 +222,15 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 						icon="${this.icon}"
 						title="${this.config.name ?? entity?.attributes?.friendly_name}"
 						>
-							${entity?.state}
-							${this.on && this.hasBrightness ? formatValue(this.brightness) + '%' : ''}
+							${this.errorMessage ?? entity?.state}
+							${this.titleValue}
 						</awesome-card-title>
 					</div>
+					${this.error && html`
+						<div slot="end">
+							<ha-icon icon="mdi:alert-outline"></ha-icon>
+						</div>
+					`}
 				</awesome-slider>
 			</ha-card>
 		`
@@ -193,6 +238,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 
 }
 
-const formatValue = val => Math.round(val / 255 * 100)
+const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
+const formatWattage = watts => watts !== undefined ? `${watts} W` : ''
 
 customElements.define('light-card', LightCard)

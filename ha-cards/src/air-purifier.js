@@ -1,5 +1,6 @@
 import {LitElement, html, css} from 'lit'
 import {mixin, hassData, onOffControls} from './mixin/mixin.js'
+import * as styles from './util/styles.js'
 
 
 class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
@@ -62,71 +63,21 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 			return 'green'
 	}
 
-	static styles = css`
-		.green   {--color: 50, 205, 50}
-		.orange  {--color: 255, 215, 0}
-		.red     {--color: 255, 0, 0}
-		.neutral {--color: 255, 255, 255}
+	static styles = [
+		styles.sliderCardSizes,
+		styles.sliderCard,
+		styles.sliderCardButtons,
+		css`
+			.green   {--color: 50, 205, 50}
+			.orange  {--color: 255, 215, 0}
+			.red     {--color: 255, 0, 0}
+			.neutral {--color: 255, 255, 255}
 
-		:host {
-			display: block;
-			--button-size: calc(var(--size) - (2 * var(--gap)));
-		}
-
-		:host,
-		:host([size="medium"]) {
-			--size: 4rem;
-			--gap: 0.5rem;
-		}
-
-		:host([size="small"]) {
-			--size: 3rem;
-			--gap: 0.375rem;
-		}
-
-		:host([size="large"]) {
-			--size: 5rem;
-			--gap: 0.75rem;
-		}
-
-		ha-card {
-			padding: 0rem;
-			position: relative;
-			height: var(--size);
-			overflow: hidden;
-		}
-
-		.value-label + .value-label {
-			margin-left: 0.5rem;
-		}
-
-		awesome-slider {
-			width: unset;
-			height: unset;
-			position: absolute;
-			inset: 0;
-			padding: var(--gap);
-		}
-			awesome-slider [slot="start"] {
-				pointer-events: none;
+			.value-label + .value-label {
+				margin-left: 0.5rem;
 			}
-			awesome-slider awesome-button {
-				width: var(--button-size);
-				height: var(--button-size);
-				--bg-opacity: 0.14;
-			}
-			awesome-slider awesome-button:not([selected]) {
-				--bg-opacity: 0.06;
-				--color: 255, 255, 255;
-			}
-
-		[slot="end"] {
-			display: flex
-		}
-			[slot="end"] > * + * {
-				margin-left: var(--gap);
-			}
-	`
+		`
+	]
 
 	render() {
 		const {state} = this
@@ -144,18 +95,19 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title icon="mdi:air-filter">${state.fan?.attributes?.friendly_name}</awesome-card-title>
-						<div style="display: ${this.on ? '' : 'none'}">
-							<span class="value-label">
-								<strong>${state.pm2_5?.state}</strong>
-								${state.pm2_5?.attributes?.unit_of_measurement}
-							</span>
-							<span class="value-label">
-								<strong>${this.dragValue ?? this.speed}</strong>
-								${state.motor_speed?.attributes?.unit_of_measurement}
-							</span>
-						</div>
-						<div style="display: ${this.on ? 'none' : ''}">Off</div>
+						<awesome-card-title
+						icon="mdi:air-filter"
+						title="${state.fan?.attributes?.friendly_name}"
+						>
+							${!this.on ? 'Off' : html`
+								<span class="value-label">
+									<strong>${state.pm2_5?.state}</strong> µg/m³
+								</span>
+								<span class="value-label">
+									<strong>${this.dragValue ?? this.speed}</strong> rpm
+								</span>
+							`}
+						</awesome-card-title>
 					</div>
 					<div slot="end">
 						<awesome-button @click=${() => this.mode = 'Auto'} icon="mdi:fan-auto" ?selected="${state.fan?.attributes?.preset_mode === 'Auto'}"></awesome-button>

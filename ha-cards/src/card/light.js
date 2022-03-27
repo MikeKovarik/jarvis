@@ -157,11 +157,13 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title icon="${this.icon}">
+						<awesome-card-title
+						icon="${this.icon}"
+						title="${this.config.name ?? entity?.attributes?.friendly_name}"
+						>
 							${entity?.state}
 							${this.hasBrightness ? formatValue(this.brightness) + '%' : ''}
 						</awesome-card-title>
-						<div>${this.config.name ?? entity?.attributes?.friendly_name}</div>
 					</div>
 				</awesome-slider>
 			</ha-card>

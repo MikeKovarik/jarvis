@@ -1,5 +1,6 @@
 import {LitElement, html, css} from 'lit'
 import {mixin, hassData, onOffControls} from './mixin/mixin.js'
+import * as styles from './util/styles.js'
 
 
 class EnsureValue {
@@ -87,6 +88,11 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 		return this.state.humidifier.attributes.humidity
 	}
 
+	get targetHumidity2() {
+		return this.dragValue
+			?? this.state.humidifier.attributes.humidity
+	}
+
 	set targetHumidity(humidity) {
 		if (!this.on) this.turnOn()
 		if (!this.auto) this.mode = 'Humidity'
@@ -160,56 +166,20 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 			return 'neutral'
 	}
 
-	static styles = css`
-		.cyan    {--color: 70, 180, 255}
-		.red     {--color: 255, 0, 0}
-		.neutral {--color: 255, 255, 255}
+	static styles = [
+		styles.sliderCardSizes,
+		styles.sliderCard,
+		styles.sliderCardButtons,
+		css`
+			.cyan    {--color: 70, 180, 255}
+			.red     {--color: 255, 0, 0}
+			.neutral {--color: 255, 255, 255}
 
-		:host,
-		:host([size="medium"]) {
-			--size: 4rem;
-			--gap: 0.5rem;
-		}
-
-		:host([size="small"]) {
-			--size: 3rem;
-			--gap: 0.375rem;
-		}
-
-		:host([size="large"]) {
-			--size: 5rem;
-			--gap: 0.75rem;
-		}
-
-		ha-card {
-			padding: 0rem;
-			position: relative;
-			height: var(--size);
-			overflow: hidden;
-		}
-
-		.value-label + .value-label {
-			margin-left: 0.5rem;
-		}
-
-		awesome-slider {
-			width: unset;
-			height: unset;
-			position: absolute;
-			inset: 0;
-			padding: var(--gap);
-		}
-			awesome-slider [slot="start"] {
-				pointer-events: none;
+			.value-label + .value-label {
+				margin-left: 0.5rem;
 			}
-
-		[slot="end"] {
-			display: flex
-		}
-			[slot="end"] > * + * {
-				margin-left: var(--gap);
-			}
-	`
+		`
+	]
 
 	render() {
 		const {state, errorMessage} = this
@@ -247,22 +217,24 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title icon="mdi:air-humidifier">${state.humidifier?.attributes?.friendly_name}</awesome-card-title>
-						<div style="display: ${this.offline ? 'none' : ''}">
-							<span class="value-label">
-								<strong>${this.currentHumidity}</strong>
-								${state.humidity?.attributes?.unit_of_measurement}
-								${(this.auto || this.dragValue) ? html`
-									/
-									<strong>${this.dragValue ?? this.targetHumidity}</strong>
-									${state.humidity?.attributes?.unit_of_measurement}
-								` : ''}
-							</span>
-							<span class="value-label">
-								<strong>${state.temperature?.state}</strong>
-								${state.temperature?.attributes?.unit_of_measurement}
-							</span>
-						</div>
+						<awesome-card-title
+						icon="mdi:air-humidifier"
+						title="${state.humidifier?.attributes?.friendly_name}"
+						>
+							${!this.on ? 'Off' : html`
+								<span class="value-label">
+									<strong>${this.currentHumidity}</strong> %
+									${(this.auto || this.dragValue) ? html`
+										/
+										<strong>${this.targetHumidity2}</strong> %
+									` : ''}
+								</span>
+								<span class="value-label">
+									<strong>${state.temperature?.state}</strong> °C
+								</span>
+							`}
+
+						</awesome-card-title>
 						<div>${errorMessage}</div>
 					</div>
 					<div slot="end">

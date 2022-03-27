@@ -14,6 +14,12 @@
 			"NODE_ENV": "prod"
 		}
 	}, {
+		"name"           : "hass",
+		"script"         : "lan-hub/hass.js",
+		"env": {
+			"NODE_ENV": "prod"
+		}
+	}, {
 		"name"           : "proxy",
 		"script"         : "internet-proxy/proxytunnel.cjs",
 		"log_date_format": "DD.MM. HH:mm:ss",

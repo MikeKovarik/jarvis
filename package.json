@@ -13,6 +13,7 @@
     "proxy-test:dev": "node internet-proxy-test/proxytunnel.cjs",
     "z2m:start": "pm2 start pm2.json --only z2m",
     "hub:start": "pm2 start pm2.json --only hub",
+    "hass:start": "pm2 start pm2.json --only hass",
     "proxy:start": "pm2 start pm2.json --only proxy",
     "proxy-test:start": "pm2 start pm2.json --only proxy",
     "z2m:restart": "pm2 restart pm2.json --only z2m",

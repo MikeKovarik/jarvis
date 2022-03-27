@@ -1,5 +1,4 @@
 import {LitElement, html, css} from 'lit'
-import {styleMap} from 'lit-html/directives/style-map.js'
 import {mixin, eventEmitter} from './mixin/mixin.js'
 import {clamp} from './util/util.js'
 
@@ -53,6 +52,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			position: relative;
 			overflow: hidden;
 			align-items: center;
+			touch-action: var(--slider-touch-action);
 		}
 		:host, * {
 			box-sizing: border-box;
@@ -61,6 +61,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			opacity: 0.4;
 			pointer-events: none;
 		}
+
 		:host {
 			width: 200px;
 			height: 32px;
@@ -69,9 +70,9 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			width: 32px;
 			height: 200px;
 		}
-		:host,
+
 		#status,
-		#inside {
+		#overlay {
 			position: absolute;
 			inset: 0;
 		}
@@ -79,16 +80,18 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			background-color: rgba(var(--color), 0.08);
 			overflow: hidden;
 		}
+
 		#status {
 			background-color: rgba(var(--color), 0.08);
 			will-change: transform;
+			transform: var(--slider-status-transform);
+			transform-origin: var(--slider-status-transform-origin);
 		}
-		:host,
-		#inside {
+
+		#overlay {
 			padding: inherit;
-		}
-		#inside {
 			display: flex;
+			flex-direction: var(--slider-overlay-flex-direction);
 			align-items: inherit;
 			justify-content: space-between;
 		}
@@ -96,14 +99,28 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 				pointer-events: none;
 			}
 	`
-/*
+
 	updated(props) {
-		if (props.has('vertical')) this.applyOrientation()
+		if (props.has('vertical') || props.has('inverted'))
+			this.applyOrientation()
 	}
 
 	applyOrientation() {
+		const touchAction     = this.vertical ? 'pan-x' : 'pan-y'
+		const transformOrigin = this.inverted ? 'bottom right' : 'top left'
+		const flexDirection   = (this.vertical ? 'column' : 'row') + (this.inverted ? '-reverse' : '')
+
+		this.style.setProperty('--slider-touch-action', touchAction)
+		this.style.setProperty('--slider-status-transform-origin', transformOrigin)
+		this.style.setProperty('--slider-overlay-flex-direction', flexDirection)
 	}
-*/
+
+	get statusTransform() {
+		return this.vertical
+			? `scale(1, ${this.ratio})`
+			: `scale(${this.ratio}, 1)`
+	}
+
 	initX = undefined
 	initY = undefined
 
@@ -184,42 +201,23 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		}
 	}
 
-	get statusStyle() {
-		return {
-			transformOrigin: this.inverted ? 'bottom right' : 'top left',
-			transform: !this.vertical
-				? `scale(${this.ratio}, 1)`
-				: `scale(1, ${this.ratio})`
-		}
-	}
-
-	get insideStyle() {
-		return {
-			flexDirection: (this.vertical ? 'column' : 'row') + (this.inverted ? '-reverse' : '')
-		}
-	}
-
 	connectedCallback() {
 		this.addEventListener('pointerdown', this.onPointerDown)
 		this.addEventListener('pointercancel', this.resetDrag)
-		super.connectedCallback();
+		super.connectedCallback()
+		this.applyOrientation()
 	}
 
 	disconnectedCallback() {
 		this.removeEventListener('pointerdown', this.onPointerDown)
 		this.removeEventListener('pointercancel', this.resetDrag)
-		super.disconnectedCallback();
+		super.disconnectedCallback()
 	}
 
 	render() {
 		return html`
-			<style>
-				:host {
-					touch-action: ${this.vertical ? 'pan-x' : 'pan-y'}
-				}
-			</style>
-			<div id="status" style=${styleMap(this.statusStyle)}></div>
-			<div id="inside" style=${styleMap(this.insideStyle)}>
+			<div id="status" style="transform: ${this.statusTransform}"></div>
+			<div id="overlay">
 				<slot name="start"></slot>
 				${this.hideValue ? '' : html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
 				<slot name="end"></slot>
@@ -230,49 +228,4 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 }
 
 
-class AwesomeSliderCard extends mixin(LitElement, sliderCore) {
-
-	static properties = {
-		...AwesomeSlider.properties
-	}
-
-	static styles = css`
-		:host {
-			display: block;
-			position: relative;
-		}
-		ha-card,
-		awesome-slider {
-			position: absolute;
-			inset: 0;
-			width: auto;
-			height: auto;
-		}
-		ha-card {
-			padding: 0.5rem 1rem;
-			background-color: transparent;
-			border-radius: 0.5rem;
-			overflow: hidden;
-		}
-	`
-
-	render() {
-		return html`
-			<ha-card>
-				<awesome-slider
-				.vertical="${this.vertical}"
-				.inverted="${this.inverted}"
-				.value=${this.value}
-				.min="${this.min}"
-				.max="${this.max}"
-				.step="${this.step}"
-				></awesome-slider>
-			</ha-card>
-		`
-	}
-
-}
-
-
 customElements.define('awesome-slider', AwesomeSlider)
-customElements.define('awesome-slider-card', AwesomeSliderCard)

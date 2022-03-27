@@ -31,7 +31,6 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	onStateUpdate() {
-		console.log(this.state)
 		this.hasBrightness = this.entityType === 'light'
 		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
 		/*
@@ -160,7 +159,6 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		}
 
 		awesome-card-title {
-			pointer-events: none;
 			color: var(--color-fg);
 		}
 	`
@@ -185,7 +183,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 						title="${this.config.name ?? entity?.attributes?.friendly_name}"
 						>
 							${entity?.state}
-							${this.hasBrightness ? formatValue(this.brightness) + '%' : ''}
+							${this.on && this.hasBrightness ? formatValue(this.brightness) + '%' : ''}
 						</awesome-card-title>
 					</div>
 				</awesome-slider>

@@ -109,6 +109,10 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			#value {
 				pointer-events: none;
 			}
+
+		slot {
+			pointer-events: none;
+		}
 	`
 
 	updated(props) {

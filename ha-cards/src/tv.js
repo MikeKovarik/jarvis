@@ -166,6 +166,7 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 			width: var(--slider-size);
 			height: 4.25rem;
 			background-color: transparent;
+			pointer-events: auto;
 		}
 
 		#mute {

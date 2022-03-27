@@ -47,13 +47,11 @@ export const sliderCard = css`
 `
 
 export const sliderCardButtons = css`
-	awesome-slider [slot="start"] {
-		pointer-events: none;
-	}
 	awesome-slider awesome-button {
 		width: var(--button-size);
 		height: var(--button-size);
 		--bg-opacity: 0.14;
+		pointer-events: auto;
 	}
 	awesome-slider awesome-button:not([selected]) {
 		--bg-opacity: 0.06;

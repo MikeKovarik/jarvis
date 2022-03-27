@@ -63,6 +63,7 @@
 				const newState = JSON.parse(JSON.stringify(state))
 				card.setConfig(cfg)
 				card.state = newState
+				card.onStateUpdate()
 				setTimeout(() => card.requestUpdate())
 			})
 

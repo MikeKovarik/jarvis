@@ -52,6 +52,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			display: block;
 			position: relative;
 			overflow: hidden;
+			align-items: center;
 		}
 		:host, * {
 			box-sizing: border-box;
@@ -68,13 +69,13 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			width: 32px;
 			height: 200px;
 		}
-		#container,
+		:host,
 		#status,
 		#inside {
 			position: absolute;
 			inset: 0;
 		}
-		#container {
+		:host {
 			background-color: rgba(var(--color), 0.08);
 			overflow: hidden;
 		}
@@ -82,24 +83,27 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			background-color: rgba(var(--color), 0.08);
 			will-change: transform;
 		}
-		#container,
+		:host,
 		#inside {
 			padding: inherit;
 		}
 		#inside {
 			display: flex;
-			align-items: center;
+			align-items: inherit;
 			justify-content: space-between;
 		}
 			#value {
 				pointer-events: none;
 			}
 	`
-
-	updated(changedProperties) {
-		console.log('updated', changedProperties)
+/*
+	updated(props) {
+		if (props.has('vertical')) this.applyOrientation()
 	}
 
+	applyOrientation() {
+	}
+*/
 	initX = undefined
 	initY = undefined
 
@@ -171,12 +175,12 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		const rawValue = this.min + (clampedRatio * this.maxFromZero)
 		const oldValue = this.value
 		this.value = Math.round(rawValue / this.step) * this.step
-		if (oldValue !== this.value) this.emit('input', this.value)
-	}
-
-	get style() {
-		return {
-			touchAction: !this.vertical ? 'pan-y' : 'pan-x'
+		if (oldValue !== this.value) {
+			this.emit('input', this.value)
+			if (this.haptic) {
+				navigator.vibrate(0)
+				navigator.vibrate(1)
+			}
 		}
 	}
 
@@ -195,20 +199,30 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		}
 	}
 
+	connectedCallback() {
+		this.addEventListener('pointerdown', this.onPointerDown)
+		this.addEventListener('pointercancel', this.resetDrag)
+		super.connectedCallback();
+	}
+
+	disconnectedCallback() {
+		this.removeEventListener('pointerdown', this.onPointerDown)
+		this.removeEventListener('pointercancel', this.resetDrag)
+		super.disconnectedCallback();
+	}
+
 	render() {
 		return html`
-			<div
-			id="container"
-			style=${styleMap(this.style)}
-			@pointerdown="${this.onPointerDown}"
-			@pointercancel="${this.resetDrag}"
-			>
-				<div id="status" style=${styleMap(this.statusStyle)}></div>
-				<div id="inside" style=${styleMap(this.insideStyle)}>
-					<slot name="start"></slot>
-					${this.hideValue ? '' : html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
-					<slot name="end"></slot>
-				</div>
+			<style>
+				:host {
+					touch-action: ${this.vertical ? 'pan-x' : 'pan-y'}
+				}
+			</style>
+			<div id="status" style=${styleMap(this.statusStyle)}></div>
+			<div id="inside" style=${styleMap(this.insideStyle)}>
+				<slot name="start"></slot>
+				${this.hideValue ? '' : html`<span id="value">${this.formatValue?.(this.value) ?? `${this.value} ${this.suffix}`}</span>`}
+				<slot name="end"></slot>
 			</div>
 		`
 	}

@@ -6,9 +6,12 @@ export const hassData = Base => class extends Base {
 	async setConfig(config) {
 		if (!config.entity)
 			throw new Error('You need to define an entity')
-		if (!config.entity?.startsWith(`${this.constructor.entityType}.`))
-			throw new Error(`only supported entity is ${this.constructor.entityType}.*`)
-		this.baseId = config.entity.split('.')[1]
+		const allowedTypes = [this.constructor.entityType].flat()
+		const [entityType, entityId] = config.entity.split('.')
+		if (!allowedTypes.includes(entityType))
+			throw new Error(`only supported entities are ${allowedTypes.join(', ')}`)
+		this.entityType = entityType
+		this.entityId = entityId
 		this.config = config
 	}
 
@@ -37,7 +40,7 @@ export const hassData = Base => class extends Base {
 	state = {}
 
 	get entity() {
-		const {entityType} = this.constructor
+		const {entityType} = this
 		return this.state[entityType]
 	}
 
@@ -48,9 +51,8 @@ export const hassData = Base => class extends Base {
 	set hass(hass) {
 		this._hass = hass
 		const {states} = hass
-		const {state, config} = this
-		const {entityType} = this.constructor
-		const entityNameStub = `.${this.baseId}_`
+		const {state, config, entityType} = this
+		const entityNameStub = `.${this.entityId}_`
 		const updatedProps = new Set
 		if (state[entityType] !== states[config.entity])
 			updatedProps.add(entityType)
@@ -66,9 +68,6 @@ export const hassData = Base => class extends Base {
 		if (updatedProps.size) {
 			this.requestUpdate()
 			this.onStateUpdate?.(updatedProps)
-			//console.log('-'.repeat(100))
-        	//console.log('config', JSON.stringify(this.config))
-        	//console.log('state', JSON.stringify(this.state))
 		}
 	}
 

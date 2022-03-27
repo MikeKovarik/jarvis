@@ -22,17 +22,18 @@ cards:
 
 class LightCard extends mixin(LitElement, hassData, onOffControls) {
 
-	static entityType = 'light'
-	entityType = 'light'
-	//static entityType = ['light', 'switch']
+	static entityType = ['light', 'switch']
 
-	transition = 0.5
+	transition = 0.3
 
 	static properties = {
 		transition: {type: Number},
 	}
 
 	onStateUpdate() {
+		console.log(this.state)
+		this.hasBrightness = this.entityType === 'brightness'
+		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
 		/*
 		const {r, g, b} = tempToRgb(this.kelvin)
 		this.style.setProperty('--color', [r, g, b].join(', '))
@@ -91,7 +92,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 	get icon() {
 		return this.entityType === 'light'
 			? (this.on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline')
-			: (this.on ? 'mdi: toggle-switch-variant' : 'mdi:toggle-switch-variant-of')
+			: (this.on ? 'mdi:toggle-switch-variant' : 'mdi:toggle-switch-variant-of')
 	}
 
 	static styles = css`
@@ -99,8 +100,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 			--gap: 1rem;
 		}
 
-		.light,
-		:host {
+		.light {
 			--color-fg: 248, 227, 157; /* 35 brightned */
 			--color-bg: 250, 212, 97;
 			--color: var(--color-bg);
@@ -134,6 +134,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 			position: absolute;
 			inset: 0;
 			padding: var(--gap);
+			align-items: flex-start;
 		}
 
 		awesome-card-title {
@@ -145,7 +146,7 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		const {entity, state} = this
 
 		return html`
-			<ha-card>
+			<ha-card class="${this.entityType}">
 				<awesome-slider
 				value="${this.brightness}"
 				min="0"
@@ -156,7 +157,10 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title icon="${this.icon}">${entity?.state} ${formatValue(this.brightness)}%</awesome-card-title>
+						<awesome-card-title icon="${this.icon}">
+							${entity?.state}
+							${this.hasBrightness ? formatValue(this.brightness) + '%' : ''}
+						</awesome-card-title>
 						<div>${this.config.name ?? entity?.attributes?.friendly_name}</div>
 					</div>
 				</awesome-slider>

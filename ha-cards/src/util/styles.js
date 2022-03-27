@@ -57,7 +57,7 @@ export const sliderCardButtons = css`
 	}
 	awesome-slider awesome-button:not([selected]) {
 		--bg-opacity: 0.06;
-		--color: 255, 255, 255;
+		--color-rgb: 255, 255, 255;
 	}
 
 	[slot="end"] {

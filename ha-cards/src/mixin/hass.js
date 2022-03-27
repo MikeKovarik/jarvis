@@ -21,11 +21,11 @@ export const hassData = Base => class extends Base {
 		}
 		.slider {
 			padding: 0.5rem 1rem;
-			background-color: rgba(var(--color), 0.1);
+			background-color: rgba(var(--color-rgb), 0.1);
 			border-radius: 0.5rem;
 		}
 		.rpm {
-			color: rgba(var(--color), 1);
+			color: rgba(var(--color-rgb), 1);
 		}
 		.key-val strong {
 			font-weight: 500;

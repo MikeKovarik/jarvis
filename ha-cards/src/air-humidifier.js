@@ -171,9 +171,9 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 		styles.sliderCard,
 		styles.sliderCardButtons,
 		css`
-			.cyan    {--color: 70, 180, 255}
-			.red     {--color: 255, 0, 0}
-			.neutral {--color: 255, 255, 255}
+			.cyan    {--color-rgb: 70, 180, 255}
+			.red     {--color-rgb: 255, 0, 0}
+			.neutral {--color-rgb: 255, 255, 255}
 
 			.value-label + .value-label {
 				margin-left: 0.5rem;

@@ -32,11 +32,11 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 
 	onStateUpdate() {
 		console.log(this.state)
-		this.hasBrightness = this.entityType === 'brightness'
+		this.hasBrightness = this.entityType === 'light'
 		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
 		/*
 		const {r, g, b} = tempToRgb(this.kelvin)
-		this.style.setProperty('--color', [r, g, b].join(', '))
+		this.style.setProperty('--color-rgb', [r, g, b].join(', '))
 		*/
 	}
 
@@ -96,49 +96,72 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	static styles = css`
-		:host {
-			--gap: 1rem;
+		.light,
+		.switch {
+			/* looks good on #000 background, but not on gray
+			--slider-bg-color-rgb: 158, 164, 184;
+			--slider-bg-color-opacity: 0.2;
+			*/
+			--slider-bg-color-rgb: 158, 164, 184;
+			--slider-bg-color-opacity: 0.08;
+			/*
+			*/
 		}
 
 		.light {
-			--color-fg: 248, 227, 157; /* 35 brightned */
-			--color-bg: 250, 212, 97;
-			--color: var(--color-bg);
-
-			--slider-status-opacity: 0.15;
-			--slider-status-color: 250, 212, 97;
-			--slider-bg-opacity: 0.2;
-			--slider-bg-color: 158, 164, 184;
+			--color-fg-rgb: 248, 227, 157; /* 35% brightned */
+			--slider-status-color-rgb: 250, 212, 97;
+			--slider-status-color-opacity: 0.15;
 		}
 
 		.switch {
-			--color-fg: 146, 179, 242;
-			--color-bg: 250, 212, 97;
-			--color: var(--color-bg);
-			--slider-status-opacity: 0.12;
-			--slider-status-color: 255, 255, 255;
-			--slider-bg-opacity: 0.2;
-			--slider-bg-color: 158, 164, 184;
+			--color-fg-rgb: 146, 179, 242;
+			--slider-status-color-rgb: 255, 255, 255;
+			--slider-status-color-opacity: 0.12;
+		}
+
+		.off {
+			--color-fg-rgb: 230, 230, 230;
+			--color-fg-opacity: 0.6;
+		}
+		.on {
+			--color-fg-opacity: 1;
+		}
+
+		:host {
+			--gap: 1rem;
+			display: block;
+			width: 200px;
+			height: 80px;
+			position: relative;
 		}
 
 		ha-card {
-			padding: 0rem;
-			position: relative;
-			overflow: hidden;
-			min-height: 8rem;
+			--color-fg: rgb(var(--color-fg-rgb), var(--color-fg-opacity));
+			background-color: transparent;
 		}
 
+		ha-card,
 		awesome-slider {
 			width: unset;
 			height: unset;
 			position: absolute;
 			inset: 0;
+		}
+
+		ha-card {
+			padding: 0rem;
+			overflow: hidden;
+		}
+
+		awesome-slider {
 			padding: var(--gap);
 			align-items: flex-start;
 		}
 
 		awesome-card-title {
-			color: rgb(var(--color-fg));
+			pointer-events: none;
+			color: var(--color-fg);
 		}
 	`
 
@@ -146,11 +169,11 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		const {entity, state} = this
 
 		return html`
-			<ha-card class="${this.entityType}">
+			<ha-card class="${this.entityType} ${this.on ? 'on' : 'off'}">
 				<awesome-slider
-				value="${this.brightness}"
+				value="${this.hasBrightness ? this.brightness : this.on ? 1 : 0}"
 				min="0"
-				max="255"
+				max="${this.hasBrightness ? 255 : 1}"
 				step="${1}"
 				@drag-move="${this.onDragMove}"
 				@drag-end="${this.onDragEnd}"

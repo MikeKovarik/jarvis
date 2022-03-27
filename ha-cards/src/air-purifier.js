@@ -68,10 +68,10 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 		styles.sliderCard,
 		styles.sliderCardButtons,
 		css`
-			.green   {--color: 50, 205, 50}
-			.orange  {--color: 255, 215, 0}
-			.red     {--color: 255, 0, 0}
-			.neutral {--color: 255, 255, 255}
+			.green   {--color-rgb: 50, 205, 50}
+			.orange  {--color-rgb: 255, 215, 0}
+			.red     {--color-rgb: 255, 0, 0}
+			.neutral {--color-rgb: 255, 255, 255}
 
 			.value-label + .value-label {
 				margin-left: 0.5rem;

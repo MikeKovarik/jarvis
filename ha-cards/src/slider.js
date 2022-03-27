@@ -76,13 +76,24 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			position: absolute;
 			inset: 0;
 		}
+
 		:host {
-			background-color: rgba(var(--color), 0.08);
-			overflow: hidden;
+			background-color: var(--slider-bg-color,
+				rgba(
+					var(--slider-bg-color-rgb, var(--color-rgb)),
+					var(--slider-bg-color-opacity, 0.08)
+				)
+			);
 		}
 
 		#status {
-			background-color: rgba(var(--color), 0.08);
+			background-color: var(--slider-status-color,
+				rgba(
+					var(--slider-status-color-rgb, var(--color-rgb)),
+					var(--slider-status-color-opacity, 0.08)
+				)
+			);
+
 			will-change: transform;
 			transform: var(--slider-status-transform);
 			transform-origin: var(--slider-status-transform-origin);

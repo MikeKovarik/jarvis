@@ -18,8 +18,8 @@ class AwesomeButton extends mixin(LitElement) {
 			height: 3rem;
 			border-radius: 0.5rem;
 			--bg-opacity: 0.04;
-			background-color: rgba(var(--color), var(--bg-opacity));
-			color: rgb(var(--color));
+			background-color: rgba(var(--color-rgb), var(--bg-opacity));
+			color: rgb(var(--color-rgb));
 		}
 		mwc-ripple {
 			position: absolute;

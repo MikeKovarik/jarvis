@@ -157,7 +157,7 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 		}
 
 		#volume-slider {
-			--color: 120, 180, 250;
+			--color-rgb: 120, 180, 250;
 			border-radius: 0.5rem;
 			overflow: hidden;
 		}
@@ -169,10 +169,10 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 		}
 
 		#mute {
-			--color: 255, 255, 255;
+			--color-rgb: 255, 255, 255;
 		}
 		#unmute {
-			--color: 255, 30, 10;
+			--color-rgb: 255, 30, 10;
 			--bg-opacity: 0.2;
 		}
 
@@ -184,7 +184,7 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 		}
 			.main-grid awesome-button,
 			awesome-grid awesome-button {
-				--color: 255, 255, 255;
+				--color-rgb: 255, 255, 255;
 				width: var(--button-size);
 				height: var(--button-size);
 			}

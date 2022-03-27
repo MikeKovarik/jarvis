@@ -21,7 +21,7 @@
 				height: 380px;
 			}
 			:root {
-				--color: 0, 255, 0;
+				--color-rgb: 0, 255, 0;
 			}
 			.layout-vertical {
 				display: flex;
@@ -67,10 +67,6 @@
 
 			render(html`
 
-				<!--
-				<air-purifier-card></air-purifier-card>
-				-->
-
 				<div class="layout-vertical padded">
 
 					<awesome-slider value="62" style="padding: 0.5rem;">
@@ -97,27 +93,23 @@
 						<button slot="end">end</button>
 					</awesome-slider>
 
-					<awesome-slider
-					hideValue
-					>
+					<awesome-slider hideValue>
 						<div slot="start">
 						start slot
 						</div>
 						<awesome-button slot="end" icon="mdi:fan-auto" style="color: green"></awesome-button>
 					</awesome-slider>
 
-					<awesome-slider
-					hideValue
-					>
+					<awesome-slider hideValue>
 						<div slot="start">
 						start slot
 						</div>
 						<awesome-button slot="end" icon="mdi:fan-auto" style="color: white"></awesome-button>
 					</awesome-slider>
 
+
 				</div>
 
-					<!--
 				<br><br><br><br><br><br>
 
 				<div class="layout-vertical padded">
@@ -143,7 +135,6 @@
 				</div>
 
 				<h2>vertical</h2>
-
 				<div class="layout-horizontal padded">
 					<awesome-slider vertical  value="60"  min="20"  max="80"></awesome-slider>
 					<awesome-slider vertical  value="40"   min="0"  max="60"></awesome-slider>
@@ -155,7 +146,6 @@
 				</div>
 
 				<h2>vertical inverted</h2>
-
 				<div class="layout-horizontal padded">
 					<awesome-slider inverted vertical  value="60"  min="20"  max="80"></awesome-slider>
 					<awesome-slider inverted vertical  value="40"   min="0"  max="60"></awesome-slider>
@@ -182,7 +172,6 @@
 					<awesome-slider-card vertical value="70" min="20" max="80"></awesome-slider-card>
 					<awesome-slider-card vertical min="0" max="0.3" step="0.01" value="0.1"></awesome-slider-card>
 				</div>
-					-->
 
 				<br><br><br><br><br><br>
 				<br><br><br><br><br><br>

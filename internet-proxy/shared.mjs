@@ -23,3 +23,5 @@ if (username === 'Mike') {
 
 if (key === undefined || cert === undefined)
 	console.error(`Certificates did not load`)
+
+export const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/config.json')))

@@ -21,7 +21,7 @@ app.listen(config.appPort, () => {
 	if (config.tunnel !== false) {
 		exposeThroughProxy({
 			log: true,
-			...config
+			...config['proxy-hub']
 		})
 	}
 })

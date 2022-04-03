@@ -1,15 +1,16 @@
 import fs from 'fs'
-import {createProxyServer} from 'lan-tunnel'
 import os from 'os'
 import path from 'path'
 import {fileURLToPath} from 'url'
 
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+export const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const {username} = os.userInfo()
 
-let key, cert
+export let key
+export let cert
+
 if (username === 'Mike') {
 	// localhost: testing only
 	key  = fs.readFileSync(path.join(__dirname, '../data/ssl.key'))
@@ -22,12 +23,3 @@ if (username === 'Mike') {
 
 if (key === undefined || cert === undefined)
 	console.error(`Certificates did not load`)
-
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/config.json')))
-
-createProxyServer({
-	log: true,
-	key,
-	cert,
-	...config,
-})

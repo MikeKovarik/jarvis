@@ -1,2 +1,2 @@
 require = require('esm')(module/*, options*/)
-module.exports = require('./proxytunnel.mjs')
+module.exports = require('./proxy-hub.mjs')

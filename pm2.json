@@ -20,15 +20,22 @@
 			"NODE_ENV": "prod"
 		}
 	}, {
-		"name"           : "proxy",
-		"script"         : "internet-proxy/proxytunnel.cjs",
+		"name"           : "proxy-hub",
+		"script"         : "internet-proxy/proxy-hub.cjs",
+		"log_date_format": "DD.MM. HH:mm:ss",
+		"env": {
+			"NODE_ENV": "prod"
+		}
+	}, {
+		"name"           : "proxy-hass",
+		"script"         : "internet-proxy/proxy-hass.cjs",
 		"log_date_format": "DD.MM. HH:mm:ss",
 		"env": {
 			"NODE_ENV": "prod"
 		}
 	}, {
 		"name"           : "proxy-test",
-		"script"         : "internet-proxy-test/proxytunnel.cjs",
+		"script"         : "internet-proxy/proxy-test.cjs",
 		"log_date_format": "DD.MM. HH:mm:ss",
 		"env": {
 			"NODE_ENV": "prod"

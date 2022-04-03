@@ -6,5 +6,6 @@ createProxyServer({
 	log: true,
 	key,
 	cert,
+	...config,
 	...config['proxy-hub'],
 })

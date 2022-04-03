@@ -1,4 +1,5 @@
 import {spawn} from 'child_process'
+import {exposeThroughProxy} from 'lan-tunnel'
 import config from '../config.js'
 
 

@@ -9,5 +9,6 @@ process.once('exit', code => process.exit(code))
 
 exposeThroughProxy({
 	log: true,
-	...config['proxy-hass']
+	...config,
+	...config['proxy-hass'],
 })

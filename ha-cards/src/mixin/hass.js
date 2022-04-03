@@ -6,7 +6,7 @@ export const hassData = Base => class extends Base {
 	state = {}
 	config = {}
 
-	async setConfig(newConfig) {
+	setConfig(newConfig) {
 		if (!newConfig.entity)
 			throw new Error('You need to define an entity')
 		const allowedTypes = [this.constructor.entityType].flat()

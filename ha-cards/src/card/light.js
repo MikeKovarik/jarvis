@@ -114,7 +114,6 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	static styles = [
-	styles.sliderCard2,
 	css`
 		.light,
 		.switch {
@@ -168,7 +167,9 @@ class LightCard extends mixin(LitElement, hassData, onOffControls) {
 		awesome-card-title {
 			color: var(--color-fg);
 		}
-	`]
+	`,
+	styles.sliderCard2,
+	]
 
 	get icon() {
 		const {config, entityType, on} = this

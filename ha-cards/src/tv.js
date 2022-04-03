@@ -15,7 +15,6 @@ const localeNumString  = '+ěščřžýáíé'
 const localeNumRow = sanitizeNums(localeNumString)
 
 function translateKey(e) {
-	if (e.keyCode === 32) return 'PAUSE' // space
 	switch (e.key) {
 		case 'ArrowLeft':       return 'LEFT'
 		case 'ArrowRight':      return 'RIGHT'
@@ -88,6 +87,15 @@ const tvCore = Base => class extends Base {
         this.callService('media_player', 'select_source', {source})
     }
 
+    turnOn() {
+		const {mac} = this.config
+        if (this.config.mac)
+            this._hass.callService('wake_on_lan', 'send_magic_packet', {mac})
+        else
+            this.callService('media_player', 'turn_on'); 
+    }
+
+	turnOff = () => this.callService('media_player', 'turn_off')
 }
 
 const mediaPlayerMute = Base => class extends Base {
@@ -115,23 +123,46 @@ const mediaPlayerVolume = Base => class extends Base {
 
 }
 
+const resizeMixin = Base => class extends Base {
+
+	connectedCallback() {
+		super.connectedCallback()
+		this.resizeObserver = new ResizeObserver(this.onResize)
+		this.resizeObserver.observe(this)
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback()
+		this.resizeObserver.unobserve(this)
+		this.resizeObserver = undefined
+	}
+
+	onResize = entries => {
+		console.log('onResize', entries[0].contentRect)
+	}
+
+}
+
 class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, mediaPlayerMute) {
 
 	getCardSize = () => 6
 
-	//listenToGlobalKeyboardEvents = true
-	listenToGlobalKeyboardEvents = false
+	listenToGlobalKeyboardEvents = true
+	//listenToGlobalKeyboardEvents = false
 
 	static excludedInputs = ['apps', 'home dashboard', 'spotify', 'twitch']
 
 	connectedCallback() {
 		super.connectedCallback()
-		if (this.listenToGlobalKeyboardEvents)
+		if (this.listenToGlobalKeyboardEvents) {
+			console.log('subscribing')
 			document.addEventListener('keyup', this.onKeyUp)
+		}
 	}
 
 	disconnectedCallback() {
 		super.disconnectedCallback()
+			console.log('unsubbing')
 		window.removeEventListener('keyup', this.onKeyUp)
 	}
 
@@ -140,9 +171,12 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 	}
 
 	onKeyUp = e => {
+		if (e.keyCode === 32) return this.playPause() // space
 		const lgButton = translateKey(e)
 		if (lgButton) this.pressButton(lgButton)
 	}
+
+	playPause = () => this.callService('media_player', 'media_play_pause')
 
 	onStateUpdate() {
 		const {excludedInputs} = this.constructor
@@ -151,9 +185,12 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 	}
 
 	static styles = css`
-		ha-card {
+		:host {
+			display: block;
+		}
+
+		ha-card#main {
 			padding: 0.5rem;
-			--slider-size: 5rem;
 		}
 
 		#volume-slider {
@@ -163,12 +200,14 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 		}
 		#volume-slider awesome-button {
 			margin: 0;
-			width: var(--slider-size);
 			height: 4.25rem;
 			background-color: transparent;
 			pointer-events: auto;
 		}
 
+		awesome-button {
+			--color-rgb: 255, 255, 255;
+		}
 		#mute {
 			--color-rgb: 255, 255, 255;
 		}
@@ -177,43 +216,55 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 			--bg-opacity: 0.2;
 		}
 
-		awesome-grid {
-			--button-size: 5rem;
-		}
-		awesome-grid[columns="4"] {
-			--button-size: 4rem;
-		}
-			.main-grid awesome-button,
-			awesome-grid awesome-button {
-				--color-rgb: 255, 255, 255;
-				width: var(--button-size);
-				height: var(--button-size);
-			}
-		#color-red {
+		.color-red {
 			color: red;
 		}
 		#current-channel {
-			grid-row: 1/ span 2;
-			grid-column: 1/ span 3;
+			text-align: center;
+			background-size: cover;
+			background-position: center;
 		}
 
-		#volume-slider,
-		#current-channel {
-			width: unset;
-			height: unset;
-		}
-
-		.main-grid {
-			--button-size: 5rem;
+		#main-grid {
 			display: grid;
 			gap: 0.5rem;
 			grid-template-columns: repeat(5, 1fr);
 			width: min-content;
+			grid-auto-rows: 1fr;
+			width: 100%;
 		}
-			.main-grid > * {
-				min-width: var(--button-size);
-				min-height: var(--button-size);
+			#main-grid > * {
+				width: unset;
+				height: unset;
+				min-width: unset;
+				min-height: unset;
 			}
+
+		ha-card.containerless {
+			background-color: transparent;
+			border-radius: 0;
+			box-shadow: none;
+			padding: 0;
+		}
+			ha-card.containerless #main-grid > * {
+				background-color: var( --ha-card-background, var(--card-background-color, white) );
+				border-radius: var(--ha-card-border-radius, 4px);
+				box-shadow: var( --ha-card-box-shadow, 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12) );
+			}
+
+		#sizer {
+			opacity: 0;
+			visibility: hidden;
+			z-index: -1;
+			position: relative;
+			pointer-events: none;
+		}
+		#sizer::before {
+			content: '';
+			display: block;
+			padding-top: 100%;
+		}
+
 	`
 
 	// adaptive max-volume
@@ -222,21 +273,35 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 
 	render() {
 		const {state} = this
-		const {volume_level, sound_output, friendly_name, source, media_title} = state.media_player?.attributes ?? {}
+		const {volume_level, sound_output, friendly_name, source, media_title, entity_picture} = state.media_player?.attributes ?? {}
 
 		return html`
-			<ha-card>
-				<div class="main-grid">
-					<awesome-button id="current-channel">${[source, media_title].filter(a => a).join(' | ')}</awesome-button>
-					<awesome-button icon="mdi:numeric"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('GUIDE')} icon="mdi:format-list-numbered"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('EXIT')}>EXIT</awesome-button>
-					<awesome-button @click=${() => this.pressButton('INFO')}>INFO</awesome-button>
-					<awesome-button icon="mdi:play-pause" @click="${() => this.callService('media_player', 'media_play_pause')}"></awesome-button>
-					<awesome-button icon="mdi:play"></awesome-button>
-					<awesome-button icon="mdi:pause"></awesome-button>
-					<awesome-button icon="mdi:import"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('RED')} icon="mdi:circle" id="color-red"></awesome-button>
+			<ha-card class="${this.config.containerless === false ? 'plain' : 'containerless'}">
+
+				<div id="main-grid">
+					<awesome-button id="current-channel" style="background-image: url('${entity_picture}')">
+						${entity_picture ? '' : [source, media_title].filter(a => a).join(' | ')}
+					</awesome-button>
+
+					<awesome-button @click=${() => this.pressButton('RED')} icon="mdi:circle" class="color-red"></awesome-button>
+
+					${this.on
+						? html`<awesome-button @click=${() => this.turnOff()} icon="mdi:power" class="color-red"></awesome-button>`
+						: html`<awesome-button @click=${() => this.turnOn()} icon="mdi:power" class="color-red"></awesome-button>`}
+
+					<awesome-button icon="mdi:play-pause" @click="${this.playPause}"></awesome-button>
+
+					<awesome-button style="grid-column: 1; grid-row: 2;" @click=${() => this.pressButton('CHANNELUP')}>P +</awesome-button>
+					<awesome-button style="grid-column: 1; grid-row: 3;" @click=${() => this.pressButton('CHANNELDOWN')}>P -</awesome-button>
+					<awesome-button style="grid-column: 1; grid-row: 4;" @click=${() => this.pressButton('GUIDE')} icon="mdi:format-list-numbered"></awesome-button>
+
+					<awesome-button style="grid-column: 2; grid-row: 2;" @click=${() => this.pressButton('HOME')}  icon="mdi:home-outline"></awesome-button>
+					<awesome-button style="grid-column: 3; grid-row: 2;" @click=${() => this.pressButton('UP')}    icon="mdi:chevron-up"></awesome-button>
+					<awesome-button style="grid-column: 2; grid-row: 3;" @click=${() => this.pressButton('LEFT')}  icon="mdi:chevron-left"></awesome-button>
+					<awesome-button style="grid-column: 3; grid-row: 3;" @click=${() => this.pressButton('ENTER')}>OK</awesome-button>
+					<awesome-button style="grid-column: 4; grid-row: 3;" @click=${() => this.pressButton('RIGHT')} icon="mdi:chevron-right"></awesome-button>
+					<awesome-button style="grid-column: 2; grid-row: 4;" @click=${() => this.pressButton('BACK')}  icon="mdi:undo-variant"></awesome-button>
+					<awesome-button style="grid-column: 3; grid-row: 4;" @click=${() => this.pressButton('DOWN')}  icon="mdi:chevron-down" ></awesome-button>
 
 					<awesome-slider
 					id="volume-slider"
@@ -254,103 +319,50 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 					</awesome-slider>
 
 					${this.muted
-						? html`<awesome-button style="grid-column: 5; grid-row: 5;" icon="mdi:volume-mute" id="unmute" @click="${this.unmute}"></awesome-button>`
-						: html`<awesome-button style="grid-column: 5; grid-row: 5;" icon="mdi:volume-mute" id="mute" @click="${this.mute}"></awesome-button>`
+						? html`<awesome-button icon="mdi:volume-mute" id="unmute" @click="${this.unmute}"></awesome-button>`
+						: html`<awesome-button icon="mdi:volume-mute" id="mute" @click="${this.mute}"></awesome-button>`
 					}
+
+					<awesome-button @click=${() => this.pressButton('EXIT')}>EXIT</awesome-button>
+
+					<div id="sizer"></div>
 				</div>
-
-				<br>
-
-				<awesome-grid padded columns="3">
-					<awesome-button @click=${() => this.pressButton('HOME')}  icon="mdi:home-outline"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('UP')}    icon="mdi:chevron-up"></awesome-button>
-					<div></div>
-
-					<awesome-button @click=${() => this.pressButton('LEFT')}  icon="mdi:chevron-left"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('ENTER')}>OK</awesome-button>
-					<awesome-button @click=${() => this.pressButton('RIGHT')} icon="mdi:chevron-right"></awesome-button>
-
-					<awesome-button @click=${() => this.pressButton('BACK')} icon="mdi:undo-variant"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('DOWN')}  icon="mdi:chevron-down" ></awesome-button>
-					<awesome-button @click=${() => this.pressButton('SETTINGS')} icon="mdi:cog-outline"></awesome-button>
-				</awesome-grid>
-
-				<hr>
-
-				<awesome-grid padded columns="3">
-					<awesome-button @click=${() => this.pressButton('1')} icon="mdi:numeric-1"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('2')} icon="mdi:numeric-2"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('3')} icon="mdi:numeric-3"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('4')} icon="mdi:numeric-4"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('5')} icon="mdi:numeric-5"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('6')} icon="mdi:numeric-6"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('7')} icon="mdi:numeric-7"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('8')} icon="mdi:numeric-8"></awesome-button>
-					<awesome-button @click=${() => this.pressButton('9')} icon="mdi:numeric-9"></awesome-button>
-					<div></div>
-					<awesome-button @click=${() => this.pressButton('0')} icon="mdi:numeric-0"></awesome-button>
-					<div></div>
-				</awesome-grid>
-
-				<div>
-					status: ${this.on ? 'ON' : 'OFF'}
-					${this.on
-						? html`<button @click=${() => this.turnOff()}>OFF</button>`
-						: html`<button @click=${() => this.turnOn()}>ON</button>`}
-				</div>
-				<div>
-					source: ${source}
-				</div>
-				<div>
-					media_title: ${media_title}
-				</div>
-				${this.inputSources?.map(source => html`<button @click=${() => this.setSource(source)}>${source}</button>`)}
-
-				<br>
-
-				<!--
-				<br>
-				<button @click=${() => this.pressButton('LEFT')}>LEFT</button>
-				<button @click=${() => this.pressButton('RIGHT')}>RIGHT</button>
-				<button @click=${() => this.pressButton('DOWN')}>DOWN</button>
-				<button @click=${() => this.pressButton('UP')}>UP</button>
-				<br>
-				<button @click=${() => this.pressButton('RED')}>RED</button>
-				<button @click=${() => this.pressButton('GREEN')}>GREEN</button>
-				<button @click=${() => this.pressButton('YELLOW')}>YELLOW</button>
-				<button @click=${() => this.pressButton('BLUE')}>BLUE</button>
-				<br>
-				<button @click=${() => this.pressButton('VOLUMEUP')}>VOLUMEUP</button>
-				<button @click=${() => this.pressButton('VOLUMEDOWN')}>VOLUMEDOWN</button>
-				-->
-				<br>
-				<button @click=${() => this.pressButton('CHANNELUP')}>CHANNELUP</button>
-				<button @click=${() => this.pressButton('CHANNELDOWN')}>CHANNELDOWN</button>
-				<br>
-				<button @click=${() => this.pressButton('PLAY')}>PLAY</button>
-				<button @click=${() => this.pressButton('PAUSE')}>PAUSE</button>
-				<br>
-				<br>
-				<hr>
-				apps
-				<br>
-				<button @click=${() => this.pressButton('NETFLIX')}>NETFLIX</button>
-				channels
-				<br>
-				<button @click=${() => this.setChannel('ct 1')}>ct 1</button>
-				<button @click=${() => this.setChannel('CT 2 ')}>ct 2</button>
-				<button @click=${() => this.setChannel('ct 24')}>ct 24</button>
-				<button @click=${() => this.setChannel('NOVA')}>NOVA</button>
-				<button @click=${() => this.setChannel('nova')}>nova</button>
-				<button @click=${() => this.setChannel('nova cinema')}>nova cinema</button>
-				<button @click=${() => this.setChannel('prima')}>prima</button>
-				<button @click=${() => this.setChannel('prima cool')}>prima cool</button>
-				<button @click=${() => this.setChannel('cnn')}>cnn</button>
 			</ha-card>
 		`
 	}
 
+	renderNumPad = () => html`
+		<awesome-grid padded columns="3">
+			<awesome-button @click=${() => this.pressButton('1')} icon="mdi:numeric-1"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('2')} icon="mdi:numeric-2"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('3')} icon="mdi:numeric-3"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('4')} icon="mdi:numeric-4"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('5')} icon="mdi:numeric-5"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('6')} icon="mdi:numeric-6"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('7')} icon="mdi:numeric-7"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('8')} icon="mdi:numeric-8"></awesome-button>
+			<awesome-button @click=${() => this.pressButton('9')} icon="mdi:numeric-9"></awesome-button>
+			<div></div>
+			<awesome-button @click=${() => this.pressButton('0')} icon="mdi:numeric-0"></awesome-button>
+			<div></div>
+		</awesome-grid>
+	`
+
 }
+
+/*
+				<awesome-button style="grid-column: 1; grid-row: 2;" icon="mdi:chevron-up"></awesome-button>
+				<awesome-button style="grid-column: 1; grid-row: 3;" icon="mdi:chevron-down"></awesome-button>
+				<awesome-button style="grid-column: 1; grid-row: 5;" @click=${() => this.pressButton('INFO')}>INFO</awesome-button>
+				<awesome-button icon="mdi:numeric"></awesome-button>
+				<awesome-button icon="mdi:import"></awesome-button>
+				<awesome-button @click=${() => this.pressButton('PLAY')} icon="mdi:play"></awesome-button>
+				<awesome-button @click=${() => this.pressButton('PAUSE')} icon="mdi:pause"></awesome-button>
+				<button @click=${() => this.pressButton('RED')}>RED</button>
+				<button @click=${() => this.pressButton('GREEN')}>GREEN</button>
+				<button @click=${() => this.pressButton('YELLOW')}>YELLOW</button>
+				<button @click=${() => this.pressButton('BLUE')}>BLUE</button>
+*/
 
 const removeDiacritics = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 //const removeUnwantedCharacters = str => str.replace(/\s+/g, '')
@@ -358,20 +370,32 @@ const removeUnwantedCharacters = str => str.replace(/[^a-zA-Z\d\s]/g, ' ').repla
 const slugifyString = str => removeUnwantedCharacters(removeDiacritics(str.toLowerCase()))
 const slugify = str => str ? slugifyString(str) : undefined
 
+const weakmap = new WeakMap
+
 class MyTvButtonCard extends mixin(LitElement, hassData, tvCore) {
 
 	static entityType = 'media_player'
 
 	static styles = css`
 		ha-card {
-			/*
-			height: 80px;
-			font-size: 12px;
-			*/
-			height: 48px;
+			height: 56px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			text-align: center;
+		}
+
+		:host {
+			--color-rgb: 255, 255, 255;
+		}
+
+		ha-card.selected {
+			font-weight: 500;
+			color: rgb(var(--color-rgb));
+			background-color: rgba(var(--color-rgb), 0.1);
+		}
+		ha-card:not(.selected) {
+			color: rgba(var(--color-rgb), 0.6);
 		}
 	`
 
@@ -386,66 +410,59 @@ class MyTvButtonCard extends mixin(LitElement, hassData, tvCore) {
 		this.fullNameSlug = slugify(this.fullName)
 	}
 
-	onStateUpdate() {
-		//const {media_content_type} = this.state.attributes // 'channel'
-		//const {source} = this.state.attributes // 'Live TV'
-		const {state, config} = this
-		const {media_player} = state
-
-		//this.sources = this.state.media_player?.attributes?.source_list ?? []
-		//this.sourceSlugs = this.sources.map(slugifyString)
-
-		this.source = media_player?.attributes?.source
-		this.sourceSlug = slugify(this.source)
-
-		this.channel = media_player?.attributes?.media_title
-		this.channelSlug = slugify(this.channel)
-
-		if (this.channelSlug) {
-			this.selected = this.fullNameSlug
-				? this.channelSlug.startsWith(this.fullNameSlug)
-				: this.channelSlug.startsWith(this.nameSlug)
-		} else if (this.sourceSlug) {
-			this.selected = this.fullNameSlug
-				? this.sourceSlug.startsWith(this.fullNameSlug)
-				: this.sourceSlug.startsWith(this.nameSlug)
+	getProcessedState() {
+		const {media_player} = this.state
+		if (weakmap.get(media_player)) {
+			return weakmap.get(media_player)
 		} else {
-			this.selected = false
+			const sourceNames = this.state.media_player?.attributes?.source_list ?? []
+			const sourceSlugs = sourceNames.map(slugifyString)
+			const sourceName = media_player?.attributes?.source
+			const sourceSlug = slugify(sourceName)
+			const channelName = media_player?.attributes?.media_title
+			const channelSlug = slugify(channelName)
+			const processed = {sourceNames, sourceSlugs, sourceName, sourceSlug, channelName, channelSlug}
+			weakmap.set(media_player, processed)
+			return processed
 		}
 	}
 
-	get style() {
-		return {
-			color: this.selected ? 'cyan' : ''
-		}
+	onStateUpdate() {
+		//const {sourceNames, sourceSlugs, source, sourceSlug, channel, channelSlug} = this.getProcessedState()
+		const sourceNames = this.state.media_player?.attributes?.source_list ?? []
+		const {sourceSlugs, sourceSlug, channelSlug} = this.getProcessedState()
+
+		this.targetSourceSlug = sourceSlugs.find(this.matchesName)
+		this.targetSourceName = sourceNames[sourceSlugs.indexOf(this.targetSourceSlug)]
+		this.isSource = !!this.targetSourceSlug
+		this.isChannel = !this.isSource
+
+		this.selected = (this.isChannel && channelSlug && this.matchesName(channelSlug))
+					 || (this.isSource && sourceSlug && this.matchesName(sourceSlug))
 	}
 
-	onClick = () => this.setChannel(this.config.channel ?? this.config.name)
+	matchesName = slug => {
+		return this.fullNameSlug
+			? slug.startsWith(this.fullNameSlug)
+			: slug.startsWith(this.nameSlug)
+	}
+
+	onClick = () => {
+		if (this.isChannel)
+			this.setChannel(this.config.name)
+		else if (this.isSource)
+			this.setSource(this.targetSourceName ?? this.config.name)
+	}
 
 	render() {
-		const {displayName} = this
 		return html`
 			<ha-card
 			@click=${this.onClick}
-			style=${styleMap(this.style)}
+			class="${this.selected ? 'selected' : ''}"
 			>
-				${displayName}
+				${this.displayName}
 			</ha-card>
 		`
-		/*
-				name: ${this.name}
-				|
-				nameSlug: ${this.nameSlug}
-				<br>
-				fullName: ${this.fullName}
-				|
-				fullNameSlug: ${this.fullNameSlug}
-				<br>
-				channel: ${this.channel}
-				|
-				channelSlug: ${this.channelSlug}
-				<div style="font-size: 9px">${this.sourceSlugs?.join(', ')}</div>
-		*/
 	}
 
 }

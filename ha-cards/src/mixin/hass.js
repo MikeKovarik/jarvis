@@ -74,7 +74,7 @@ export const hassData = Base => class extends Base {
 
 	callService(domain, name, data = {}) {
 		const {entity_id} = this
-        this._hass.callService(domain, name, {entity_id, ...data})
+        return this._hass.callService(domain, name, {entity_id, ...data})
 	}
 
 }

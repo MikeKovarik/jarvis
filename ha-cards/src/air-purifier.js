@@ -1,9 +1,9 @@
 import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOffControls} from './mixin/mixin.js'
+import {mixin, hassData, onOff} from './mixin/mixin.js'
 import * as styles from './util/styles.js'
 
 
-class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
+class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 
 	static entityType = 'fan'
 
@@ -13,10 +13,6 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOffControls) {
 	}
 
 	getCardSize = () => 1
-
-	get on() {
-		return this.state.fan?.state === 'on'
-	}
 
 	get mode() {
 		return this.state.fan?.attributes?.preset_mode

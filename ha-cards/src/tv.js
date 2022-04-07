@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit'
 import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin, hassData} from './mixin/mixin'
+import {mixin, hassData, onOff} from './mixin/mixin.js'
+import {timeout} from './util/util.js'
 
 
 function sanitizeNums(string) {
@@ -70,29 +71,22 @@ const tvCore = Base => class extends Base {
 
 	static entityType = 'media_player'
 
-	pressButton = button => {
-		this.callService('webostv', 'button', {button})
-	}
+	pressButton = button => this.callService('webostv', 'button', {button})
 
-	callCommand = async (command, payload) => {
-		this.callService('webostv', 'command', {command, payload})
-	}
+	callCommand = (command, payload) => this.callService('webostv', 'command', {command, payload})
 
 	setChannel = async media_content_id => {
 		const media_content_type = 'channel'
-		this.callService('media_player', 'play_media', {media_content_id, media_content_type})
+		return this.callService('media_player', 'play_media', {media_content_id, media_content_type})
 	}
 
-    setSource(source) {
-        this.callService('media_player', 'select_source', {source})
-    }
+    setSource = source => this.callService('media_player', 'select_source', {source})
 
-    turnOn() {
+    turnOn = () => {
 		const {mac} = this.config
-        if (this.config.mac)
-            this._hass.callService('wake_on_lan', 'send_magic_packet', {mac})
-        else
-            this.callService('media_player', 'turn_on'); 
+        return this.config.mac
+            ? this._hass.callService('wake_on_lan', 'send_magic_packet', {mac})
+			: this.callService('media_player', 'turn_on')
     }
 
 	turnOff = () => this.callService('media_player', 'turn_off')
@@ -104,11 +98,11 @@ const mediaPlayerMute = Base => class extends Base {
 		return this.state.media_player?.attributes?.is_volume_muted ?? false
     }
 
-    mute = () => this.#setMute(true)
+    mute = () => this.#callMuteService(true)
 
-	unmute = () => this.#setMute(false)
+	unmute = () => this.#callMuteService(false)
 
-	#setMute(is_volume_muted) {
+	#callMuteService(is_volume_muted) {
         this.callService('media_player', 'volume_mute', {is_volume_muted})
 	}
 
@@ -143,12 +137,12 @@ const resizeMixin = Base => class extends Base {
 
 }
 
-class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, mediaPlayerMute) {
+class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVolume, mediaPlayerMute) {
 
 	getCardSize = () => 6
 
-	listenToGlobalKeyboardEvents = true
-	//listenToGlobalKeyboardEvents = false
+	//listenToGlobalKeyboardEvents = true
+	listenToGlobalKeyboardEvents = false
 
 	static excludedInputs = ['apps', 'home dashboard', 'spotify', 'twitch']
 
@@ -164,10 +158,6 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 		super.disconnectedCallback()
 			console.log('unsubbing')
 		window.removeEventListener('keyup', this.onKeyUp)
-	}
-
-	get on() {
-		return this.state.media_player?.state === 'on'
 	}
 
 	onKeyUp = e => {
@@ -286,8 +276,8 @@ class MyTvCard extends mixin(LitElement, hassData, tvCore, mediaPlayerVolume, me
 					<awesome-button @click=${() => this.pressButton('RED')} icon="mdi:circle" class="color-red"></awesome-button>
 
 					${this.on
-						? html`<awesome-button @click=${() => this.turnOff()} icon="mdi:power" class="color-red"></awesome-button>`
-						: html`<awesome-button @click=${() => this.turnOn()} icon="mdi:power" class="color-red"></awesome-button>`}
+						? html`<awesome-button @click=${this.turnOff} icon="mdi:power" class="color-red"></awesome-button>`
+						: html`<awesome-button @click=${this.turnOn} icon="mdi:power" class="color-red"></awesome-button>`}
 
 					<awesome-button icon="mdi:play-pause" @click="${this.playPause}"></awesome-button>
 
@@ -372,7 +362,7 @@ const slugify = str => str ? slugifyString(str) : undefined
 
 const weakmap = new WeakMap
 
-class MyTvButtonCard extends mixin(LitElement, hassData, tvCore) {
+class MyTvButtonCard extends mixin(LitElement, hassData, onOff, tvCore) {
 
 	static entityType = 'media_player'
 
@@ -447,11 +437,15 @@ class MyTvButtonCard extends mixin(LitElement, hassData, tvCore) {
 			: slug.startsWith(this.nameSlug)
 	}
 
-	onClick = () => {
+	onClick = async () => {
+		if (!this.on) {
+			await this.turnOn()
+			await timeout(1000) // just to be sure. TODO: test out if/how long is necessary.
+		}
 		if (this.isChannel)
-			this.setChannel(this.config.name)
+			return this.setChannel(this.config.name)
 		else if (this.isSource)
-			this.setSource(this.targetSourceName ?? this.config.name)
+			return this.setSource(this.targetSourceName ?? this.config.name)
 	}
 
 	render() {

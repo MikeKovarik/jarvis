@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit'
 import {mixin, hassData, onOff} from '../mixin/mixin.js'
-import {tempToRgb} from './../util/temp-to-rgb'
+import {tempToRgb} from '../util/temp-to-rgb'
 import * as styles from '../util/styles.js'
 
 
@@ -21,7 +21,7 @@ cards:
     entity: switch.lamp_reading
 */
 
-class LightCard extends mixin(LitElement, hassData, onOff) {
+class Light2Card extends mixin(LitElement, hassData, onOff) {
 
 	static entityType = ['light', 'switch']
 
@@ -31,13 +31,44 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 		transition: {type: Number},
 	}
 
+	get card() {
+		return this._card ?? (this._card = this.renderRoot.querySelector('ha-card'))
+	}
+
 	onStateUpdate() {
+        console.log('~ onStateUpdate')
 		this.hasBrightness = this.entityType === 'light'
 		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
 		/*
 		const {r, g, b} = tempToRgb(this.kelvin)
 		this.style.setProperty('--color-rgb', [r, g, b].join(', '))
 		*/
+		const {attributes} = this.entity
+        //console.log('~ attributes', attributes)
+		//console.log('~ attributes.color_mode', attributes.color_mode)
+		console.log('rgb_color', attributes.rgb_color)
+		console.log('hs_color', attributes.hs_color)
+		if (attributes.color_mode === 'xy') {
+			const rgbString = attributes.rgb_color.join(',')
+			const [hue, saturation] = attributes.hs_color
+			// TODO:find a way to move this logic to :host. for now it's not user-friendly
+			setTimeout(() => {
+    	        console.log('~ this.card', this.card)
+				//this.card?.style.setProperty('--color-fg', `rgb(${rgbString})`)
+				this.style.setProperty('--color-fg', `hsl(${hue}, ${saturation * 0.9}%, 70%)`)
+			})
+			this.style.setProperty('--slider-bg-color-rgb', rgbString)
+			this.style.setProperty('--slider-status-color-rgb', rgbString)
+			//console.log('~ saturation', saturation)
+            //console.log('~ (saturation * 0.001)', (saturation * 0.001))
+			const fraction = (saturation * 0.001)
+			const opacity1 = 0.16 - fraction
+			const opacity2 = 0.2 - fraction
+			/*
+			this.style.setProperty('--slider-bg-color-opacity', opacity1)
+			this.style.setProperty('--slider-status-color-opacity', opacity2)
+			*/
+		}
 	}
 
 	get error() {
@@ -52,6 +83,7 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			return 'Offline'
 	}
 
+	// OFFLINE: this.entity.attributes.linkquality === null
 	get on() {
 		return this.transitionOverrideState?.on
 			?? this.entity?.state === 'on'
@@ -80,9 +112,7 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 		this.brightness = detail
 	}
 
-	onToggle = () => {
-		this.toggleOnOff()
-	}
+	onToggle = () => this.toggleOnOff()
 
 	// State changes a couple of times during transition. Here we store desired target value
 	// to be shown during transition. This prevents the slider to chaoticaly jump between values.
@@ -189,15 +219,22 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			: formatWattage(this.state.power?.state)
 	}
 
+	//this.entity.supported_color_modes = ['color_temp', 'xy']
+
 	render() {
 		const {entity, config, state} = this
+        //console.log('~ state', JSON.stringify(state))
 
 		const safeValue = this.hasBrightness
 			? this.on ? this.brightness : 0
 			: this.on ? 1 : 0
 
+		const className = entity.attributes.color_mode === 'xy'
+			? 'color'
+			: this.entityType
+
 		return html`
-			<ha-card class="${this.entityType} ${this.on ? 'on' : 'off'}">
+			<ha-card class="${className} ${this.on ? 'on' : 'off'}">
 				<awesome-slider
 				value="${safeValue}"
 				min="0"
@@ -216,6 +253,19 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 							${this.errorMessage ?? entity?.state}
 							${this.titleValue}
 						</awesome-card-title>
+						<!--
+						color_mode: ${JSON.stringify(entity.attributes.color_mode)}
+						<br>
+						color_temp: ${JSON.stringify(entity.attributes.color_temp)}
+						<br>
+						color: ${JSON.stringify(entity.attributes.color)}
+						<br>
+						rgb_color: ${JSON.stringify(entity.attributes.rgb_color)}
+						<br>
+						hs_color: ${JSON.stringify(entity.attributes.hs_color)}
+						<br>
+						xy_color: ${JSON.stringify(entity.attributes.xy_color)}
+						-->
 					</div>
 					${this.error && html`
 						<div slot="end">
@@ -232,4 +282,4 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
 const formatWattage = watts => watts !== undefined ? `${watts} W` : ''
 
-customElements.define('light-card', LightCard)
+customElements.define('light2-card', Light2Card)

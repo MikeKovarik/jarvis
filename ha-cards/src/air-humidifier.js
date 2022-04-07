@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOffControls} from './mixin/mixin.js'
+import {mixin, hassData, onOff} from './mixin/mixin.js'
 import * as styles from './util/styles.js'
 
 
@@ -50,7 +50,7 @@ class EnsureValue {
 
 }
 
-class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
+class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 
 	static entityType = 'humidifier'
 
@@ -63,10 +63,6 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOffControls) {
 
 	get offline() {
 		return this.state.humidifier?.state === 'unavailable'
-	}
-
-	get on() {
-		return this.state.humidifier?.state === 'on'
 	}
 
 	get mode() {

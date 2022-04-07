@@ -1,4 +1,4 @@
-export const onOffControls = Base => class extends Base {
+export const onOff = Base => class extends Base {
 
 	// boolean on/off toggle
 	toggle(state) {

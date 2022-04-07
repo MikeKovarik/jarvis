@@ -55,6 +55,10 @@ export const sliderCard2 = css`
 		--color-fg-opacity: 1;
 	}
 	
+	/*
+	:host { TODO:find a way to move this logic to :host.
+	for now it's not user-friendly
+	*/
 	ha-card {
 		--color-fg: rgb(var(--color-fg-rgb), var(--color-fg-opacity));
 		background-color: transparent;

@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'lit'
-import {mixin} from './mixin/mixin.js'
+import {mixin} from '../mixin/mixin.js'
 
 
 class AwesomeButton extends mixin(LitElement) {

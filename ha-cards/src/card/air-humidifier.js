@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOff} from './mixin/mixin.js'
-import * as styles from './util/styles.js'
+import {mixin, hassData, onOff} from '../mixin/mixin.js'
+import * as styles from '../util/styles.js'
 
 
 class EnsureValue {

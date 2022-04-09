@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit'
 import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin} from './mixin/mixin.js'
+import {mixin} from '../mixin/mixin.js'
 
 
 class AwesomeCardTitle extends mixin(LitElement) {

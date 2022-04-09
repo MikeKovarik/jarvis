@@ -2,7 +2,17 @@ import {LitElement, html, css} from 'lit'
 import {mixin, hassData, onOff} from '../mixin/mixin.js'
 import {tempToRgb} from '../util/temp-to-rgb'
 import * as styles from '../util/styles.js'
+import {hexToRgb} from 'iridescent'
 
+
+const isHex = string => {
+	if (typeof hex !== 'string')
+		return false
+	if (string.startsWith('#'))
+		string = string.slice(1)
+	return (string.length === 3 || string.length === 6)
+		&& !Number.isNaN(Number('0x' + string))
+}
 
 /*
 type: grid
@@ -29,6 +39,23 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 
 	static properties = {
 		transition: {type: Number},
+	}
+
+	setConfig(newConfig) {
+		super.setConfig(newConfig)
+		let color = newConfig.color ?? newConfig.defaultColor
+		if (color) {
+			color = color.trim()
+			if (isHex(color)) {
+				this.defaultColorRgb = hexToRgb(color)
+			} else {
+				// not yet implemented
+			}
+		}
+		// rgb(255, 255, 255)
+		// hsl(0, 0, 0) a procenta
+		// #FF00FF
+		// TODO: default color
 	}
 
 	get card() {
@@ -121,8 +148,9 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 
 	turnOn = (data = {}) => {
 		if (this.entityType === 'light') {
-			const {transition} = this
-			this.callService('light', 'turn_on', {transition, ...data})
+			const {transition, defaultColorRgb} = this
+			const rgb_color = defaultColorRgb ? `[${defaultColorRgb.join(',')}]` : undefined
+			this.callService('light', 'turn_on', {transition, rgb_color, ...data})
 			this.transitionOverrideState = {...data, on: true}
 			clearTimeout(this.overrideValueTimeout)
 			this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)

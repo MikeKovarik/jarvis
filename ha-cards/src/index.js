@@ -1,12 +1,13 @@
 // components
-export * from './slider.js'
-export * from './grid.js'
-export * from './title.js'
+export * from './components/slider.js'
+export * from './components/title.js'
+export * from './components/colorwheel.js'
+export * from './components/colorpicker.js'
+export * from './components/button.js'
 
 // cards
-export * from './button.js'
-export * from './tv.js'
-export * from './air-humidifier.js'
-export * from './air-purifier.js'
+export * from './card/tv.js'
+export * from './card/air-humidifier.js'
+export * from './card/air-purifier.js'
 export * from './card/light.js'
 export * from './card/light2.js'

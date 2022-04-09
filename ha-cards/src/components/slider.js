@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit'
-import {mixin, eventEmitter} from './mixin/mixin.js'
-import {clamp} from './util/util.js'
+import {mixin, eventEmitter} from '../mixin/mixin.js'
+import {clamp} from '../util/util.js'
 
 
 const sliderCore = Base => class extends Base {
@@ -108,12 +108,10 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			align-items: inherit;
 			justify-content: space-between;
 		}
-			#value {
-				pointer-events: none;
-			}
-
+		#value,
 		slot {
 			pointer-events: none;
+			user-select: none;
 		}
 	`
 

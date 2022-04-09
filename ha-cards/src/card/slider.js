@@ -1,7 +1,5 @@
 import {LitElement, html, css} from 'lit'
-import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin, eventEmitter} from './mixin/mixin.js'
-import {clamp} from './util/util.js'
+import {mixin, eventEmitter} from '../mixin/mixin.js'
 
 
 class AwesomeSliderCard extends mixin(LitElement, sliderCore) {

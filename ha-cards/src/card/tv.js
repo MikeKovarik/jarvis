@@ -1,7 +1,6 @@
 import {LitElement, html, css} from 'lit'
-import {styleMap} from 'lit-html/directives/style-map.js'
-import {mixin, hassData, onOff} from './mixin/mixin.js'
-import {timeout} from './util/util.js'
+import {mixin, hassData, onOff} from '../mixin/mixin.js'
+import {timeout} from '../util/util.js'
 
 
 function sanitizeNums(string) {

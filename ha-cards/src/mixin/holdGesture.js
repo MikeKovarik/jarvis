@@ -7,12 +7,12 @@ import {tapHoldThreshold, tapDragThreshold} from '../util/const.js'
 export const holdGesture = Base => class extends Base {
 
 	#timeout = undefined
-	#gestureTriggered = false
+	#gestureActive = false
 	#initEvent = undefined
 	#lastEvent = undefined
 
-	#pointerUpEventFired = undefined
-	#contextMenuEventFired = undefined
+	#pointerUpEventFired = false
+	#contextMenuEventFired = false
 
 	connectedCallback() {
 		this.addEventListener('pointerdown', this.#onPointerDown)
@@ -39,7 +39,7 @@ export const holdGesture = Base => class extends Base {
 	}
 
 	#onPointerDown = e => {
-		this.#gestureTriggered = false
+		this.#gestureActive = false
 		clearTimeout(this.#timeout)
 		this.#addAditionalEvents()
 		this.#timeout = setTimeout(this.#onTimeout, tapHoldThreshold)
@@ -48,33 +48,32 @@ export const holdGesture = Base => class extends Base {
 
 	#onPointerMove = e => {
 		this.#lastEvent = e
-		if (this.#gestureTriggered) e.preventDefault()
+		if (this.#gestureActive) e.preventDefault()
 	}
 
 	#onTimeout = () => {
 		if (isWithinThreshold(this.#initEvent, this.#lastEvent, tapDragThreshold)) {
 			const {x, y} = this.#lastEvent
 			this.emit('hold', {x, y})
-			this.#gestureTriggered = true
+			this.#gestureActive = true
 		}
 		this.#clearTimeout()
 	}
 
 	#onContextMenu = e => {
 		this.#contextMenuEventFired = true
-		if (this.#gestureTriggered) e.preventDefault()
-		this.#reset()
+		if (this.#gestureActive) e.preventDefault()
 		this.#tryReset()
 	}
 
 	#onPointerUp = e => {
 		this.#pointerUpEventFired = true
-		if (this.#gestureTriggered) {
+		if (this.#gestureActive) {
 			e.preventDefault()
 			this.emit('hold-end')
 		}
 		this.#clearTimeout()
-		// Do not reset #gestureTriggered here immediately.
+		// Do not reset #gestureActive here immediately.
 		this.#tryReset()
 	}
 
@@ -89,7 +88,9 @@ export const holdGesture = Base => class extends Base {
 	}
 
 	#reset = e => {
-		this.#gestureTriggered = false
+		this.#gestureActive = false
+		this.#pointerUpEventFired = false
+		this.#contextMenuEventFired = false
 		this.#removeAditionalEvents()
 	}
 

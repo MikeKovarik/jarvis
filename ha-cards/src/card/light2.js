@@ -6,10 +6,8 @@ import {hexToRgb} from 'iridescent'
 
 
 const isHex = string => {
-	if (typeof hex !== 'string')
-		return false
-	if (string.startsWith('#'))
-		string = string.slice(1)
+	if (typeof string !== 'string') return false
+	if (string.startsWith('#')) string = string.slice(1)
 	return (string.length === 3 || string.length === 6)
 		&& !Number.isNaN(Number('0x' + string))
 }
@@ -43,11 +41,16 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 
 	setConfig(newConfig) {
 		super.setConfig(newConfig)
+        //console.log('~ newConfig', newConfig)
 		let color = newConfig.color ?? newConfig.defaultColor
+        console.log('~ color', color)
 		if (color) {
 			color = color.trim()
+            console.log('~ color', color)
 			if (isHex(color)) {
-				this.defaultColorRgb = hexToRgb(color)
+				const {r, g, b} = hexToRgb(color)
+				this.defaultColorRgb = [r, g, b]
+                console.log('~ this.defaultColorRgb', this.defaultColorRgb)
 			} else {
 				// not yet implemented
 			}
@@ -63,8 +66,8 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	}
 
 	onStateUpdate() {
-        console.log('~ onStateUpdate')
-        console.log('~ this.entity', this.entity)
+        //console.log('onStateUpdate', this.entity)
+        console.log('onStateUpdate')
 		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
 		this.hasBrightness = this.entityType === 'light' // TODO
 		this.hasColor = this.entity.attributes.supported_color_modes.includes('xy')
@@ -76,17 +79,14 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		const {attributes} = this.entity
         //console.log('~ attributes', attributes)
 		//console.log('~ attributes.color_mode', attributes.color_mode)
-		console.log('rgb_color', attributes.rgb_color)
-		console.log('hs_color', attributes.hs_color)
+		//console.log('rgb_color', attributes.rgb_color)
+		//console.log('hs_color', attributes.hs_color)
 		if (attributes.color_mode === 'xy') {
 			const rgbString = attributes.rgb_color.join(',')
 			const [hue, saturation] = attributes.hs_color
 			// TODO:find a way to move this logic to :host. for now it's not user-friendly
-			setTimeout(() => {
-    	        console.log('~ this.card', this.card)
 				//this.card?.style.setProperty('--color-fg', `rgb(${rgbString})`)
-				this.style.setProperty('--color-fg', `hsl(${hue}, ${saturation * 0.9}%, 70%)`)
-			})
+			this.style.setProperty('--color-fg', `hsl(${hue}, ${saturation * 0.9}%, 70%)`)
 			this.style.setProperty('--slider-bg-color-rgb', rgbString)
 			this.style.setProperty('--slider-status-color-rgb', rgbString)
 		}
@@ -137,21 +137,33 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	isHolding = false
 
 	onHold = ({x, y}) => {
+    	console.log('--- HOLD')
 		this.isHolding = true
 		const bbox = this.getBoundingClientRect()
 		this.style.setProperty('--colorpicker-x', (x - bbox.x) + 'px')
 		this.style.setProperty('--colorpicker-y', (y - bbox.y) + 'px')
 		this.colorPicker = this.renderRoot.querySelector('slick-colorpicker')
 		this.colorPicker.style.display = 'block'
-		const fakeEvent = {x, y, preventDefault: noop}
-		this.colorPicker.onPointerDown(fakeEvent)
+		this.colorPicker.onPointerDown({x, y, preventDefault: noop})
+		this.colorPicker.on('hsl', this.onColorPicked)
 	}
 
 	onHoldEnd = () => {
 		this.isHolding = false
-		console.log('onHoldEnd')
+    	console.log('--- HOLD END')
 		this.colorPicker.style.display = 'none'
+		this.colorPicker.off('hsl', this.onColorPicked)
 	}
+
+	onColorPicked = throttle(([hue, , lightness]) => {
+		const transition = 0
+		const h = Math.round(hue)
+		const s = (100 - lightness) * 2
+		const currentHs = this.entity.attributes.hs_color
+		if (currentHs && currentHs[0] === h && currentHs[1] === s) return
+		const hs_color = [h, s]
+		this.callService('light', 'turn_on', {transition, hs_color})
+	}, 100)
 
 	// ------------------------------
 
@@ -178,7 +190,9 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	turnOn = (data = {}) => {
 		if (this.entityType === 'light') {
 			const {transition, defaultColorRgb} = this
-			const rgb_color = defaultColorRgb ? `[${defaultColorRgb.join(',')}]` : undefined
+            console.log('~ defaultColorRgb', defaultColorRgb)
+			const rgb_color = defaultColorRgb
+            console.log('~ rgb_color', rgb_color)
 			this.callService('light', 'turn_on', {transition, rgb_color, ...data})
 			this.transitionOverrideState = {...data, on: true}
 			clearTimeout(this.overrideValueTimeout)
@@ -354,5 +368,19 @@ const noop = () => {}
 
 const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
 const formatWattage = watts => watts !== undefined ? `${watts} W` : ''
+
+const throttle = (callback, millis) => {
+    let timeout = undefined
+	let cachedArgs
+    return (...args) => {
+		cachedArgs = args
+		if (!timeout) {
+            timeout = setTimeout(() => {
+	            callback(...cachedArgs)
+                timeout = undefined
+            }, millis)
+        }
+    }
+}
 
 customElements.define('light2-card', Light2Card)

@@ -158,7 +158,6 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	dragBrightness = undefined
 
 	onDragMove = ({detail}) => {
-	    console.log('onDragMove', detail)
 		this.dragBrightness = detail
 		this.requestUpdate('dragBrightness')
 	}

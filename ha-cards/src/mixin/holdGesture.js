@@ -1,5 +1,8 @@
 import {tapHoldThreshold, tapDragThreshold} from '../util/const.js'
 
+// WARNING: Different behavior between desktop (with touch) & phones
+// desktop: (even with touch, using hold) fires contextmenu event after pointerup
+// phone:   fires contextmenu after about 500-700, while still hodlding (ie. before pointerup)
 
 export const holdGesture = Base => class extends Base {
 
@@ -7,6 +10,9 @@ export const holdGesture = Base => class extends Base {
 	#gestureTriggered = false
 	#initEvent = undefined
 	#lastEvent = undefined
+
+	#pointerUpEventFired = undefined
+	#contextMenuEventFired = undefined
 
 	connectedCallback() {
 		this.addEventListener('pointerdown', this.#onPointerDown)
@@ -26,7 +32,6 @@ export const holdGesture = Base => class extends Base {
 	}
 
 	#removeAditionalEvents = () => {
-        console.log('~ removeAditionalEvents()')
 		document.removeEventListener('contextmenu',   this.#onContextMenu, {capture: true})
 		document.removeEventListener('pointermove',   this.#onPointerMove, {capture: true})
 		document.removeEventListener('pointerup',     this.#onPointerUp, {capture: true})
@@ -52,31 +57,35 @@ export const holdGesture = Base => class extends Base {
 			this.emit('hold', {x, y})
 			this.#gestureTriggered = true
 		}
-		this.#clear()
+		this.#clearTimeout()
 	}
 
-	// context menu is always triggered after pointerup, no matter the .preventDefault()
 	#onContextMenu = e => {
-    	console.log('~ #onContextMenu', this.#gestureTriggered)
+		this.#contextMenuEventFired = true
 		if (this.#gestureTriggered) e.preventDefault()
 		this.#reset()
+		this.#tryReset()
 	}
 
 	#onPointerUp = e => {
-	    //console.log('~ #onPointerUp', e.type, e)
+		this.#pointerUpEventFired = true
 		if (this.#gestureTriggered) {
 			e.preventDefault()
 			this.emit('hold-end')
 		}
-		this.#clear()
+		this.#clearTimeout()
 		// Do not reset #gestureTriggered here immediately.
-		// Because context menu is always triggered after pointerup, no matter the .preventDefault()
-		setTimeout(this.#reset, 200)
+		this.#tryReset()
 	}
 
-	#clear = e => {
+	#clearTimeout = e => {
 		clearTimeout(this.#timeout)
 		this.#timeout = undefined
+	}
+
+	#tryReset = e => {
+		if (this.#contextMenuEventFired && this.#pointerUpEventFired)
+			this.#reset()
 	}
 
 	#reset = e => {

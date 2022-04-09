@@ -30,13 +30,12 @@ class SlickColorPicker extends LitElement {
 			y: this.bbox.y + this.halfSize
 		}
 		this.setPointerSize(e)
-		this.onDrag(e)
+		this.onPointerMove(e)
 		this.addDragEvents()
 	}
 
-	onDrag = e => {
+	onPointerMove = e => {
 		e.preventDefault()
-    	console.log('picker onDrag')
 		const x = e.x - this.center.x
 		const y = e.y - this.center.y
 		const dist = Math.min(this.halfSize, calculatePythagorean(x, y))
@@ -47,7 +46,7 @@ class SlickColorPicker extends LitElement {
 		this.style.setProperty('--colorpicker-lightness', lightness + '%')
 	}
 
-	onDragEnd = e => {
+	onPointerUp = e => {
 		this.removeDragEvents()
 		this.resetPointerSize()
 	}
@@ -61,13 +60,13 @@ class SlickColorPicker extends LitElement {
 	}
 
 	addDragEvents = () => {
-		document.addEventListener('pointermove', this.onDrag)
-		document.addEventListener('pointerup', this.onDragEnd)
+		document.addEventListener('pointermove', this.onPointerMove)
+		document.addEventListener('pointerup', this.onPointerUp)
 	}
 
 	removeDragEvents = () => {
-		document.removeEventListener('pointermove', this.onDrag)
-		document.removeEventListener('pointerup', this.onDragEnd)
+		document.removeEventListener('pointermove', this.onPointerMove)
+		document.removeEventListener('pointerup', this.onPointerUp)
 	}
 
 	static styles = css`
@@ -134,7 +133,7 @@ class SlickColorPicker extends LitElement {
 		return html`
 			<slick-colorwheel
 			@pointerdown=${this.onPointerDown}
-			@pointercancel=${this.onDragEnd}
+			@pointercancel=${this.onPointerUp}
 			@pointerover=${this.setPointerSize}
 			@pointerleave=${this.resetPointerSize}
 			@pointerout=${this.resetPointerSize}

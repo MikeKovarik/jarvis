@@ -1,11 +1,11 @@
 export const onOff = Base => class extends Base {
 
-	get on() {
+	get isOn() {
 		return this.entity?.state === 'on'
 	}
 
-	get off() {
-		return !this.on
+	get isOff() {
+		return !this.isOn
 	}
 
 /*
@@ -25,7 +25,7 @@ export const onOff = Base => class extends Base {
 	turnOff = () => this.callService('homeassistant', 'turn_off')
 
 	toggleOnOff = () => {
-		return this.on
+		return this.isOn
 			? this.turnOff()
 			: this.turnOn()
 	}

@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOff} from '../mixin/mixin.js'
+import {slickElement, hassData, onOff, eventEmitter, holdGesture} from '../mixin/mixin.js'
 import {tempToRgb} from '../util/temp-to-rgb'
 import * as styles from '../util/styles.js'
 import {hexToRgb} from 'iridescent'
@@ -31,7 +31,7 @@ cards:
     entity: switch.lamp_reading
 */
 
-class Light2Card extends mixin(LitElement, hassData, onOff) {
+class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture) {
 
 	static entityType = ['light', 'switch']
 
@@ -98,6 +98,16 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 		}
 	}
 
+	connectedCallback() {
+		this.on('hold', this.onHold)
+		super.connectedCallback()
+	}
+
+	disconnectedCallback() {
+		this.off('hold', this.onHold)
+		super.disconnectedCallback()
+	}
+
 	get error() {
 		//return !this.entity
 		return !!this.errorMessage
@@ -111,8 +121,8 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 	}
 
 	// OFFLINE: this.entity.attributes.linkquality === null
-	get on() {
-		return this.transitionOverrideState?.on
+	get isOn() {
+		return this.transitionOverrideState?.isOn
 			?? this.entity?.state === 'on'
 	}
 
@@ -128,7 +138,12 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 
 	dragBrightness = undefined
 
+	onHold = () => {
+		console.log('onHold')
+	}
+
 	onDragMove = ({detail}) => {
+	    console.log('onDragMove', detail)
 		this.dragBrightness = detail
 		this.requestUpdate('dragBrightness')
 	}
@@ -241,7 +256,7 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
 	}
 
 	get titleValue() {
-		if (!this.on) return
+		if (!this.isOn) return
 		return this.hasBrightness && this.dragBrightness !== undefined
 			? formatBrightness(this.brightness)
 			: formatWattage(this.state.power?.state)
@@ -254,15 +269,15 @@ class Light2Card extends mixin(LitElement, hassData, onOff) {
         //console.log('~ state', JSON.stringify(state))
 
 		const safeValue = this.hasBrightness
-			? this.on ? this.brightness : 0
-			: this.on ? 1 : 0
+			? this.isOn ? this.brightness : 0
+			: this.isOn ? 1 : 0
 
 		const className = entity.attributes.color_mode === 'xy'
 			? 'color'
 			: this.entityType
 
 		return html`
-			<ha-card class="${className} ${this.on ? 'on' : 'off'}">
+			<ha-card class="${className} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${safeValue}"
 				min="0"

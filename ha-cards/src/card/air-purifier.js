@@ -56,7 +56,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 
 	get level() {
 		const value = Number(this.state.pm2_5?.state)
-		if (!this.on || value === null || value === undefined)
+		if (!this.isOn || value === null || value === undefined)
 			return 0
 		else if (value >= 200)
 			return 3
@@ -96,7 +96,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 		const {state, mode} = this
 
 		return html`
-			<ha-card class="${this.colorClass} ${this.on ? 'on' : 'off'}">
+			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${this.speed}"
 				min="${state.favorite_motor_speed?.attributes?.min}"
@@ -112,7 +112,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 						icon="mdi:air-filter"
 						title="${state.fan?.attributes?.friendly_name}"
 						>
-							${!this.on ? 'Off' : html`
+							${!this.isOn ? 'Off' : html`
 								${this.config.showModeLabel ? html`
 									<strong class="value-label">${mode === 'Favorite' ? 'Custom' : mode}</strong>
 								` : ''}

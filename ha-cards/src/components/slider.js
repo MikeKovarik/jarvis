@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit'
 import {mixin, eventEmitter} from '../mixin/mixin.js'
 import {clamp} from '../util/util.js'
+import {tapHoldThreshold, tapDragThreshold} from '../util/const.js'
 
 
 const sliderCore = Base => class extends Base {
@@ -33,8 +34,6 @@ const sliderCore = Base => class extends Base {
 	}
 
 }
-
-const clickThreshold = 300
 
 class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
@@ -161,7 +160,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	onPointerUp = e => {
 		const timeDiff = Date.now() - this.pointerDownTime
-		if (!this.isDragging && timeDiff < clickThreshold) {
+		if (!this.isDragging && timeDiff < tapHoldThreshold) {
 			this.emit('toggle')
 		} else if (this.isDragging) {
 			this.onPointerMove(e, true)
@@ -180,11 +179,12 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 	}
 
 	onPointerMove = (e, force = false) => {
+		if (e.defaultPrevented) return
 		let diffPx = !this.vertical
 			? e.x - this.initX
 			: e.y - this.initY
 		if (this.dragValidating && !force) {
-			if (Math.abs(diffPx) < 15) return
+			if (Math.abs(diffPx) < tapDragThreshold) return
 			this.isDragging = true
 			this.dragValidating = false
 			this.emit('drag-start')

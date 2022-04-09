@@ -133,7 +133,7 @@ class MyTvCard extends AwesomeToggleCard {
 		connection.subscribeMessage(x => console.log('trigger', x), {type: "subscribe_trigger", trigger: {entity_id}})
 	}
 
-	get on() {
+	get isOn() {
 		return this.state.media_player?.state === 'on'
 	}
 
@@ -208,8 +208,8 @@ class MyTvCard extends AwesomeToggleCard {
 		return html`
 			<ha-card>
 				<div>
-					status: ${this.on ? 'ON' : 'OFF'}
-					${this.on
+					status: ${this.isOn ? 'ON' : 'OFF'}
+					${this.isOn
 						? html`<button @click=${() => this.turnOff()}>
 								OFF
 						  </button>`

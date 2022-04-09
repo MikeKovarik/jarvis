@@ -274,7 +274,7 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 
 					<awesome-button @click=${() => this.pressButton('RED')} icon="mdi:circle" class="color-red"></awesome-button>
 
-					${this.on
+					${this.isOn
 						? html`<awesome-button @click=${this.turnOff} icon="mdi:power" class="color-red"></awesome-button>`
 						: html`<awesome-button @click=${this.turnOn} icon="mdi:power" class="color-red"></awesome-button>`}
 
@@ -437,7 +437,7 @@ class MyTvButtonCard extends mixin(LitElement, hassData, onOff, tvCore) {
 	}
 
 	onClick = async () => {
-		if (!this.on) {
+		if (!this.isOn) {
 			await this.turnOn()
 			await timeout(1000) // just to be sure. TODO: test out if/how long is necessary.
 		}

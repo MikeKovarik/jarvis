@@ -52,8 +52,8 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			return 'Offline'
 	}
 
-	get on() {
-		return this.transitionOverrideState?.on
+	get isOn() {
+		return this.transitionOverrideState?.isOn
 			?? this.entity?.state === 'on'
 	}
 
@@ -183,7 +183,7 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 	}
 
 	get titleValue() {
-		if (!this.on) return
+		if (!this.isOn) return
 		return this.hasBrightness && this.dragBrightness !== undefined
 			? formatBrightness(this.brightness)
 			: formatWattage(this.state.power?.state)
@@ -193,11 +193,11 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 		const {entity, config, state} = this
 
 		const safeValue = this.hasBrightness
-			? this.on ? this.brightness : 0
-			: this.on ? 1 : 0
+			? this.isOn ? this.brightness : 0
+			: this.isOn ? 1 : 0
 
 		return html`
-			<ha-card class="${this.entityType} ${this.on ? 'on' : 'off'}">
+			<ha-card class="${this.entityType} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${safeValue}"
 				min="0"

@@ -70,7 +70,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 	}
 
 	set mode(mode) {
-		if (!this.on) this.turnOn()
+		if (!this.isOn) this.turnOn()
 		this.callService('humidifier', 'set_mode', {mode})
 	}
 
@@ -95,7 +95,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 	}
 
 	set targetHumidity(humidity) {
-		if (!this.on) this.turnOn()
+		if (!this.isOn) this.turnOn()
 		if (!this.auto) this.mode = 'Humidity'
 		this.callService('humidifier', 'set_humidity', {humidity})
 		// If mode isn't set to 'Humidity', it takes up to a minute to switch to 'Humidity'.
@@ -161,7 +161,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 			return 'neutral'
 		else if (this.error)
 			return 'red'
-		else if (this.on)
+		else if (this.isOn)
 			return 'cyan'
 		else
 			return 'neutral'
@@ -189,8 +189,8 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 		/*
 			<div class="header">
 				<div>
-					status: ${this.on ? 'ON' : 'OFF'}
-					${this.on
+					status: ${this.isOn ? 'ON' : 'OFF'}
+					${this.isOn
 						? html`<button @click=${() => this.turnOff()}>OFF</button>`
 						: html`<button @click=${() => this.turnOn()}>ON</button>`}
 				</div>
@@ -207,7 +207,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 			</div>
 		*/
 		return html`
-			<ha-card class="${this.colorClass} ${this.on ? 'on' : 'off'}">
+			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${targetHumidity}"
 				min="${state.humidifier?.attributes?.min_humidity}"
@@ -223,7 +223,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 						icon="mdi:air-humidifier"
 						title="${state.humidifier?.attributes?.friendly_name}"
 						>
-							${!this.on ? 'Off' : html`
+							${!this.isOn ? 'Off' : html`
 								${this.config.showModeLabel ? html`
 									<strong class="value-label">${this.auto ? 'Auto' : this.mode}</strong>
 								` : ''}

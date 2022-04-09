@@ -13,7 +13,8 @@ const sliderCore = Base => class extends Base {
 	step = 1
 	suffix = '%'
 	hideValue = false
-	haptic = true
+	//haptic = true
+	haptic = false // TODO
 
 	get maxFromZero() {
 		return this.max - this.min

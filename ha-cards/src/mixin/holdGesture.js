@@ -9,29 +9,36 @@ export const holdGesture = Base => class extends Base {
 	#lastEvent = undefined
 
 	connectedCallback() {
-		this.addEventListener('pointerdown',   this.#onPointerDown)
-		this.addEventListener('pointermove',   this.#onPointerMove)
-		this.addEventListener('pointerup',     this.#onPointerUp)
-		this.addEventListener('pointercancel', this.#onPointerUp)
-		this.addEventListener('contextmenu',   this.#contextmenu)
+		this.addEventListener('pointerdown', this.#onPointerDown)
 		super.connectedCallback()
 	}
 
 	disconnectedCallback() {
-		this.removeEventListener('pointerdown',   this.#onPointerDown)
-		this.removeEventListener('pointermove',   this.#onPointerMove)
-		this.removeEventListener('pointerup',     this.#onPointerUp)
-		this.removeEventListener('pointercancel', this.#onPointerUp)
-		this.removeEventListener('contextmenu',   this.#contextmenu)
+		this.removeEventListener('pointerdown', this.#onPointerDown)
 		super.disconnectedCallback()
 	}
 
+	#addAditionalEvents() {
+		document.addEventListener('contextmenu',   this.#onContextMenu, {capture: true})
+		document.addEventListener('pointermove',   this.#onPointerMove, {capture: true})
+		document.addEventListener('pointerup',     this.#onPointerUp, {capture: true})
+		document.addEventListener('pointercancel', this.#onPointerUp, {capture: true})
+	}
+
+	#removeAditionalEvents = () => {
+        console.log('~ removeAditionalEvents()')
+		document.removeEventListener('contextmenu',   this.#onContextMenu, {capture: true})
+		document.removeEventListener('pointermove',   this.#onPointerMove, {capture: true})
+		document.removeEventListener('pointerup',     this.#onPointerUp, {capture: true})
+		document.removeEventListener('pointercancel', this.#onPointerUp, {capture: true})
+	}
+
 	#onPointerDown = e => {
-		clearTimeout(this.#timeout)
 		this.#gestureTriggered = false
+		clearTimeout(this.#timeout)
+		this.#addAditionalEvents()
 		this.#timeout = setTimeout(this.#onTimeout, tapHoldThreshold)
-		this.#initEvent = e
-		this.#lastEvent = e
+		this.#initEvent = this.#lastEvent = e
 	}
 
 	#onPointerMove = e => {
@@ -41,24 +48,40 @@ export const holdGesture = Base => class extends Base {
 
 	#onTimeout = () => {
 		if (isWithinThreshold(this.#initEvent, this.#lastEvent, tapDragThreshold)) {
-			this.emit('hold')
+			const {x, y} = this.#lastEvent
+			this.emit('hold', {x, y})
 			this.#gestureTriggered = true
 		}
 		this.#clear()
 	}
 
-	#contextmenu = e => {
+	// context menu is always triggered after pointerup, no matter the .preventDefault()
+	#onContextMenu = e => {
+    	console.log('~ #onContextMenu', this.#gestureTriggered)
 		if (this.#gestureTriggered) e.preventDefault()
+		this.#reset()
 	}
 
 	#onPointerUp = e => {
-		if (this.#gestureTriggered) e.preventDefault()
+	    //console.log('~ #onPointerUp', e.type, e)
+		if (this.#gestureTriggered) {
+			e.preventDefault()
+			this.emit('hold-end')
+		}
 		this.#clear()
+		// Do not reset #gestureTriggered here immediately.
+		// Because context menu is always triggered after pointerup, no matter the .preventDefault()
+		setTimeout(this.#reset, 200)
 	}
 
 	#clear = e => {
 		clearTimeout(this.#timeout)
 		this.#timeout = undefined
+	}
+
+	#reset = e => {
+		this.#gestureTriggered = false
+		this.#removeAditionalEvents()
 	}
 
 }

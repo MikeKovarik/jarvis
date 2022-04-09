@@ -64,8 +64,11 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 
 	onStateUpdate() {
         console.log('~ onStateUpdate')
-		this.hasBrightness = this.entityType === 'light'
+        console.log('~ this.entity', this.entity)
 		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
+		this.hasBrightness = this.entityType === 'light' // TODO
+		this.hasColor = this.entity.attributes.supported_color_modes.includes('xy')
+		this.hasTemp = this.entity.attributes.supported_color_modes.includes('color_temp')
 		/*
 		const {r, g, b} = tempToRgb(this.kelvin)
 		this.style.setProperty('--color-rgb', [r, g, b].join(', '))
@@ -86,25 +89,18 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			})
 			this.style.setProperty('--slider-bg-color-rgb', rgbString)
 			this.style.setProperty('--slider-status-color-rgb', rgbString)
-			//console.log('~ saturation', saturation)
-            //console.log('~ (saturation * 0.001)', (saturation * 0.001))
-			const fraction = (saturation * 0.001)
-			const opacity1 = 0.16 - fraction
-			const opacity2 = 0.2 - fraction
-			/*
-			this.style.setProperty('--slider-bg-color-opacity', opacity1)
-			this.style.setProperty('--slider-status-color-opacity', opacity2)
-			*/
 		}
 	}
 
 	connectedCallback() {
 		this.on('hold', this.onHold)
+		this.on('hold-end', this.onHoldEnd)
 		super.connectedCallback()
 	}
 
 	disconnectedCallback() {
 		this.off('hold', this.onHold)
+		this.off('hold-end', this.onHoldEnd)
 		super.disconnectedCallback()
 	}
 
@@ -136,11 +132,30 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		this.turnOn({brightness})
 	}
 
-	dragBrightness = undefined
+	// -------------------- HOLD GESTURE
 
-	onHold = () => {
-		console.log('onHold')
+	isHolding = false
+
+	onHold = ({x, y}) => {
+		this.isHolding = true
+		const bbox = this.getBoundingClientRect()
+		this.style.setProperty('--colorpicker-x', (x - bbox.x) + 'px')
+		this.style.setProperty('--colorpicker-y', (y - bbox.y) + 'px')
+		this.colorPicker = this.renderRoot.querySelector('slick-colorpicker')
+		this.colorPicker.style.display = 'block'
+		const fakeEvent = {x, y, preventDefault: noop}
+		this.colorPicker.onPointerDown(fakeEvent)
 	}
+
+	onHoldEnd = () => {
+		this.isHolding = false
+		console.log('onHoldEnd')
+		this.colorPicker.style.display = 'none'
+	}
+
+	// ------------------------------
+
+	dragBrightness = undefined
 
 	onDragMove = ({detail}) => {
 	    console.log('onDragMove', detail)
@@ -240,6 +255,19 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		awesome-card-title {
 			color: var(--color-fg);
 		}
+
+		slick-colorpicker {
+			box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+			width: 120px;
+			height: 120px;
+			z-index: 999;
+			position: absolute;
+			left: var(--colorpicker-x, 50%);
+			top:  var(--colorpicker-y, 50%);
+			transition: 120ms transform cubic-bezier(0.0, 0.0, 0.2, 1);
+			transform: translate(-50%, -50%);
+			display: none;
+		}
 	`,
 	styles.sliderCard2,
 	]
@@ -277,6 +305,7 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			: this.entityType
 
 		return html`
+			${this.hasColor && html`<slick-colorpicker></slick-colorpicker>`}
 			<ha-card class="${className} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${safeValue}"
@@ -321,6 +350,8 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	}
 
 }
+
+const noop = () => {}
 
 const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
 const formatWattage = watts => watts !== undefined ? `${watts} W` : ''

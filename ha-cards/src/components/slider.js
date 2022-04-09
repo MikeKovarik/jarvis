@@ -160,6 +160,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 	}
 
 	onPointerUp = e => {
+    	console.log('onPointerUp', e)
 		const timeDiff = Date.now() - this.pointerDownTime
 		if (!this.isDragging && timeDiff < tapHoldThreshold) {
 			this.emit('toggle')
@@ -171,7 +172,8 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		this.resetDrag()
 	}
 
-	resetDrag = () => {
+	resetDrag = e => {
+    	console.log('resetDrag', e)
 		document.removeEventListener('pointermove', this.onPointerMove)
 		document.removeEventListener('pointerup', this.onPointerUp)
 		this.dragValidating = undefined

@@ -12,7 +12,7 @@ export default {
 	output: {
 		file: 'dist/my-awesome-cards.js',
 		format: 'umd',
-		name: 'lit'
+		name: 'slick'
 	},
 	plugins: [
 		resolve(),

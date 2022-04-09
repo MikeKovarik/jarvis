@@ -43,14 +43,11 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		super.setConfig(newConfig)
         //console.log('~ newConfig', newConfig)
 		let color = newConfig.color ?? newConfig.defaultColor
-        console.log('~ color', color)
 		if (color) {
 			color = color.trim()
-            console.log('~ color', color)
 			if (isHex(color)) {
 				const {r, g, b} = hexToRgb(color)
 				this.defaultColorRgb = [r, g, b]
-                console.log('~ this.defaultColorRgb', this.defaultColorRgb)
 			} else {
 				// not yet implemented
 			}

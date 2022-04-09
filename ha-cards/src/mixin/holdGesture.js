@@ -68,8 +68,7 @@ export const holdGesture = Base => class extends Base {
 
 	#onTimeout = () => {
 		if (this.#movementX < movementThreshold && this.#movementY < movementThreshold) {
-			const {x, y} = this.#lastEvent
-			this.emit('hold', {x, y})
+			this.emit('hold', this.#lastEvent)
 			this.#gestureActive = true
 		}
 		this.#clearTimeout()
@@ -78,7 +77,7 @@ export const holdGesture = Base => class extends Base {
 	#onPointerUp = e => {
 		if (this.#gestureActive) {
 			e.preventDefault()
-			this.emit('hold-end')
+			this.emit('hold-end', e)
 		}
 		this.#clearTimeout()
 		this.#reset()
@@ -98,7 +97,3 @@ export const holdGesture = Base => class extends Base {
 	}
 
 }
-
-const isWithin = (n1, n2, threshold) => Math.abs(n1 - n2) <= threshold
-
-const isWithinThreshold = (e1, e2, threshold) => isWithin(e1.x, e2.x, threshold) && isWithin(e1.y, e2.y, threshold)

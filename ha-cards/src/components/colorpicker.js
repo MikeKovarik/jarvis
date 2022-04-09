@@ -1,23 +1,22 @@
 import {LitElement, html, css} from 'lit'
+import {slickElement, eventEmitter} from '../mixin/mixin.js'
 
 
 const calculatePythagorean = (a, b) => Math.sqrt((a ** 2) + (b ** 2))
 const calculateAngle = (a, b) => Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI
 
-class SlickColorPicker extends LitElement {
-/*
+class SlickColorPicker extends slickElement(eventEmitter) {
+
 	connectedCallback() {
 		this.addEventListener('pointerdown', this.onPointerDown)
-		this.addEventListener('pointercancel', this.removeDragEvents)
 		super.connectedCallback()
 	}
 
 	disconnectedCallback() {
 		this.removeEventListener('pointerdown', this.onPointerDown)
-		this.removeEventListener('pointercancel', this.removeDragEvents)
 		super.disconnectedCallback()
 	}
-*/
+
 	onPointerDown = e => {
 		e.preventDefault()
 		this.initX = e.x
@@ -29,6 +28,7 @@ class SlickColorPicker extends LitElement {
 			x: this.bbox.x + this.halfSize,
 			y: this.bbox.y + this.halfSize
 		}
+		this.rotate = Number(getComputedStyle(this).getPropertyValue('--colorwheel-rotate').replace('deg', '')) ?? 0
 		this.setPointerSize(e)
 		this.onPointerMove(e)
 		this.addDragEvents()
@@ -39,11 +39,14 @@ class SlickColorPicker extends LitElement {
 		const x = e.x - this.center.x
 		const y = e.y - this.center.y
 		const dist = Math.min(this.halfSize, calculatePythagorean(x, y))
-		const hue = 90 + calculateAngle(e, this.center)
+		let hue = calculateAngle(e, this.center) - this.rotate
+		if (hue < 0) hue = hue + 360
+		//const hue = 90 + calculateAngle(e, this.center)
 		const lightness = 100 - ((dist / this.halfSize) * 50)
 		this.style.setProperty('--colorpicker-dist', dist + 'px')
 		this.style.setProperty('--colorpicker-hue', hue + 'deg')
 		this.style.setProperty('--colorpicker-lightness', lightness + '%')
+		this.emit('hsl', [hue, 100, lightness])
 	}
 
 	onPointerUp = e => {
@@ -62,11 +65,13 @@ class SlickColorPicker extends LitElement {
 	addDragEvents = () => {
 		document.addEventListener('pointermove', this.onPointerMove)
 		document.addEventListener('pointerup', this.onPointerUp)
+		document.addEventListener('pointercancel', this.removeDragEvents)
 	}
 
 	removeDragEvents = () => {
 		document.removeEventListener('pointermove', this.onPointerMove)
 		document.removeEventListener('pointerup', this.onPointerUp)
+		document.removeEventListener('pointercancel', this.removeDragEvents)
 	}
 
 	static styles = css`
@@ -105,12 +110,12 @@ class SlickColorPicker extends LitElement {
 			transform-origin: center;
 			transform:
 				translate(-50%, -50%)
-				rotate(calc(var(--colorpicker-hue, 90deg) - 90deg))
+				rotate(calc(var(--colorpicker-hue, 0deg) + var(--colorwheel-rotate, 0deg)))
 				translate(var(--colorpicker-dist, 0px));
 			background-color: hsl(
-				calc(var(--colorpicker-hue, 0deg) - var(--colorwheel-rotate, 0deg)),
+				calc(var(--colorpicker-hue, 0deg)),
 				100%,
-				calc(var(--colorpicker-lightness, 50%))
+				var(--colorpicker-lightness, 50%)
 			);
 		}
 
@@ -131,13 +136,7 @@ class SlickColorPicker extends LitElement {
 
 	render() {
 		return html`
-			<slick-colorwheel
-			@pointerdown=${this.onPointerDown}
-			@pointercancel=${this.onPointerUp}
-			@pointerover=${this.setPointerSize}
-			@pointerleave=${this.resetPointerSize}
-			@pointerout=${this.resetPointerSize}
-			></slick-colorwheel>
+			<slick-colorwheel></slick-colorwheel>
 			<div id="handle" class="${this.pointerType}"></div>
 		`
 	}

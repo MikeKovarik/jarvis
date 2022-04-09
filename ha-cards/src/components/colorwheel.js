@@ -25,7 +25,8 @@ class SlickColorWheel extends LitElement {
 
 		.hue {
 			filter: blur(16px);
-			transform: rotateZ(var(--colorwheel-rotate, 0deg)) scale(1.2);
+			/*transform: rotateZ(var(--colorwheel-rotate, 0deg)) scale(1.2);*/
+			transform: rotate(calc(90deg + var(--colorwheel-rotate, 0deg))) scale(1.2);
 			/*background: conic-gradient(red, magenta, blue, aqua, lime, yellow, red);*/
 			background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
 		}

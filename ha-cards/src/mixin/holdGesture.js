@@ -1,8 +1,8 @@
 import {tapHoldThreshold, tapDragThreshold} from '../util/const.js'
 
-// WARNING: Different behavior between desktop (with touch) & phones
-// desktop: (even with touch, using hold) fires contextmenu event after pointerup
-// phone:   fires contextmenu after about 500-700, while still hodlding (ie. before pointerup)
+// WARNING: contextmenu behaves differently on phones than on desktop (longpress touch)
+// desktop: fires after pointerup
+// phone:   fires while still hodlding (ie. before pointerup). after about 500-700ms
 
 export const holdGesture = Base => class extends Base {
 
@@ -11,28 +11,26 @@ export const holdGesture = Base => class extends Base {
 	#initEvent = undefined
 	#lastEvent = undefined
 
-	#pointerUpEventFired = false
-	#contextMenuEventFired = false
 
 	connectedCallback() {
 		this.addEventListener('pointerdown', this.#onPointerDown)
+		document.addEventListener('contextmenu', this.#onContextMenu, {capture: true})
 		super.connectedCallback()
 	}
 
 	disconnectedCallback() {
 		this.removeEventListener('pointerdown', this.#onPointerDown)
+		document.removeEventListener('contextmenu', this.#onContextMenu, {capture: true})
 		super.disconnectedCallback()
 	}
 
 	#addAditionalEvents() {
-		document.addEventListener('contextmenu',   this.#onContextMenu, {capture: true})
 		document.addEventListener('pointermove',   this.#onPointerMove, {capture: true})
 		document.addEventListener('pointerup',     this.#onPointerUp, {capture: true})
 		document.addEventListener('pointercancel', this.#onPointerUp, {capture: true})
 	}
 
 	#removeAditionalEvents = () => {
-		document.removeEventListener('contextmenu',   this.#onContextMenu, {capture: true})
 		document.removeEventListener('pointermove',   this.#onPointerMove, {capture: true})
 		document.removeEventListener('pointerup',     this.#onPointerUp, {capture: true})
 		document.removeEventListener('pointercancel', this.#onPointerUp, {capture: true})
@@ -61,20 +59,19 @@ export const holdGesture = Base => class extends Base {
 	}
 
 	#onContextMenu = e => {
-		this.#contextMenuEventFired = true
-		if (this.#gestureActive) e.preventDefault()
-		this.#tryReset()
+		// WARNING: do not pair with #onPointerUp nor try to use with #gestureActive.
+		// The event may fire 1) before, 2) after 3) never (if slightly moved) and is unreliable.
+		// We can only safely limit the prevention to this element.
+		if (e.target === this) e.preventDefault()
 	}
 
 	#onPointerUp = e => {
-		this.#pointerUpEventFired = true
 		if (this.#gestureActive) {
 			e.preventDefault()
 			this.emit('hold-end')
 		}
 		this.#clearTimeout()
-		// Do not reset #gestureActive here immediately.
-		this.#tryReset()
+		this.#reset()
 	}
 
 	#clearTimeout = e => {
@@ -82,15 +79,10 @@ export const holdGesture = Base => class extends Base {
 		this.#timeout = undefined
 	}
 
-	#tryReset = e => {
-		if (this.#contextMenuEventFired && this.#pointerUpEventFired)
-			this.#reset()
-	}
-
 	#reset = e => {
 		this.#gestureActive = false
-		this.#pointerUpEventFired = false
-		this.#contextMenuEventFired = false
+		this.#lastEvent = undefined
+		this.#initEvent = undefined
 		this.#removeAditionalEvents()
 	}
 

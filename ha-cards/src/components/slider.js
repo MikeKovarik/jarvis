@@ -181,6 +181,7 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	onPointerMove = (e, force = false) => {
 		if (e.defaultPrevented) return
+		e.preventDefault()
 		let diffPx = !this.vertical
 			? e.x - this.initX
 			: e.y - this.initY

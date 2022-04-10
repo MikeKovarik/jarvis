@@ -73,16 +73,14 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			height: 200px;
 		}
 
+		#background,
 		#status,
 		#overlay {
 			position: absolute;
 			inset: 0;
 		}
 
-		:host::before {
-			content: '';
-			inset: 0;
-			position: absolute;
+		#background {
 			z-index: 0;
 			background-color: var(--color);
 			opacity: var(--slider-bg-opacity, 0.08);
@@ -95,6 +93,15 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			will-change: transform;
 			transform: var(--slider-status-transform);
 			transform-origin: var(--slider-status-transform-origin);
+		}
+
+		#background,
+		#status {
+			transition: 80ms all;
+		}
+
+		:host(.dragging) #status {
+			transition: none;
 		}
 
 		#overlay {
@@ -226,7 +233,10 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 	}
 
 	render() {
+		this.className = this.isDragging ? 'dragging' : ''
+
 		return html`
+			<div id="background"></div>
 			<div id="status" style="transform: ${this.statusTransform}"></div>
 			<div id="overlay">
 				<slot name="start"></slot>

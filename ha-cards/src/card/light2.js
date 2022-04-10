@@ -226,7 +226,7 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		}
 
 		ha-card,
-		awesome-slider {
+		slick-slider {
 			width: unset;
 			height: unset;
 			position: absolute;
@@ -238,12 +238,12 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			overflow: hidden;
 		}
 
-		awesome-slider {
+		slick-slider {
 			padding: var(--gap);
 			align-items: flex-start;
 		}
 
-		awesome-card-title {
+		slick-card-title {
 			color: var(--color-fg);
 		}
 
@@ -297,7 +297,7 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		return html`
 			${this.hasColor ? html`<slick-colorpicker></slick-colorpicker>` : null}
 			<ha-card class="${className} ${this.isOn ? 'on' : 'off'}">
-				<awesome-slider
+				<slick-slider
 				value="${safeValue}"
 				min="0"
 				max="${this.hasBrightness ? 255 : 1}"
@@ -308,20 +308,20 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title
+						<slick-card-title
 						icon="${this.icon}"
 						title="${this.config.name ?? entity?.attributes?.friendly_name}"
 						>
 							${this.errorMessage ?? entity?.state}
 							${this.titleValue}
-						</awesome-card-title>
+						</slick-card-title>
 					</div>
 					${this.error && html`
 						<div slot="end">
 							<ha-icon icon="mdi:alert-outline"></ha-icon>
 						</div>
 					`}
-				</awesome-slider>
+				</slick-slider>
 			</ha-card>
 		`
 	}

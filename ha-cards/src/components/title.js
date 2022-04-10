@@ -3,7 +3,7 @@ import {styleMap} from 'lit-html/directives/style-map.js'
 import {mixin} from '../mixin/mixin.js'
 
 
-class AwesomeCardTitle extends mixin(LitElement) {
+class SlickCardTitle extends mixin(LitElement) {
 
 	static properties = {
 		icon: {type: String},
@@ -46,4 +46,4 @@ class AwesomeCardTitle extends mixin(LitElement) {
 
 }
 
-customElements.define('awesome-card-title', AwesomeCardTitle)
+customElements.define('slick-card-title', SlickCardTitle)

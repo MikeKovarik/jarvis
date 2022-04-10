@@ -208,7 +208,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 		*/
 		return html`
 			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
-				<awesome-slider
+				<slick-slider
 				value="${targetHumidity}"
 				min="${state.humidifier?.attributes?.min_humidity}"
 				max="${state.humidifier?.attributes?.max_humidity}"
@@ -219,7 +219,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title
+						<slick-card-title
 						icon="mdi:air-humidifier"
 						title="${state.humidifier?.attributes?.friendly_name}"
 						>
@@ -241,13 +241,13 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 								` : ''}
 							`}
 
-						</awesome-card-title>
+						</slick-card-title>
 						<div>${errorMessage}</div>
 					</div>
 					<div slot="end">
 						<awesome-button @click=${this.toggleMode} icon="${this.presetIcon}" style="display: ${this.offline ? 'none' : ''}"></awesome-button>
 					</div>
-				</awesome-slider>
+				</slick-slider>
 			</ha-card>
 		`
 	}

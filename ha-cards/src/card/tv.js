@@ -292,7 +292,7 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 					<awesome-button style="grid-column: 2; grid-row: 4;" @click=${() => this.pressButton('BACK')}  icon="mdi:undo-variant"></awesome-button>
 					<awesome-button style="grid-column: 3; grid-row: 4;" @click=${() => this.pressButton('DOWN')}  icon="mdi:chevron-down" ></awesome-button>
 
-					<awesome-slider
+					<slick-slider
 					id="volume-slider"
 					vertical inverted
 					value=${volume_level}
@@ -305,7 +305,7 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 					>
 						<awesome-button slot="end"   icon="mdi:plus"  @click="${() => this.callService('media_player', 'volume_up')}"></awesome-button>
 						<awesome-button slot="start" icon="mdi:minus" @click="${() => this.callService('media_player', 'volume_down')}"></awesome-button>
-					</awesome-slider>
+					</slick-slider>
 
 					${this.muted
 						? html`<awesome-button icon="mdi:volume-mute" id="unmute" @click="${this.unmute}"></awesome-button>`

@@ -37,7 +37,7 @@ export const sliderCardSizes = css`
 `
 
 export const sliderCard = css`
-	awesome-slider {
+	slick-slider {
 		width: unset;
 		height: unset;
 		position: absolute;
@@ -66,13 +66,13 @@ export const sliderCard2 = css`
 `
 
 export const sliderCardButtons = css`
-	awesome-slider awesome-button {
+	slick-slider awesome-button {
 		width: var(--button-size);
 		height: var(--button-size);
 		--bg-opacity: 0.14;
 		pointer-events: auto;
 	}
-	awesome-slider awesome-button:not([selected]) {
+	slick-slider awesome-button:not([selected]) {
 		--bg-opacity: 0.06;
 		--color-rgb: 255, 255, 255;
 	}

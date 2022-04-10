@@ -97,7 +97,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 
 		return html`
 			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
-				<awesome-slider
+				<slick-slider
 				value="${this.speed}"
 				min="${state.favorite_motor_speed?.attributes?.min}"
 				max="${state.favorite_motor_speed?.attributes?.max}"
@@ -108,7 +108,7 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 				hideValue
 				>
 					<div slot="start">
-						<awesome-card-title
+						<slick-card-title
 						icon="mdi:air-filter"
 						title="${state.fan?.attributes?.friendly_name}"
 						>
@@ -126,12 +126,12 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 									</span>
 								` : ''}
 							`}
-						</awesome-card-title>
+						</slick-card-title>
 					</div>
 					<div slot="end">
 						<awesome-button @click=${() => this.mode = 'Auto'} icon="mdi:fan-auto" ?selected="${state.fan?.attributes?.preset_mode === 'Auto'}"></awesome-button>
 					</div>
-				</awesome-slider>
+				</slick-slider>
 			</ha-card>
 		`
 	}

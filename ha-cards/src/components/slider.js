@@ -36,7 +36,7 @@ const sliderCore = Base => class extends Base {
 
 }
 
-class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
+class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 	constructor() {
 		super()
@@ -243,4 +243,4 @@ class AwesomeSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 }
 
 
-customElements.define('awesome-slider', AwesomeSlider)
+customElements.define('slick-slider', SlickSlider)

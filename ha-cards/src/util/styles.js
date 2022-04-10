@@ -46,22 +46,16 @@ export const sliderCard = css`
 	}
 `
 
-export const sliderCard2 = css`
-	.off {
-		--color-fg-rgb: 230, 230, 230;
-		--color-fg-opacity: 0.6;
-	}
-	.on {
-		--color-fg-opacity: 1;
-	}
-	
-	/*
-	:host { TODO:find a way to move this logic to :host.
-	for now it's not user-friendly
-	*/
-	ha-card {
-		--color-fg: rgb(var(--color-fg-rgb), var(--color-fg-opacity));
+export const sliderCardColor = css`
+	:host {
 		background-color: transparent;
+	}
+	:host(.off) {
+		--color: rgb(200, 200, 200);
+		--text-opacity: 0.6;
+	}
+	:host(.on) {
+		--text-opacity: 1;
 	}
 `
 
@@ -83,4 +77,12 @@ export const sliderCardButtons = css`
 		[slot="end"] > * + * {
 			margin-left: var(--gap);
 		}
+`
+
+export const sliderCardTitle = css`
+	slick-card-title {
+		color: var(--color);
+		opacity: var(--text-opacity, 1);
+		filter: saturate(220%) contrast(60%) saturate(70%) brightness(210%);
+	}
 `

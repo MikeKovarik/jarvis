@@ -168,7 +168,7 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			color: var(--color-fg);
 		}
 	`,
-	styles.sliderCard2,
+	styles.sliderCardColor,
 	]
 
 	get icon() {

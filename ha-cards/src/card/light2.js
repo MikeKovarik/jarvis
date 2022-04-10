@@ -2,8 +2,11 @@ import {LitElement, html, css} from 'lit'
 import {slickElement, hassData, onOff, eventEmitter, holdGesture} from '../mixin/mixin.js'
 import {tempToRgb} from '../util/temp-to-rgb' // ?move to iridescent?
 import * as styles from '../util/styles.js'
-import {hexToRgb} from 'iridescent'
+import {hexToRgb, rgbToHsl} from 'iridescent'
 
+const hsl2hs = ([h, s, l]) => [h, (100 - l) * 2]
+
+const inflateHsl = ([h, s, l]) => [h * 360, s * 100, l * 100]
 
 // ?move to iridescent?
 const isHex = string => {
@@ -21,24 +24,19 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 
 	static properties = {
 		transition: {type: Number},
+		isOn: {type: String, reflect: true},
 	}
 
 	setConfig(newConfig) {
 		super.setConfig(newConfig)
-		let color = newConfig.color ?? newConfig.defaultColor
-		if (color) {
-			color = color.trim()
-			if (isHex(color)) {
-				const {r, g, b} = hexToRgb(color)
-				this.defaultColorRgb = [r, g, b]
-			} else {
-				// not yet implemented
-			}
+		let color = (newConfig.color ?? newConfig.defaultColor)?.trim?.()
+		if (color && isHex(color)) {
+			const {r, g, b} = hexToRgb(color)
+			// iridescent uses 0-1 value range. no 0-360 degrees
+			const hsl = inflateHsl(rgbToHsl([r, g, b]))
+			this.defaultColor = hsl2hs(hsl)
+			this.applyHsColor(this.defaultColor, '--color-default')
 		}
-		// rgb(255, 255, 255)
-		// hsl(0, 0, 0) a procenta
-		// #FF00FF
-		// TODO: default color
 	}
 
 	onStateUpdate() {
@@ -46,17 +44,16 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		this.hasColor = supported_color_modes.includes('xy')
 		this.hasTemp = supported_color_modes.includes('color_temp')
 		this.hasBrightness = this.hasColor || this.hasTemp || supported_color_modes.includes('brightness')
-		const {attributes} = this.entity
-		if (attributes.color_mode === 'xy') {
-			const rgbString = attributes.rgb_color.join(',')
-			const [hue, saturation] = attributes.hs_color
-			// TODO:find a way to move this logic to :host. for now it's not user-friendly
-			this.style.setProperty('--color-fg', `hsl(${hue}, ${saturation * 0.9}%, 70%)`)
-			this.style.setProperty('--slider-bg-color-rgb', rgbString)
-			this.style.setProperty('--slider-status-color-rgb', rgbString)
-		} else if (attributes.color_mode === 'color_temp') {
-			console.warn('attributes.color_mode:color_temp not yet implemented')
+		const {color_mode, rgb_color, hs_color} = this.entity.attributes
+		if (color_mode === 'xy' && rgb_color && hs_color) {
+			this.applyHsColor(hs_color)
+		} else if (color_mode === 'color_temp') {
+			console.warn('color_mode:color_temp not yet implemented')
 		}
+	}
+
+	applyHsColor([h, s] = this.entity.attributes.hs_color, name = '--color') {
+		this.style.setProperty(name, `hsl(${h}, ${s}%, 50%)`)
 	}
 
 	connectedCallback() {
@@ -86,7 +83,8 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 	// OFFLINE: this.entity.attributes.linkquality === null
 	get isOn() {
 		return this.transitionOverrideState?.isOn
-			?? this.entity?.state === 'on'
+			|| this.dragBrightness !== undefined
+			|| this.entity?.state === 'on'
 	}
 
 	get brightness() {
@@ -137,12 +135,14 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		e.stopPropagation()
 	}
 
-	onColorPicked = throttle(([hue, , lightness]) => {
-		const h = Math.round(hue)
-		const s = (100 - lightness) * 2
+	onColorPicked = throttle(hsl => {
+		let [h, s] = hsl2hs(hsl)
+		h = Math.round(h)
+		s = Math.round(s)
 		const currentHs = this.entity.attributes.hs_color
 		if (currentHs && currentHs[0] === h && currentHs[1] === s) return
 		this.callService('light', 'turn_on', {transition: 0, hs_color: [h, s]})
+		this.applyHsColor([h, s])
 	}, 100)
 
 	// ------------------------------
@@ -194,34 +194,20 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 
 	static styles = [
 	css`
-		.light,
-		.switch {
-			/* looks good on #000 background, but not on gray
-			--slider-bg-color-rgb: 158, 164, 184;
-			--slider-bg-color-opacity: 0.2;
-			*/
-			--slider-bg-color-rgb: 158, 164, 184;
-			--slider-bg-color-opacity: 0.08;
-			/*
-			*/
+		:host {
+			--color: var(--color-default);
 		}
-
-		.light {
-			--color-fg-rgb: 248, 227, 157; /* 35% brightned */
-			--slider-status-color-rgb: 250, 212, 97;
-			--slider-status-color-opacity: 0.15;
+		:host(.light) {
+			--color-default: rgb(250, 212, 97);
 		}
-
-		.switch {
-			--color-fg-rgb: 146, 179, 242;
-			--slider-status-color-rgb: 255, 255, 255;
-			--slider-status-color-opacity: 0.12;
+		:host(.switch) {
+			--color-default: rgb(146, 179, 242);
 		}
 
 		:host {
 			--gap: 1rem;
 			display: block;
-			min-height: 8rem;
+			min-height: 6rem;
 			position: relative;
 		}
 
@@ -243,10 +229,6 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			align-items: flex-start;
 		}
 
-		slick-card-title {
-			color: var(--color-fg);
-		}
-
 		slick-colorpicker {
 			box-shadow: 0 8px 16px rgba(0,0,0,0.6);
 			width: 120px;
@@ -260,7 +242,8 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			display: none;
 		}
 	`,
-	styles.sliderCard2,
+	styles.sliderCardColor,
+	styles.sliderCardTitle,
 	]
 
 	get icon() {
@@ -281,22 +264,21 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			: formatWattage(this.state.power?.state)
 	}
 
-	//this.entity.supported_color_modes = ['color_temp', 'xy']
-
 	render() {
 		const {entity, config, state} = this
+
+		this.className = [
+			this.entityType,
+			this.isOn ? 'on' : 'off'
+		].join(' ')
 
 		const safeValue = this.hasBrightness
 			? this.isOn ? this.brightness : 0
 			: this.isOn ? 1 : 0
 
-		const className = entity.attributes.color_mode === 'xy'
-			? 'color'
-			: this.entityType
-
 		return html`
 			${this.hasColor ? html`<slick-colorpicker></slick-colorpicker>` : null}
-			<ha-card class="${className} ${this.isOn ? 'on' : 'off'}">
+			<ha-card>
 				<slick-slider
 				value="${safeValue}"
 				min="0"
@@ -316,11 +298,11 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 							${this.titleValue}
 						</slick-card-title>
 					</div>
-					${this.error && html`
+					${this.error ? html`
 						<div slot="end">
 							<ha-icon icon="mdi:alert-outline"></ha-icon>
 						</div>
-					`}
+					` : null}
 				</slick-slider>
 			</ha-card>
 		`

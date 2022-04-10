@@ -183,7 +183,7 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 		}
 
 		#volume-slider {
-			--color-rgb: 120, 180, 250;
+			--color: rgb(120, 180, 250);
 			border-radius: 0.5rem;
 			overflow: hidden;
 		}
@@ -228,7 +228,6 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 				min-width: unset;
 				min-height: unset;
 			}
-
 		ha-card.containerless {
 			background-color: transparent;
 			border-radius: 0;
@@ -236,11 +235,12 @@ class MyTvCard extends mixin(LitElement, hassData, onOff, tvCore, mediaPlayerVol
 			padding: 0;
 		}
 			ha-card.containerless #main-grid > * {
+/*
 				background-color: var( --ha-card-background, var(--card-background-color, white) );
+*/
 				border-radius: var(--ha-card-border-radius, 4px);
 				box-shadow: var( --ha-card-box-shadow, 0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 1px 3px 0px rgba(0, 0, 0, 0.12) );
 			}
-
 		#sizer {
 			opacity: 0;
 			visibility: hidden;

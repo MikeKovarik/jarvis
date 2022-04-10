@@ -170,12 +170,13 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 	static styles = [
 		styles.sliderCardSizes,
 		styles.sliderCard,
-		styles.sliderCard2,
+		styles.sliderCardColor,
 		styles.sliderCardButtons,
+		styles.sliderCardTitle,
 		css`
-			.cyan    {--color-rgb: 70, 180, 255}
-			.red     {--color-rgb: 255, 0, 0}
-			.neutral {--color-rgb: 255, 255, 255}
+			:host(.cyan)    {--color: rgb(70, 180, 255)}
+			:host(.red)     {--color: rgb(255, 0, 0)}
+			:host(.neutral) {--color: rgb(255, 255, 255)}
 
 			.value-label + .value-label {
 				margin-left: 0.5rem;
@@ -186,28 +187,13 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 	render() {
 		const {state, errorMessage, targetHumidity} = this
 
-		/*
-			<div class="header">
-				<div>
-					status: ${this.isOn ? 'ON' : 'OFF'}
-					${this.isOn
-						? html`<button @click=${() => this.turnOff()}>OFF</button>`
-						: html`<button @click=${() => this.turnOn()}>ON</button>`}
-				</div>
-				<div>
-					humidifier.attributes.mode ${state.humidifier.attributes.mode}
-					${state.humidifier?.attributes?.available_modes.map(mode => html`<button @click=${() => this.mode = mode}>${mode}</button>`)}
-				</div>
-				<div>humidifier.attributes.humidity: ${state.humidifier.attributes.humidity} (target)</div>
-				<div>humidifier.attributes.max_humidity: ${state.humidifier.attributes.max_humidity}</div>
-				<div>humidifier.attributes.min_humidity: ${state.humidifier.attributes.min_humidity}</div>
-				<div>
-					humidity: ${state.humidity?.state}
-				</div>
-			</div>
-		*/
+		this.className = [
+			this.colorClass,
+			this.isOn ? 'on' : 'off'
+		].join(' ')
+
 		return html`
-			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
+			<ha-card>
 				<slick-slider
 				value="${targetHumidity}"
 				min="${state.humidifier?.attributes?.min_humidity}"

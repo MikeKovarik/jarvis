@@ -78,13 +78,14 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 	static styles = [
 		styles.sliderCardSizes,
 		styles.sliderCard,
-		styles.sliderCard2,
+		styles.sliderCardColor,
 		styles.sliderCardButtons,
+		styles.sliderCardTitle,
 		css`
-			.green   {--color-rgb: 50, 205, 50}
-			.orange  {--color-rgb: 255, 215, 0}
-			.red     {--color-rgb: 255, 0, 0}
-			.neutral {--color-rgb: 255, 255, 255}
+			:host(.green)   {--color: rgb(50, 205, 50)}
+			:host(.orange)  {--color: rgb(255, 215, 0)}
+			:host(.red)     {--color: rgb(255, 0, 0)}
+			:host(.neutral) {--color: rgb(255, 255, 255)}
 
 			.value-label + .value-label {
 				margin-left: 0.5rem;
@@ -95,8 +96,13 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 	render() {
 		const {state, mode} = this
 
+		this.className = [
+			this.colorClass,
+			this.isOn ? 'on' : 'off'
+		].join(' ')
+
 		return html`
-			<ha-card class="${this.colorClass} ${this.isOn ? 'on' : 'off'}">
+			<ha-card>
 				<slick-slider
 				value="${this.speed}"
 				min="${state.favorite_motor_speed?.attributes?.min}"

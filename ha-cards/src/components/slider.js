@@ -80,21 +80,20 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 		}
 
 		:host {
-			background-color: var(--slider-bg-color,
-				rgba(
-					var(--slider-bg-color-rgb, var(--color-rgb)),
-					var(--slider-bg-color-opacity, 0.08)
-				)
-			);
+		}
+		:host::before {
+			content: '';
+			inset: 0;
+			position: absolute;
+			z-index: 0;
+			background-color: var(--color);
+			/*filter: saturation(0.6);*/
+			opacity: 0.08;
 		}
 
 		#status {
-			background-color: var(--slider-status-color,
-				rgba(
-					var(--slider-status-color-rgb, var(--color-rgb)),
-					var(--slider-status-color-opacity, 0.08)
-				)
-			);
+			background-color: var(--color);
+			opacity: 0.18;
 
 			will-change: transform;
 			transform: var(--slider-status-transform);

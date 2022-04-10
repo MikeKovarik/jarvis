@@ -12,6 +12,9 @@ class SlickCardTitle extends mixin(LitElement) {
 	}
 
 	static styles = css`
+		:host {
+			display: block;
+		}
 		.header {
 			font-weight: 500;
 			display: flex;

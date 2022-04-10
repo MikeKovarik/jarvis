@@ -87,3 +87,7 @@ export const sliderCardTitle = css`
 		filter: saturate(220%) contrast(60%) saturate(70%) brightness(210%);
 	}
 `
+
+
+// TODO: add global variable
+// --slick-easing: cubic-bezier(0.4, 0.0, 0.2, 1);

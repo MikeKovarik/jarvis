@@ -97,7 +97,7 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 
 		#background,
 		#status {
-			transition: 80ms all;
+			transition: 80ms all var(--slick-easing);
 		}
 
 		:host(.dragging) #status {

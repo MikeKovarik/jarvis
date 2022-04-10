@@ -98,7 +98,7 @@ class SlickColorPicker extends slickElement(eventEmitter) {
 		}
 
 		#handle {
-			transition: 40ms width, 40ms height;
+			transition: 40ms width var(--slick-easing), 40ms height var(--slick-easing);
 			pointer-events: none;
 			box-sizing: border-box;
 			box-shadow: 0 0 6px rgba(0,0,0,0.6);

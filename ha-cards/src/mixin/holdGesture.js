@@ -10,6 +10,10 @@ const movementThreshold = tapDragThreshold * 1.5
 
 export const holdGesture = Base => class extends Base {
 
+	// To be overwritten by user. A way to (temporarily) disable the gesture.
+	// Cannot be defined at property, because it clashes with user's getter.
+	//holdGestureEnabled = true
+
 	#timeout = undefined
 	#gestureActive = false
 	#lastEvent = undefined
@@ -49,6 +53,7 @@ export const holdGesture = Base => class extends Base {
 	}
 
 	#onPointerDown = e => {
+		if (!this.holdGestureEnabled) return
 		this.#gestureActive = false
 		clearTimeout(this.#timeout)
 		this.#addAditionalEvents()

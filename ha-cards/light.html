@@ -42,7 +42,7 @@
 		<script type="module">
 			import {html, render} from 'lit'
 
-			const config = {"type":"custom:light2-card"}
+			const baseConfig = {"type":"custom:light2-card"}
 
 			const demoStates = [
 				{"light":{"entity_id":"light.bulb_couch","state":"off","attributes":{"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["brightness"],"linkquality":81,"update":{"state":"available"},"update_available":null,"friendly_name":"bulb-couch","supported_features":45},"last_changed":"2022-03-26T23:25:31.459077+00:00","last_updated":"2022-03-27T13:55:05.838614+00:00","context":{"id":"51d270fde31e539d5f4252018e4ae66c","parent_id":null,"user_id":null}},"update_available":{"entity_id":"binary_sensor.bulb_couch_update_available","state":"on","attributes":{"brightness":64,"linkquality":81,"update":{"state":"available"},"update_available":null,"device_class":"update","friendly_name":"bulb-couch update available"},"last_changed":"2022-03-26T17:49:37.388495+00:00","last_updated":"2022-03-27T13:55:05.837611+00:00","context":{"id":"0d52b290be1467318de584f6bc8ac8b2","parent_id":null,"user_id":null}}},
@@ -65,22 +65,40 @@
 				{"light":{"entity_id":"light.bulb_growlight","state":"on","attributes":{"min_mireds":150,"max_mireds":500,"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["color_temp","xy"],"color_mode":"xy","brightness":10,"hs_color":[211.102,20],"rgb_color":[10,128,255],"xy_color":[0.141,0.134],"color":{"x":0.141,"y":0.134},"linkquality":102,"friendly_name":"bulb-growlight","supported_features":63},"last_changed":"2022-04-06T18:01:55.971003+00:00","last_updated":"2022-04-06T19:05:32.382366+00:00","context":{"id":"1963df4a283eab364dbda17aad530d04","parent_id":null,"user_id":"bf4261b893ef4dcebafd918baa751736"}}},
 				{"light":{"entity_id":"light.bulb_growlight","state":"on","attributes":{"min_mireds":150,"max_mireds":500,"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["color_temp","xy"],"color_mode":"xy","brightness":10,"hs_color":[211.102,0],"rgb_color":[10,128,255],"xy_color":[0.141,0.134],"color":{"x":0.141,"y":0.134},"linkquality":102,"friendly_name":"bulb-growlight","supported_features":63},"last_changed":"2022-04-06T18:01:55.971003+00:00","last_updated":"2022-04-06T19:05:32.382366+00:00","context":{"id":"1963df4a283eab364dbda17aad530d04","parent_id":null,"user_id":"bf4261b893ef4dcebafd918baa751736"}}},
 				*/
+				['Custom default color ON', {color: 'ff00FF'}, {"light":{"entity_id":"light.bulb_growlight","state":"on","attributes":{"min_mireds":150,"max_mireds":500,"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["color_temp","xy"],"color_mode":"xy","brightness":163,"hs_color":[299.754,95.686],"rgb_color":[254,11,255],"xy_color":[0.385,0.155],"color":{"x":0.385,"y":0.155},"linkquality":126,"friendly_name":"bulb-growlight","supported_features":63},"last_changed":"2022-04-10T08:26:20.269137+00:00","last_updated":"2022-04-10T08:26:25.519013+00:00","context":{"id":"163a1419189301937acb3c7724838e0b","parent_id":null,"user_id":"bf4261b893ef4dcebafd918baa751736"}}}],
+				['Custom default color OFF (should reflect on drag state while off)', {color: 'ff00FF'}, {"light":{"entity_id":"light.bulb_growlight","state":"off","attributes":{"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["brightness"],"linkquality":81,"update":{"state":"available"},"update_available":null,"friendly_name":"bulb-growlight","supported_features":45},"last_changed":"2022-03-26T23:25:31.459077+00:00","last_updated":"2022-03-27T13:55:05.838614+00:00","context":{"id":"51d270fde31e539d5f4252018e4ae66c","parent_id":null,"user_id":null}},"update_available":{"entity_id":"binary_sensor.bulb_couch_update_available","state":"on","attributes":{"brightness":64,"linkquality":81,"update":{"state":"available"},"update_available":null,"device_class":"update","friendly_name":"bulb-couch update available"},"last_changed":"2022-03-26T17:49:37.388495+00:00","last_updated":"2022-03-27T13:55:05.837611+00:00","context":{"id":"0d52b290be1467318de584f6bc8ac8b2","parent_id":null,"user_id":null}}}],
 			]
 
 			const cards = new Array(demoStates.length).fill(0).map(a => html`<light2-card></light2-card>`)
 			render(cards, document.body)
 
 			const cardNodes = Array.from(document.querySelectorAll('light2-card'))
+
+			const getEntity = state => state.light ?? state.switch
+
+			const unwrapDemo = arg => {
+				if (Array.isArray(arg)) {
+					let title
+					if (typeof arg[0] === 'string') title = arg.shift()
+					let [state, config] = [...arg].reverse()
+					return {title, config, state}
+				} else {
+					return {config: {}, state: arg}
+				}
+			}
 			
-			demoStates.forEach((state, i) => {
+			demoStates.forEach((demo, i) => {
+				const {title, config, state} = unwrapDemo(demo)
 				const card = cardNodes[i]
-				const entity = (state.light ?? state.switch).entity_id
-				const cfg = {entity, ...config}
-				const newState = JSON.parse(JSON.stringify(state))
-				card.setConfig(cfg)
-				card.state = newState
+				const entity = getEntity(state).entity_id
+				card.setConfig({entity, ...baseConfig, ...config})
+				card.state = JSON.parse(JSON.stringify(state))
 				card.onStateUpdate()
-				setTimeout(() => card.requestUpdate())
+				setTimeout(() => {
+					card.requestUpdate()
+					if (title) card.before(title)
+                    console.log('~ card', card)
+				})
 			})
 
 		</script>

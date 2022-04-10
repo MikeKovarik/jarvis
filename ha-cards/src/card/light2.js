@@ -133,8 +133,9 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 
 	isHolding = false
 
-	onHold = ({x, y}) => {
-    	console.log('--- HOLD')
+	onHold = ({x, y, target, pointerId}) => {
+    	console.log('--- HOLD', pointerId)
+    	console.log('target', target)
 		this.isHolding = true
 		const bbox = this.getBoundingClientRect()
 		this.style.setProperty('--colorpicker-x', (x - bbox.x) + 'px')
@@ -143,6 +144,10 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 		this.colorPicker.style.display = 'block'
 		this.colorPicker.onPointerDown({x, y, preventDefault: noop})
 		this.colorPicker.on('hsl', this.onColorPicked)
+		//target.releasePointerCapture(pointerId)
+		this.colorPicker.setPointerCapture(pointerId)
+		//this.addEventListener('touchmove', this.onTouchMove)
+		//this.addEventListener('touchmove', this.onTouchMove, {passive: false, capture: true})
 	}
 
 	onHoldEnd = () => {
@@ -150,6 +155,14 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
     	console.log('--- HOLD END')
 		this.colorPicker.style.display = 'none'
 		this.colorPicker.off('hsl', this.onColorPicked)
+		//this.removeEventListener('touchmove', this.onTouchMove)
+		//this.removeEventListener('touchmove', this.onTouchMove, {passive: false, capture: true})
+	}
+
+	onTouchMove = e => {
+    console.log('~ onTouchMove')
+		e.preventDefault()
+		e.stopPropagation()
 	}
 
 	onColorPicked = throttle(([hue, , lightness]) => {
@@ -315,7 +328,7 @@ class Light2Card extends slickElement(hassData, onOff, eventEmitter, holdGesture
 			: this.entityType
 
 		return html`
-			${this.hasColor && html`<slick-colorpicker></slick-colorpicker>`}
+			${this.hasColor ? html`<slick-colorpicker></slick-colorpicker>` : null}
 			<ha-card class="${className} ${this.isOn ? 'on' : 'off'}">
 				<awesome-slider
 				value="${safeValue}"

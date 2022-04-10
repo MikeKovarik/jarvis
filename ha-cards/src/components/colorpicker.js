@@ -35,6 +35,7 @@ class SlickColorPicker extends slickElement(eventEmitter) {
 	}
 
 	onPointerMove = e => {
+    	console.log('picker onPointerMove', e.target)
 		e.preventDefault()
 		const x = e.x - this.center.x
 		const y = e.y - this.center.y

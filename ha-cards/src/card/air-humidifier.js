@@ -86,9 +86,9 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 	}
 
 	get targetHumidity() {
-		const {state, dragValue, auto, on} = this
+		const {state, dragValue, auto, isOn} = this
 		if (dragValue !== undefined) return dragValue
-		if (!on) return 0
+		if (!isOn) return 0
 		return auto
 			? state.humidifier.attributes.humidity
 			: 0

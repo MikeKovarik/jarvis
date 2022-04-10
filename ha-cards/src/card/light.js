@@ -1,27 +1,22 @@
-import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOff} from '../mixin/mixin.js'
-import {tempToRgb} from './../util/temp-to-rgb'
+import {html, css} from 'lit'
+import {slickElement, hassData, onOff, eventEmitter, holdGesture} from '../mixin/mixin.js'
+import {tempToRgb} from '../util/temp-to-rgb' // ?move to iridescent?
 import * as styles from '../util/styles.js'
+import {hexToRgb, rgbToHsl} from 'iridescent'
 
+const hsl2hs = ([h, s, l]) => [h, (100 - l) * 2]
 
-/*
-type: grid
-square: false
-columns: 2
-cards:
-  - type: custom:light-card
-    entity: light.bulb_office
-  - type: custom:light-card
-    entity: light.bulb_office
-  - type: custom:light-card
-    entity: light.bulb_couch
-  - type: custom:light-card
-    entity: light.bulb_kitchen
-  - type: custom:light-card
-    entity: switch.lamp_reading
-*/
+const inflateHsl = ([h, s, l]) => [h * 360, s * 100, l * 100]
 
-class LightCard extends mixin(LitElement, hassData, onOff) {
+// ?move to iridescent?
+const isHex = string => {
+	if (typeof string !== 'string') return false
+	if (string.startsWith('#')) string = string.slice(1)
+	return (string.length === 3 || string.length === 6)
+		&& !Number.isNaN(Number('0x' + string))
+}
+
+class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture) {
 
 	static entityType = ['light', 'switch']
 
@@ -29,15 +24,48 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 
 	static properties = {
 		transition: {type: Number},
+		isOn: {type: String, reflect: true},
+	}
+
+	setConfig(newConfig) {
+		super.setConfig(newConfig)
+		let color = (newConfig.color ?? newConfig.defaultColor)?.trim?.()
+		if (color && isHex(color)) {
+			const {r, g, b} = hexToRgb(color)
+			// iridescent uses 0-1 value range. no 0-360 degrees
+			const hsl = inflateHsl(rgbToHsl([r, g, b]))
+			this.defaultColor = hsl2hs(hsl)
+			this.applyHsColor(this.defaultColor, '--color-default')
+		}
 	}
 
 	onStateUpdate() {
-		this.hasBrightness = this.entityType === 'light'
-		//this.hasBrightness = (this.entity.attributes.supported_color_modes ?? []).includes('brightness')
-		/*
-		const {r, g, b} = tempToRgb(this.kelvin)
-		this.style.setProperty('--color-rgb', [r, g, b].join(', '))
-		*/
+		const supported_color_modes = this.entity.attributes.supported_color_modes ?? []
+		this.hasColor = supported_color_modes.includes('xy')
+		this.hasTemp = supported_color_modes.includes('color_temp')
+		this.hasBrightness = this.hasColor || this.hasTemp || supported_color_modes.includes('brightness')
+		const {color_mode, rgb_color, hs_color} = this.entity.attributes
+		if (color_mode === 'xy' && rgb_color && hs_color) {
+			this.applyHsColor(hs_color)
+		} else if (color_mode === 'color_temp') {
+			console.warn('color_mode:color_temp not yet implemented')
+		}
+	}
+
+	applyHsColor([h, s] = this.entity.attributes.hs_color, name = '--color-on') {
+		this.style.setProperty(name, `hsl(${h}, ${s}%, 50%)`)
+	}
+
+	connectedCallback() {
+		this.on('hold', this.onHold)
+		this.on('hold-end', this.onHoldEnd)
+		super.connectedCallback()
+	}
+
+	disconnectedCallback() {
+		this.off('hold', this.onHold)
+		this.off('hold-end', this.onHoldEnd)
+		super.disconnectedCallback()
 	}
 
 	get error() {
@@ -52,9 +80,11 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			return 'Offline'
 	}
 
+	// OFFLINE: this.entity.attributes.linkquality === null
 	get isOn() {
 		return this.transitionOverrideState?.isOn
-			?? this.entity?.state === 'on'
+			|| this.dragBrightness !== undefined
+			|| this.entity?.state === 'on'
 	}
 
 	get brightness() {
@@ -66,6 +96,56 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 	set brightness(brightness) {
 		this.turnOn({brightness})
 	}
+
+	// -------------------- HOLD GESTURE
+
+	isHolding = false
+
+	get holdGestureEnabled() {
+		return this.hasColor || this.hasTemp
+	}
+
+	onHold = ({x, y}) => {
+		if (this.hasColor) {
+			this.isHolding = true
+			const bbox = this.getBoundingClientRect()
+			this.style.setProperty('--colorpicker-x', (x - bbox.x) + 'px')
+			this.style.setProperty('--colorpicker-y', (y - bbox.y) + 'px')
+			this.colorPicker = this.renderRoot.querySelector('slick-colorpicker')
+			this.colorPicker.style.display = 'block'
+			this.colorPicker.onPointerDown({x, y, preventDefault: noop})
+			this.colorPicker.on('hsl', this.onColorPicked)
+		} else if (this.hasTemp) {
+			console.warn('temp not yet implemented')
+		}
+	}
+
+	onHoldEnd = () => {
+		if (this.hasColor) {
+			this.isHolding = false
+			this.colorPicker.style.display = 'none'
+			this.colorPicker.off('hsl', this.onColorPicked)
+		} else if (this.hasTemp) {
+			// TODO
+		}
+	}
+
+	onTouchMove = e => {
+		e.preventDefault()
+		e.stopPropagation()
+	}
+
+	onColorPicked = throttle(hsl => {
+		let [h, s] = hsl2hs(hsl)
+		h = Math.round(h)
+		s = Math.round(s)
+		const currentHs = this.entity.attributes.hs_color
+		if (currentHs && currentHs[0] === h && currentHs[1] === s) return
+		this.callService('light', 'turn_on', {transition: 0, hs_color: [h, s]})
+		this.applyHsColor([h, s])
+	}, 100)
+
+	// ------------------------------
 
 	dragBrightness = undefined
 
@@ -80,9 +160,7 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 		this.brightness = detail
 	}
 
-	onToggle = () => {
-		this.toggleOnOff()
-	}
+	onToggle = () => this.toggleOnOff()
 
 	// State changes a couple of times during transition. Here we store desired target value
 	// to be shown during transition. This prevents the slider to chaoticaly jump between values.
@@ -91,8 +169,8 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 
 	turnOn = (data = {}) => {
 		if (this.entityType === 'light') {
-			const {transition} = this
-			this.callService('light', 'turn_on', {transition, ...data})
+			const {transition, defaultColor} = this
+			this.callService('light', 'turn_on', {transition, hs_color: defaultColor, ...data})
 			this.transitionOverrideState = {...data, on: true}
 			clearTimeout(this.overrideValueTimeout)
 			this.overrideValueTimeout = setTimeout(this.clearTransitionOverrideState, transition * 1000 * 1.25)
@@ -115,34 +193,20 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 
 	static styles = [
 	css`
-		.light,
-		.switch {
-			/* looks good on #000 background, but not on gray
-			--slider-bg-color-rgb: 158, 164, 184;
-			--slider-bg-color-opacity: 0.2;
-			*/
-			--slider-bg-color-rgb: 158, 164, 184;
-			--slider-bg-color-opacity: 0.08;
-			/*
-			*/
+		:host(.on) {
+			--color: var(--color-on, var(--color-default));
 		}
-
-		.light {
-			--color-fg-rgb: 248, 227, 157; /* 35% brightned */
-			--slider-status-color-rgb: 250, 212, 97;
-			--slider-status-color-opacity: 0.15;
+		:host(.light) {
+			--color-default: rgb(250, 212, 97);
 		}
-
-		.switch {
-			--color-fg-rgb: 146, 179, 242;
-			--slider-status-color-rgb: 255, 255, 255;
-			--slider-status-color-opacity: 0.12;
+		:host(.switch) {
+			--color-default: rgb(146, 179, 242);
 		}
 
 		:host {
 			--gap: 1rem;
 			display: block;
-			min-height: 8rem;
+			min-height: 6rem;
 			position: relative;
 		}
 
@@ -164,11 +228,21 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 			align-items: flex-start;
 		}
 
-		slick-card-title {
-			color: var(--color-fg);
+		slick-colorpicker {
+			box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+			width: 120px;
+			height: 120px;
+			z-index: 999;
+			position: absolute;
+			left: var(--colorpicker-x, 50%);
+			top:  var(--colorpicker-y, 50%);
+			transition: 120ms transform cubic-bezier(0.0, 0.0, 0.2, 1);
+			transform: translate(-50%, -50%);
+			display: none;
 		}
 	`,
 	styles.sliderCardColor,
+	styles.sliderCardTitle,
 	]
 
 	get icon() {
@@ -192,12 +266,18 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 	render() {
 		const {entity, config, state} = this
 
+		this.className = [
+			this.entityType,
+			this.isOn ? 'on' : 'off'
+		].join(' ')
+
 		const safeValue = this.hasBrightness
 			? this.isOn ? this.brightness : 0
 			: this.isOn ? 1 : 0
 
 		return html`
-			<ha-card class="${this.entityType} ${this.isOn ? 'on' : 'off'}">
+			${this.hasColor ? html`<slick-colorpicker></slick-colorpicker>` : null}
+			<ha-card>
 				<slick-slider
 				value="${safeValue}"
 				min="0"
@@ -217,11 +297,11 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 							${this.titleValue}
 						</slick-card-title>
 					</div>
-					${this.error && html`
+					${this.error ? html`
 						<div slot="end">
 							<ha-icon icon="mdi:alert-outline"></ha-icon>
 						</div>
-					`}
+					` : null}
 				</slick-slider>
 			</ha-card>
 		`
@@ -229,7 +309,23 @@ class LightCard extends mixin(LitElement, hassData, onOff) {
 
 }
 
+const noop = () => {}
+
 const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
 const formatWattage = watts => watts !== undefined ? `${watts} W` : ''
+
+const throttle = (callback, millis) => {
+    let timeout = undefined
+	let cachedArgs
+    return (...args) => {
+		cachedArgs = args
+		if (!timeout) {
+            timeout = setTimeout(() => {
+	            callback(...cachedArgs)
+                timeout = undefined
+            }, millis)
+        }
+    }
+}
 
 customElements.define('light-card', LightCard)

@@ -27,9 +27,9 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 	}
 
 	get speed() {
-		const {state, dragValue, auto, on} = this
+		const {state, dragValue, auto, isOn} = this
 		if (dragValue !== undefined) return dragValue
-		if (!on) return 0
+		if (!isOn) return 0
 		return auto
 			? Number(state.motor_speed?.state)
 			: Number(state.favorite_motor_speed?.state)

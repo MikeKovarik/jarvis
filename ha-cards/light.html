@@ -11,7 +11,7 @@
 				color: #FFF;
 				padding-bottom: 1000px;
 			}
-			light2-card {
+			light-card {
 				width: 300px;
 				min-height: 80px;
 				margin: 0.5rem;
@@ -42,7 +42,7 @@
 		<script type="module">
 			import {html, render} from 'lit'
 
-			const baseConfig = {"type":"custom:light2-card"}
+			const baseConfig = {"type":"custom:light-card"}
 
 			const demoStates = [
 				{"light":{"entity_id":"light.bulb_couch","state":"off","attributes":{"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["brightness"],"linkquality":81,"update":{"state":"available"},"update_available":null,"friendly_name":"bulb-couch","supported_features":45},"last_changed":"2022-03-26T23:25:31.459077+00:00","last_updated":"2022-03-27T13:55:05.838614+00:00","context":{"id":"51d270fde31e539d5f4252018e4ae66c","parent_id":null,"user_id":null}},"update_available":{"entity_id":"binary_sensor.bulb_couch_update_available","state":"on","attributes":{"brightness":64,"linkquality":81,"update":{"state":"available"},"update_available":null,"device_class":"update","friendly_name":"bulb-couch update available"},"last_changed":"2022-03-26T17:49:37.388495+00:00","last_updated":"2022-03-27T13:55:05.837611+00:00","context":{"id":"0d52b290be1467318de584f6bc8ac8b2","parent_id":null,"user_id":null}}},
@@ -68,10 +68,10 @@
 				['Custom default color OFF (should reflect on drag state while off)', {color: '#bf8622'}, {"light":{"entity_id":"light.bulb_growlight","state":"off","attributes":{"effect_list":["blink","breathe","okay","channel_change","finish_effect","stop_effect"],"supported_color_modes":["brightness"],"linkquality":81,"update":{"state":"available"},"update_available":null,"friendly_name":"bulb-growlight","supported_features":45},"last_changed":"2022-03-26T23:25:31.459077+00:00","last_updated":"2022-03-27T13:55:05.838614+00:00","context":{"id":"51d270fde31e539d5f4252018e4ae66c","parent_id":null,"user_id":null}},"update_available":{"entity_id":"binary_sensor.bulb_couch_update_available","state":"on","attributes":{"brightness":64,"linkquality":81,"update":{"state":"available"},"update_available":null,"device_class":"update","friendly_name":"bulb-couch update available"},"last_changed":"2022-03-26T17:49:37.388495+00:00","last_updated":"2022-03-27T13:55:05.837611+00:00","context":{"id":"0d52b290be1467318de584f6bc8ac8b2","parent_id":null,"user_id":null}}}],
 			]
 
-			const cards = new Array(demoStates.length).fill(0).map(a => html`<light2-card></light2-card>`)
+			const cards = new Array(demoStates.length).fill(0).map(a => html`<light-card></light-card>`)
 			render(cards, document.body)
 
-			const cardNodes = Array.from(document.querySelectorAll('light2-card'))
+			const cardNodes = Array.from(document.querySelectorAll('light-card'))
 
 			const getEntity = state => state.light ?? state.switch
 

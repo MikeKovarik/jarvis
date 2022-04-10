@@ -79,21 +79,18 @@ class SlickSlider extends mixin(LitElement, sliderCore, eventEmitter) {
 			inset: 0;
 		}
 
-		:host {
-		}
 		:host::before {
 			content: '';
 			inset: 0;
 			position: absolute;
 			z-index: 0;
 			background-color: var(--color);
-			/*filter: saturation(0.6);*/
-			opacity: 0.08;
+			opacity: var(--slider-bg-opacity, 0.08);
 		}
 
 		#status {
 			background-color: var(--color);
-			opacity: 0.18;
+			opacity: 0.16;
 
 			will-change: transform;
 			transform: var(--slider-status-transform);

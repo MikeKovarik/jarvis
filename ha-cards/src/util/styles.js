@@ -53,6 +53,7 @@ export const sliderCardColor = css`
 	:host(.off) {
 		--color: rgb(200, 200, 200);
 		--text-opacity: 0.6;
+		--slider-bg-opacity: 0.01;
 	}
 	:host(.on) {
 		--text-opacity: 1;

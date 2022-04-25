@@ -1,9 +1,9 @@
-import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOff} from '../mixin/mixin.js'
+import {html, css} from 'lit'
+import {slickElement, hassData, onOff, resizeObserver} from '../mixin/mixin.js'
 import * as styles from '../util/styles.js'
 
 
-class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
+class AirPurifierCard extends slickElement(hassData, onOff, resizeObserver) {
 
 	static entityType = 'fan'
 
@@ -93,8 +93,21 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 		`
 	]
 
+
+	get showPm2() {
+		return this.width >= 160
+	}
+
+	get showPm2Unit() {
+		return this.width >= 220
+	}
+
+	breakpoints = [160, 220]
+
 	render() {
 		const {state, mode} = this
+		const {showPm2, showPm2Unit} = this
+		const {showModeLabel, showOtherInfo} = this.config
 
 		this.className = [
 			this.colorClass,
@@ -119,14 +132,14 @@ class AirPurifierCard extends mixin(LitElement, hassData, onOff) {
 						title="${state.fan?.attributes?.friendly_name}"
 						>
 							${!this.isOn ? 'Off' : html`
-								${this.config.showModeLabel ? html`
+								${showModeLabel ? html`
 									<strong class="value-label">${mode === 'Favorite' ? 'Custom' : mode}</strong>
 								` : ''}
-								<span class="value-label">
+								${showPm2 ? html`<span class="value-label">
 									<strong>${state.pm2_5?.state}</strong>
-									µg/m³
-								</span>
-								${this.config.showOtherInfo ? html`
+									${showPm2Unit ? state.pm2_5?.attributes?.unit_of_measurement : ''}
+								</span>` : ''}
+								${showOtherInfo ? html`
 									<span class="value-label">
 										<strong>${this.speed}</strong> rpm
 									</span>

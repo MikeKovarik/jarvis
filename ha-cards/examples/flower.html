@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body {
+				background-color: #111;
+				font-family: Roboto;
+				font-size: 16px;
+				color: #FFF;
+			}
+			#grid {
+				display: grid;
+				gap: 0.5rem;
+			}
+			.header {
+				font-weight: 700;
+				text-align: center;
+				padding: 1rem;
+				font-size: 12px;
+				grid-row: 1;
+			}
+			slick-flower-card {
+				--card-background-color: #1c1c1c;
+				max-width: 300px;
+				/*
+				max-height: 400px;
+				*/
+			}
+		</style>
+	</head>
+	<body>
+
+
+		<script type="importmap">
+		{
+			"imports": {
+				"lit": "../node_modules/lit/index.js",
+				"lit/": "../node_modules/lit/",
+				"lit-element": "../node_modules/lit-element/index.js",
+				"lit-element/": "../node_modules/lit-element/",
+				"lit-html": "../node_modules/lit-html/lit-html.js",
+				"lit-html/": "../node_modules/lit-html/",
+				"@lit/": "../node_modules/@lit/",
+				"@lit/reactive-element/": "../node_modules/@lit/reactive-element/",
+				"@lit/reactive-element": "../node_modules/@lit/reactive-element/reactive-element.js"
+			}
+		}
+		</script>
+
+		<script src="../lit.umd.js"></script>
+		<script src="../ha-card.js"></script>
+		<script src="../dist/my-awesome-cards.js"></script>
+		<script type="module">
+			import {html, render} from 'lit'
+
+
+			const baseConfig = {"type":"custom:slick-flower-card","entity":"plant.plant_c47c8d6dca82"}
+			const baseState  = {"plant":{"entity_id":"plant.plant_c47c8d6dca82","state":"ok","attributes":{"problem":"none","sensors":{"moisture":"sensor.flora_c47c8d6dca82_moisture","battery":"sensor.flora_c47c8d6dca82_battery","temperature":"sensor.flora_c47c8d6dca82_temperature","conductivity":"sensor.flora_c47c8d6dca82_conductivity","brightness":"sensor.flora_c47c8d6dca82_light_intensity"},"unit_of_measurement_dict":{"temperature":"°C","brightness":"lx","moisture":"%","conductivity":"µS/cm","battery":"%"},"moisture":31,"battery":42,"temperature":24.1,"conductivity":1021,"brightness":189,"max_brightness":697,"friendly_name":"plant_c47c8d6dca82"},"last_changed":"2022-04-21T17:56:45.114817+00:00","last_updated":"2022-04-25T06:56:29.336616+00:00","context":{"id":"badf1b6d86866043174db8b0c76e2432","parent_id":null,"user_id":null}}}
+
+			const demoStates = [
+				{},
+			]
+
+			const demoConfigs = [
+				{"species":"Calathea Makoyana"},
+				//{"species":"calathea concinna","title":"Calathea Zebrina"},
+				//{"species":"calathea concinna","title":"Calathea Zebrina","image":"./calathea-zebrina.jpg"},
+				//{"species":"calathea concinna","entity":"plant.plant_c47c8d6da8d7"},
+			]
+
+			render(html`
+				${new Array(demoConfigs.length * demoStates.length).fill(0).map(a => html`<slick-flower-card></slick-flower-card>`)}
+			`, document.body)
+
+			const cardNodes = document.querySelectorAll('slick-flower-card')
+			
+			cardNodes.forEach((card, i) => {
+				const x = i % demoStates.length
+				const y = Math.floor(i / demoStates.length)
+				const stateExtension = demoStates[x]
+				const cfg            = demoConfigs[y]
+				
+				const state = JSON.parse(JSON.stringify(baseState))
+				Object.assign(state.plant.attributes, stateExtension)
+
+				card.setConfig({...baseConfig, ...cfg})
+				card.state = state
+				card.onStateUpdate?.()
+				setTimeout(() => card.requestUpdate())
+			})
+
+		</script>
+	</body>
+</html>

@@ -88,6 +88,7 @@ export const sliderCardTitle = css`
 	}
 `
 
+// --card-background-color
 
 // TODO: add global variable
 // --slick-easing: cubic-bezier(0.4, 0.0, 0.2, 1);

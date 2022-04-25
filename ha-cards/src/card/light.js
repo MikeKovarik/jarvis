@@ -2,6 +2,7 @@ import {html, css} from 'lit'
 import {slickElement, hassData, onOff, eventEmitter, holdGesture} from '../mixin/mixin.js'
 import {tempToRgb} from '../util/temp-to-rgb' // ?move to iridescent?
 import * as styles from '../util/styles.js'
+import {throttle} from '../util/util.js'
 import {hexToRgb, rgbToHsl} from 'iridescent'
 
 const hsl2hs = ([h, s, l]) => [h, (100 - l) * 2]
@@ -46,7 +47,8 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 		this.hasBrightness = this.hasColor || this.hasTemp || supported_color_modes.includes('brightness')
 		const {color_mode, rgb_color, hs_color} = this.entity.attributes
 		if (color_mode === 'xy' && rgb_color && hs_color) {
-			this.applyHsColor(hs_color)
+			// only apply color when not dragging (feedback loop)
+			if (!this.isHolding) this.applyHsColor(hs_color)
 		} else if (color_mode === 'color_temp') {
 			console.warn('color_mode:color_temp not yet implemented')
 		}
@@ -76,7 +78,7 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 	get errorMessage() {
 		if (!this.entity)
 			return 'Not found'
-		if ('linkquality' in this.entity.attributes && this.entity.attributes.linkquality === null)
+		if (this.offline)
 			return 'Offline'
 	}
 
@@ -85,6 +87,16 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 		return this.transitionOverrideState?.isOn
 			|| this.dragBrightness !== undefined
 			|| this.entity?.state === 'on'
+	}
+
+	get offline() {
+		return !this.online
+	}
+
+	get online() {
+		return this.entity?.attributes
+			&& 'linkquality' in this.entity?.attributes
+			&& this.entity?.attributes.linkquality !== null
 	}
 
 	get brightness() {
@@ -114,7 +126,7 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 			this.colorPicker = this.renderRoot.querySelector('slick-colorpicker')
 			this.colorPicker.style.display = 'block'
 			this.colorPicker.onPointerDown({x, y, preventDefault: noop})
-			this.colorPicker.on('hsl', this.onColorPicked)
+			//this.colorPicker.on('hsl', this.onColorPicked)
 		} else if (this.hasTemp) {
 			console.warn('temp not yet implemented')
 		}
@@ -124,7 +136,7 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 		if (this.hasColor) {
 			this.isHolding = false
 			this.colorPicker.style.display = 'none'
-			this.colorPicker.off('hsl', this.onColorPicked)
+			//this.colorPicker.off('hsl', this.onColorPicked)
 		} else if (this.hasTemp) {
 			// TODO
 		}
@@ -135,7 +147,7 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 		e.stopPropagation()
 	}
 
-	onColorPicked = throttle(hsl => {
+	onColorPicked = throttle(({detail: hsl}) => {
 		let [h, s] = hsl2hs(hsl)
 		h = Math.round(h)
 		s = Math.round(s)
@@ -202,6 +214,9 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 		:host(.switch) {
 			--color-default: rgb(146, 179, 242);
 		}
+		:host(.offline) {
+			opacity: 0.5;
+		}
 
 		:host {
 			--gap: 1rem;
@@ -230,8 +245,8 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 
 		slick-colorpicker {
 			box-shadow: 0 8px 16px rgba(0,0,0,0.6);
-			width: 120px;
-			height: 120px;
+			width: 160px;
+			height: 160px;
 			z-index: 999;
 			position: absolute;
 			left: var(--colorpicker-x, 50%);
@@ -247,13 +262,13 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 
 	get icon() {
 		const {config, entityType, on} = this
-		if (config.icon || config.iconOn || config.iconOff) {
+		if (this.error)
+			return 'mdi:alert-outline'
+		if (config.icon || config.iconOn || config.iconOff)
 			return config.icon ?? (on ? config.iconOn : config.iconOff)
-		} else {
-			return entityType === 'light'
-				? (on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline')
-				: (on ? 'mdi:power-plug' : 'mdi:power-plug-outline')
-		}
+		return entityType === 'light'
+			? (on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline')
+			: (on ? 'mdi:power-plug' : 'mdi:power-plug-outline')
 	}
 
 	get titleValue() {
@@ -263,12 +278,22 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 			: formatWattage(this.state.power?.state)
 	}
 
+	renderTitle() {
+		if (this.error)
+			return this.errorMessage
+		return [
+			this.errorMessage ?? this.entity?.state,
+			this.titleValue,
+		].join(' ')
+	}
+
 	render() {
-		const {entity, config, state} = this
+		const {entity} = this
 
 		this.className = [
 			this.entityType,
-			this.isOn ? 'on' : 'off'
+			this.isOn ? 'on' : 'off',
+			this.offline ? 'offline' : '',
 		].join(' ')
 
 		const safeValue = this.hasBrightness
@@ -276,7 +301,7 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 			: this.isOn ? 1 : 0
 
 		return html`
-			${this.hasColor ? html`<slick-colorpicker></slick-colorpicker>` : null}
+			${this.hasColor ? html`<slick-colorpicker @hsl="${this.onColorPicked}"></slick-colorpicker>` : null}
 			<ha-card>
 				<slick-slider
 				value="${safeValue}"
@@ -293,15 +318,9 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 						icon="${this.icon}"
 						title="${this.config.name ?? entity?.attributes?.friendly_name}"
 						>
-							${this.errorMessage ?? entity?.state}
-							${this.titleValue}
+							${this.renderTitle()}
 						</slick-card-title>
 					</div>
-					${this.error ? html`
-						<div slot="end">
-							<ha-icon icon="mdi:alert-outline"></ha-icon>
-						</div>
-					` : null}
 				</slick-slider>
 			</ha-card>
 		`
@@ -313,19 +332,5 @@ const noop = () => {}
 
 const formatBrightness = val => val !== undefined ? Math.round(val / 255 * 100) + '%' : ''
 const formatWattage = watts => watts !== undefined ? `${watts} W` : ''
-
-const throttle = (callback, millis) => {
-    let timeout = undefined
-	let cachedArgs
-    return (...args) => {
-		cachedArgs = args
-		if (!timeout) {
-            timeout = setTimeout(() => {
-	            callback(...cachedArgs)
-                timeout = undefined
-            }, millis)
-        }
-    }
-}
 
 customElements.define('light-card', LightCard)

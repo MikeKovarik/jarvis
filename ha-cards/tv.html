@@ -91,7 +91,7 @@
 				{type: 'source', name: 'voyo'},
 				{type: 'source', name: 'spotify'},
 			]
-
+/*
 			render(html`
 				<div id="grid" style="grid-template-columns: repeat(${demoStates.length}, 1fr)">
 					${demoStates.map((cfg, i) => html `<div class="header" style="grid-column: ${i + 1}">
@@ -101,11 +101,14 @@
 					</div>`)}
 					${new Array(demoConfigs.length * demoStates.length).fill(0).map(a => html`<my-tv-button-card></my-tv-button-card>`)}
 				</div>
+				*/
+			render(html`
+				<my-tv-card></my-tv-card>
 				<my-tv-card></my-tv-card>
 			`, document.body)
 
 			const cardNodes = Array.from(document.querySelectorAll('my-tv-button-card'))
-			const tvCardNode = document.querySelector('my-tv-card')
+			const tvCardNodes = document.querySelectorAll('my-tv-card')
 			
 			cardNodes.forEach((card, i) => {
 				const x = i % demoStates.length
@@ -122,10 +125,15 @@
 				setTimeout(() => card.requestUpdate())
 			})
 
-			tvCardNode.setConfig({...config})
-			tvCardNode.state = JSON.parse(JSON.stringify(baseState))
-			tvCardNode.requestUpdate()
-			tvCardNode.onStateUpdate?.()
+			tvCardNodes.forEach(tvCardNode => {
+				tvCardNode.state = JSON.parse(JSON.stringify(baseState))
+				tvCardNode.setConfig({...config})
+				tvCardNode.requestUpdate()
+				tvCardNode.onStateUpdate?.()
+			})
+
+			tvCardNodes[1].state = JSON.parse(JSON.stringify(baseState))
+			tvCardNodes[1].state.media_player.state = 'off'
 
 		</script>
 	</body>

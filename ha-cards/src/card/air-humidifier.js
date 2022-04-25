@@ -1,5 +1,5 @@
-import {LitElement, html, css} from 'lit'
-import {mixin, hassData, onOff} from '../mixin/mixin.js'
+import {html, css} from 'lit'
+import {slickElement, hassData, onOff} from '../mixin/mixin.js'
 import * as styles from '../util/styles.js'
 
 
@@ -50,7 +50,7 @@ class EnsureValue {
 
 }
 
-class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
+class AirHumidifierCard extends slickElement(hassData, onOff) {
 
 	static entityType = 'humidifier'
 
@@ -177,6 +177,7 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 			:host(.cyan)    {--color: rgb(70, 180, 255)}
 			:host(.red)     {--color: rgb(255, 0, 0)}
 			:host(.neutral) {--color: rgb(255, 255, 255)}
+			:host(.error)   {--slider-bg-opacity: 0.1;}
 
 			.value-label + .value-label {
 				margin-left: 0.5rem;
@@ -184,12 +185,45 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 		`
 	]
 
+	get icon() {
+		return this.error ? 'mdi:alert-outline' : 'mdi:air-humidifier'
+	}
+
+	renderTitle() {
+		const {state, errorMessage, targetHumidity} = this
+
+		if (this.error) {
+			return errorMessage
+		} else if (!this.isOn) {
+			return 'Off'
+		} else {
+			return html`
+				${this.config.showModeLabel ? html`
+					<strong class="value-label">${this.auto ? 'Auto' : this.mode}</strong>
+				` : ''}
+				<span class="value-label">
+					<strong>${this.currentHumidity}</strong> %
+					${(this.auto && targetHumidity) ? html`
+						/
+						<strong>${targetHumidity}</strong> %
+					` : ''}
+				</span>
+				${this.config.showOtherInfo ? html`
+					<span class="value-label">
+						<strong>${state.temperature?.state}</strong> °C
+					</span>
+				` : ''}
+			`
+		}
+	}
+
 	render() {
 		const {state, errorMessage, targetHumidity} = this
 
 		this.className = [
 			this.colorClass,
-			this.isOn ? 'on' : 'off'
+			this.isOn ? 'on' : 'off',
+			this.error ? 'error' : '',
 		].join(' ')
 
 		return html`
@@ -206,29 +240,11 @@ class AirHumidifierCard extends mixin(LitElement, hassData, onOff) {
 				>
 					<div slot="start">
 						<slick-card-title
-						icon="mdi:air-humidifier"
+						.icon="${this.icon}"
 						title="${state.humidifier?.attributes?.friendly_name}"
 						>
-							${!this.isOn ? 'Off' : html`
-								${this.config.showModeLabel ? html`
-									<strong class="value-label">${this.auto ? 'Auto' : this.mode}</strong>
-								` : ''}
-								<span class="value-label">
-									<strong>${this.currentHumidity}</strong> %
-									${(this.auto && targetHumidity) ? html`
-										/
-										<strong>${targetHumidity}</strong> %
-									` : ''}
-								</span>
-								${this.config.showOtherInfo ? html`
-									<span class="value-label">
-										<strong>${state.temperature?.state}</strong> °C
-									</span>
-								` : ''}
-							`}
-
+							${this.renderTitle()}
 						</slick-card-title>
-						<div>${errorMessage}</div>
 					</div>
 					<div slot="end">
 						<awesome-button @click=${this.toggleMode} icon="${this.presetIcon}" style="display: ${this.offline ? 'none' : ''}"></awesome-button>

@@ -4,10 +4,10 @@ import {clamp, DEBUG} from '../util/util.js'
 
 
 const isDev = !window.hassConnection
-const rootPath = isDev ? 'http://localhost/flora/' : '/local/flora/'
-const imageLibPath      = rootPath + 'images/'
-const customUploadsPath = rootPath + 'uploads/'
-const dataPath          = rootPath + 'data.js'
+const localPath = isDev ? 'http://localhost/' : '/local/'
+const imageLibPath      = localPath + 'flora/images/'
+const customUploadsPath = localPath + 'flora/uploads/'
+const dataPath          = localPath + 'flora/data.js'
 
 const backendPort = 3001
 const apiRoot = `${location.protocol}//${location.hostname}:${backendPort}`
@@ -50,7 +50,8 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 	async setConfig(config) {
 		super.setConfig(config)
 		this.entityIdSlug = config.entity.split('.')[1]
-		this.customImagePath  = config.photo ?? config.image
+		const userImageParam = config.photo ?? config.image
+		this.customImagePath  = userImageParam ? localPath + userImageParam : undefined
 		this.uploadImagePath  = this.getImagePath(this.entityIdSlug, customUploadsPath)
 		this.titleImagePath   = this.getImagePath(getFlowerFileName(config.title), imageLibPath)   // user's card title: "Křoví"
 		this.nameImagePath    = this.getImagePath(getFlowerFileName(config.name), imageLibPath)    // flowers name: "Buxus microphylla var. insularis"

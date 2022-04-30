@@ -39,7 +39,7 @@ export const resizeObserver = Base => class extends Base {
 		//this.emit('resize', {width, height})
 		if (this.#didCrossBreakpoint(this.width, oldWidth))
 			this.requestUpdate()
-	}, 100)
+	}, 20)
 
 	#didCrossBreakpoint(newWidth, oldWidth) {
 		for (let b of this.breakpoints) {

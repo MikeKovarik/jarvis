@@ -1,65 +1,149 @@
-import {LitElement, html, css} from 'lit'
-import {slickElement, hassData} from '../mixin/mixin.js'
+import {html, css} from 'lit'
+import {slickElement, hassData, resizeObserver} from '../mixin/mixin.js'
+import {clamp, DEBUG} from '../util/util.js'
 
 
 const isDev = !window.hassConnection
-console.log('~ isDev', isDev)
-const imageLibPath = isDev ? 'http://localhost/flora-images/' : '/local/flora-images/'
-const customUploadsPath = isDev ? './' : '/local/'
+const rootPath = isDev ? 'http://localhost/flora/' : '/local/flora/'
+const imageLibPath      = rootPath + 'images/'
+const customUploadsPath = rootPath + 'uploads/'
+const dataPath          = rootPath + 'data.js'
 
-class FlowerCard extends slickElement(hassData) {
+const backendPort = 3001
+const apiRoot = `${location.protocol}//${location.hostname}:${backendPort}`
+
+function prevent(e) {
+	e.preventDefault()
+	e.stopPropagation()
+}
+
+const dbReady = new Promise(async (resolve, reject) => {
+	try {
+		const {default: dbArray} = await import(dataPath)
+		const entries = dbArray.map(entry => [getFlowerKey(entry[0]), entry])
+		const dbMap = new Map(entries)
+		resolve(dbMap)
+	} catch (err) {
+		reject(err)
+	}
+})
+
+const getFlowerFileName = str => str?.toLowerCase()
+const getFlowerKey      = str => getFlowerFileName(str)?.replace(/[^a-z ]/g, '')
+
+class FlowerCard extends slickElement(hassData, resizeObserver) {
 
 	static entityType = 'plant'
 
 	getCardSize = () => 2
 
-	setConfig(config) {
+	loading = true
+	apiConnected = false
+
+	static properties = {
+		loading: {type: Boolean},
+		apiConnected: {type: Boolean},
+		errorMessage: {type: String},
+		dbEntry: {type: Object},
+	}
+
+	async setConfig(config) {
 		super.setConfig(config)
-        console.log('~ config', config)
-		const [, entityId] = config.entity.split('.')
+		this.entityIdSlug = config.entity.split('.')[1]
 		this.customImagePath  = config.photo ?? config.image
-		this.uploadImagePath  = this.getImagePath(entityId, customUploadsPath)
-		this.nameImagePath    = this.getImagePath(config.name ?? config.title, imageLibPath)
-		this.speciesImagePath = this.getImagePath(config.species, imageLibPath)
+		this.uploadImagePath  = this.getImagePath(this.entityIdSlug, customUploadsPath)
+		this.titleImagePath   = this.getImagePath(getFlowerFileName(config.title), imageLibPath)   // user's card title: "Křoví"
+		this.nameImagePath    = this.getImagePath(getFlowerFileName(config.name), imageLibPath)    // flowers name: "Buxus microphylla var. insularis"
+		this.speciesImagePath = this.getImagePath(getFlowerFileName(config.species), imageLibPath) // flowers species: "buxus megistophylla"
+
+		try {
+			this.loading = true
+			const db = await dbReady
+
+			this.dbEntry = db.get(getFlowerKey(config.name))
+						?? db.get(getFlowerKey(config.species))
+						?? db.get(getFlowerKey(config.title))
+
+			this.loading = false
+		} catch (err) {
+			this.errorMessage = err.message
+		}
 	}
 
 	static styles = css`
+		:host,
+		* {
+			box-sizing: border-box;
+		}
 		:host {
 			display: block;
 			user-select: none;
 		}
 
-		:host([size="small"]) {
-			--flower-height: 240px;
-			--flower-header-size: 1.125rem;
+		:host(.small) {
+			--aspect-ratio: 1 / 1;
+			--flower-header-size: 1rem;
+			--bg-position: center top;
 		}
 
 		:host,
-		:host([size="medium"]) {
-			--flower-height: 280px;
-			--flower-header-size: 1.25rem;
+		:host(.medium) {
+			--aspect-ratio: 4 / 3;
+			--flower-header-size: 1.125rem;
+			--bg-position: center 80%;
 		}
 
-		:host([size="large"]) {
-			--flower-height: 360px;
+		:host(.large) {
+			--aspect-ratio: 16 / 9;
 			--flower-header-size: 1.5rem;
+			--flower-header-line-height: 2rem;
+			--bg-position: center 70%;
 		}
 
 		ha-card {
 			background-size: cover;
-			background-position: center;
-			height: var(--flower-height);
+			background-position: var(--bg-position);
 			position: relative;
+			overflow: hidden;
+		}
+		:host(.dragover) {
+			opacity: 0.6;
 		}
 
-			#wrapper {
-				position: absolute;
-				right: 0;
-				left: 0;
-				bottom: 0;
-				z-index: 1;
+			#content {
+				aspect-ratio: var(--aspect-ratio);
+				max-height: 320px;
+				padding: 1rem;
+				position: relative;
+				display: flex;
+				flex-direction: row-reverse;
 			}
-			#wrapper::after {
+				awesome-button {
+					width: 2.5rem;
+					height: 2.5rem;
+					margin-right: -0.5rem;
+					margin-top: -0.5rem;
+					position: relative;
+				}
+					awesome-button input {
+						position: absolute;
+						visibility: hidden;
+					}
+					awesome-button label {
+						position: absolute;
+						inset: 0;
+						cursor: pointer;
+					}
+
+			#details {
+				width: 100%;
+				backdrop-filter: blur(5px);
+				display: grid;
+				padding: 1rem;
+				gap: 0.5rem;
+				grid-template-columns: repeat(2, 1fr);
+			}
+			#details::after {
 				content: '';
 				position: absolute;
 				inset: 0;
@@ -69,22 +153,17 @@ class FlowerCard extends slickElement(hassData) {
 			}
 
 			h2 {
+				grid-column: span 2;
 				margin: 0;
-				padding: 1.25rem 1rem 0rem 1rem;
+				padding: 0;
 				display: block;
 				text-transform: capitalize;
 				font-weight: 400;
 				font-size: var(--flower-header-size);
+				line-height: var(--flower-header-line-height);
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
-			}
-
-			#grid {
-				display: grid;
-				padding: 1rem;
-				gap: 0.5rem 2rem;
-				grid-template-columns: repeat(2, 1fr);
 			}
 	`
 
@@ -98,8 +177,10 @@ class FlowerCard extends slickElement(hassData) {
 
 	get backgroundImage() {
 		return [
+			this.objectUrl,
 			this.customImagePath,
-			this.uploadImagePath,
+			`${this.uploadImagePath}?random=${this.lastUploadHash}`,
+			this.titleImagePath,
 			this.nameImagePath,
 			this.speciesImagePath,
 		]
@@ -108,24 +189,119 @@ class FlowerCard extends slickElement(hassData) {
 		.join(', ')
 	}
 
-	render() {
+	breakpoints = [200, 300]
+
+	get sizeClass() {
+		if (this.width <= 200) return 'small'
+		if (this.width <= 300) return 'medium'
+		return 'large'
+	}
+
+	isDraggingOver = false
+
+	onDropEnter = async e => {
+		prevent(e)
+		const lastVal = this.isDraggingOver
+		this.isDraggingOver = true
+		this.requestUpdate(this.isDraggingOver, lastVal)
+	}
+
+	onDropLeave = async e => {
+		prevent(e)
+		const lastVal = this.isDraggingOver
+		this.isDraggingOver = false
+		this.requestUpdate(this.isDraggingOver, lastVal)
+	}
+
+	onDrop = async e => {
+		this.onDropLeave(e)
+		this.handleFiles(e.dataTransfer.files)
+	}
+
+	onFileSelect = e => this.handleFiles(e.target.files)
+
+	lastUploadHash = 0
+
+	handleFiles = async files => {
+		const [file] = Array.from(files)
+
+		//http://localhost:3001/flower
+		await fetch(`${apiRoot}/flower/${this.entityIdSlug}`, {
+			method: 'POST',
+			headers: {'content-type': file.type},
+			body: file
+		})
+		this.lastUploadHash = Date.now()
+		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${this.lastUploadHash}`).then(res => res.blob())
+		this.objectUrl = URL.createObjectURL(resizedPhotoBlob)
+		this.requestUpdate()
+	}
+
+	renderCharts() {
 		const {config, state, entity} = this
 		const attrs = entity?.attributes
 		const units = entity?.attributes?.unit_of_measurement_dict
+        
+		if (this.errorMessage) return this.errorMessage
 
+		if (!this.loading && !this.dbEntry) {
+			const names = [config.name, config.species, config.title].filter(a => a)
+			if (names.length)
+				return `Couldn't find any data for "${names.join('" or "')}"`
+			else
+				return `Couldn't find any data. No flower name was given`
+		}
+
+		const [
+			name, species,
+			brightnessMin, brightnessMax,
+			temperatureMin, temperatureMax,
+			moistureMin, moistureMax,
+			conductivityMin, conductivityMax,
+		] = this.dbEntry ?? []
+
+		return html`
+			<slick-icon-chart title="${attrs?.temperature} ${units.temperature}"   icon="mdi:thermometer-low"      .val="${attrs?.temperature}"  .min="${temperatureMin}"  .max="${temperatureMax}"></slick-icon-chart>
+			<slick-icon-chart title="${attrs?.brightness} ${units.brightness}"     icon="hass:white-balance-sunny" .val="${attrs?.brightness}"   .min="${brightnessMin}"   .max="${brightnessMax}"></slick-icon-chart>
+			<slick-icon-chart title="${attrs?.moisture} ${units.moisture}"         icon="mdi:water-outline"        .val="${attrs?.moisture}"     .min="${moistureMin}"     .max="${moistureMax}"></slick-icon-chart>
+			<slick-icon-chart title="${attrs?.conductivity} ${units.conductivity}" icon="mdi:emoticon-poop"        .val="${attrs?.conductivity}" .min="${conductivityMin}" .max="${conductivityMax}"></slick-icon-chart>
+			${DEBUG ? html`
+				<pre style="grid-column: span 2; white-space: pre-line; font-size: 12px">
+					temperature:  ${attrs?.temperature}  (min ${temperatureMin} max ${temperatureMax})
+					brightness:   ${attrs?.brightness}   (min ${brightnessMin} max ${brightnessMax})
+					moisture:     ${attrs?.moisture}     (min ${moistureMin} max ${moistureMax})
+					conductivity: ${attrs?.conductivity} (min ${conductivityMin} max ${conductivityMax})
+				</pre>
+			` : ''}
+		`
+	}
+
+	render() {
+		const {config, state, entity} = this
 		const title = config.title ?? config.name ?? config.species
-		//entity.friendly_name: "plant_c47c8d6da8d7"
+
+		this.className = [
+			this.sizeClass,
+			this.isDraggingOver ? 'dragover' : ''
+		].join(' ')
 
 		return html`
 			<ha-card style="background-image: ${this.backgroundImage}">
-				<div id="wrapper">
+				<div id="content"
+				@dragenter="${this.onDropEnter}"
+				@dragover="${this.onDropEnter}"
+				@dragleave="${this.onDropLeave}"
+				@drop="${this.onDrop}">
+					${this.apiConnected ? html`
+						<awesome-button icon="mdi:camera-outline">
+							<input type="file" id="file" accept="image/*;capture=camera" @change="${this.onFileSelect}">
+							<label for="file"></label>
+						</awesome-button>
+					` : ''}
+				</div>
+				<div id="details">
 					<h2>${title}</h2>
-					<div id="grid">
-						<slick-icon-chart title="${attrs?.brightness} ${units.brightness}"     icon="mdi:thermometer-low" value="100"></slick-icon-chart>
-						<slick-icon-chart title="${attrs?.conductivity} ${units.conductivity}" icon="hass:white-balance-sunny" value="75"></slick-icon-chart>
-						<slick-icon-chart title="${attrs?.moisture} ${units.moisture}"         icon="mdi:water-outline" value="50"></slick-icon-chart>
-						<slick-icon-chart title="${attrs?.temperature} ${units.temperature}"   icon="mdi:emoticon-poop" value="25"></slick-icon-chart>
-					</div>
+					${this.renderCharts()}
 				</div>
 			</ha-card>
 		`
@@ -135,28 +311,16 @@ class FlowerCard extends slickElement(hassData) {
 		*/
 	}
 
-	/*
-
-	thermometer-low
-	thermometer
-	thermometer-high
-
-	watering-can-outline
-	watering-can
-
-	emoticon-poop-outline
-	emoticon-poop
-	*/
-
 }
 
 class IconChart extends slickElement() {
 
-	value = 0
-
 	static properties = {
-		value: {type: Number},
+		val: {type: Number},
+		min: {type: Number},
+		max: {type: Number},
 		icon: {type: String},
+		color: {type: String, reflect: true},
 	}
 
 	static styles = css`
@@ -167,7 +331,7 @@ class IconChart extends slickElement() {
 			--color: rgb(255, 48, 58);
 		}
 		:host([color="orange"]) {
-			--color: rgb(175, 120, 0);
+			--color: rgb(205, 140, 40);
 		}
 		:host([color="green"]) {
 			--color: rgb(105, 200, 10);
@@ -176,36 +340,95 @@ class IconChart extends slickElement() {
 		:host {
 			display: flex;
 			align-items: center;
+			position: relative;
+			overflow: hidden;
 		}
+			:host::before {
+				content: attr(title);
+				position: absolute;
+				left: 24px;
+				top: 0px;
+				bottom: 0px;
+				font-size: 12px;
+				z-index: 1;
+				display: inline-flex;
+				align-items: center;
+				white-space: nowrap;
+			}
 			ha-icon {
-				margin-right: 0.5rem;
+				position: absolute;
+				left: -2px;
+				transform: scale(0.5);
+				z-index: 99;
 			}
 			.bar {
-				height: 10px;
+				height: 18px;
 				width: 100%;
 				border-radius: 3px;
 				background-color: rgba(128, 128, 128, 0.2);
 				position: relative;
 				overflow: hidden;
+				display: flex;
 			}
-				.indicator {
-					width: 0%;
+				.indicator,
+				.bar::after {
+					display: block;
 					height: 100%;
 					background-color: var(--color);
+				}
+				.indicator {
+					padding-left: 0.25rem;
+					width: 0%;
 					opacity: 0.5;
 				}
+				.bar::after {
+					content: '';
+					flex: 1;
+					opacity: 0.15;
+				}
 	`
+
+	percentageToColor(val) {
+		if (val <= 0 || val >= 100) return 'red'
+		if (val <= 15 || val >= 85) return 'orange'
+		return 'green'
+	}
+
+	updated(map) {
+		if (this.val === undefined || this.min === undefined || this.max === undefined) {
+			// loading state should not have any color
+			this.percentage = 0
+			this.color = undefined
+		} else {
+			const shiftedVal = this.val - this.min
+			const shiftedMax = this.max - this.min
+			this.percentage = clamp((shiftedVal / shiftedMax) * 100, 0, 100)
+			this.color = this.percentageToColor(this.percentage)
+		}
+	}
 
 	render() {
 		return html`
 			<ha-icon icon="${this.icon}"></ha-icon>
-			<div class="bar" id="temp">
-				<div class="indicator" style="width: ${this.value}%"></div>
+			<div class="bar">
+				<div class="indicator" style="width: calc(${this.percentage}% - 0.25rem)"></div>
 			</div>
 		`
 	}
 
 }
+
+
+/*
+EXAMPLE OF THE FORMAT:
+first is name, second is species
+
+["Allium schoenoprasum", "allium oschaninii", 3500, 50000, 8, 35, 15, 60, 350, 2000],
+["Allium scorodoprasum", "allium oschaninii", 3500, 50000, 8, 35, 15, 60, 350, 2000],
+["Allium sphaerocephalon", "allium oschaninii", 3500, 50000, 8, 35, 15, 60, 350, 2000],
+["Allium stipitatum", "allium oschaninii", 3500, 50000, 8, 35, 15, 60, 350, 2000],
+["Allium tuberosum", "allium tuberosum", 2500, 110000, 6, 35, 25, 65, 50, 2000],
+*/
 
 
 customElements.define('slick-icon-chart', IconChart)

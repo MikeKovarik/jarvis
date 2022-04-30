@@ -31,8 +31,7 @@
 /ha-cards/dist
 /ha-cards/logos
 /ha-cards/package-lock.json
-/flora-images
-/ha-cards/flora-images
+/ha-cards/flora/images
 /ha-cards/examples/calathea-zebrina.jpg
 /Screenshot_20220326-211833.png
 /data/config-hass-proxy.json

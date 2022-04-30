@@ -20,6 +20,13 @@
 			"NODE_ENV": "prod"
 		}
 	}, {
+		"name"           : "ha-extension",
+		"script"         : "ha-cards/backend/index.js",
+		"log_date_format": "DD.MM. HH:mm:ss",
+		"env": {
+			"NODE_ENV": "prod"
+		}
+	}, {
 		"name"           : "proxy-hub",
 		"script"         : "internet-proxy/proxy-hub.cjs",
 		"log_date_format": "DD.MM. HH:mm:ss",

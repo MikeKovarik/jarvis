@@ -1,6 +1,7 @@
 import {html, css} from 'lit'
 import {slickElement, hassData, resizeObserver} from '../mixin/mixin.js'
 import {clamp, DEBUG} from '../util/util.js'
+import api from '../util/backend.js'
 
 
 const isDev = !window.hassConnection
@@ -8,9 +9,6 @@ const localPath = isDev ? 'http://localhost/' : '/local/'
 const imageLibPath      = localPath + 'flora/images/'
 const customUploadsPath = localPath + 'flora/uploads/'
 const dataPath          = localPath + 'flora/data.js'
-
-const backendPort = 3001
-const apiRoot = `${location.protocol}//${location.hostname}:${backendPort}`
 
 function prevent(e) {
 	e.preventDefault()
@@ -38,11 +36,9 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 	getCardSize = () => 2
 
 	loading = true
-	apiConnected = false
 
 	static properties = {
 		loading: {type: Boolean},
-		apiConnected: {type: Boolean},
 		errorMessage: {type: String},
 		dbEntry: {type: Object},
 	}
@@ -224,14 +220,11 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 	lastUploadHash = 0
 
 	handleFiles = async files => {
+		if (files.length === 0) return
 		const [file] = Array.from(files)
 
 		//http://localhost:3001/flower
-		await fetch(`${apiRoot}/flower/${this.entityIdSlug}`, {
-			method: 'POST',
-			headers: {'content-type': file.type},
-			body: file
-		})
+		await api.post(`/flower/${this.entityIdSlug}`, file)
 		this.lastUploadHash = Date.now()
 		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${this.lastUploadHash}`).then(res => res.blob())
 		this.objectUrl = URL.createObjectURL(resizedPhotoBlob)
@@ -323,7 +316,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 				@dragover="${this.onDropEnter}"
 				@dragleave="${this.onDropLeave}"
 				@drop="${this.onDrop}">
-					${this.apiConnected ? html`
+					${api.connected ? html`
 						<awesome-button icon="mdi:camera-outline">
 							<input type="file" id="file" accept="image/*;capture=camera" @change="${this.onFileSelect}">
 							<label for="file"></label>

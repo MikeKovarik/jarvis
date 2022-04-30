@@ -260,11 +260,41 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 			conductivityMin, conductivityMax,
 		] = this.dbEntry ?? []
 
+		const chartData = [{
+			unit: units.temperature,
+			val: attrs?.temperature,
+			min: temperatureMin,
+			max: temperatureMax,
+			icon: "mdi:thermometer-low",
+		}, {
+			unit: units.brightness,
+			val: attrs?.brightness,
+			min: brightnessMin,
+			max: brightnessMax,
+			icon: "hass:white-balance-sunny",
+		}, {
+			unit: units.moisture,
+			val: attrs?.moisture,
+			min: moistureMin,
+			max: moistureMax,
+			icon: "mdi:water-outline",
+		}, {
+			unit: units.conductivity,
+			val: attrs?.conductivity,
+			min: conductivityMin,
+			max: conductivityMax,
+			icon: "mdi:emoticon-poop",
+		}]
+
+		return chartData.map(({unit, val, min, max, icon}) => html`
+			<slick-icon-chart icon="${icon}" .val="${val}" .min="${min}" .max="${max}"
+			title="${val} ${unit} | min ${min} ${unit} | max ${max} ${unit}">
+				${val} ${unit}
+			</slick-icon-chart>
+		`)
+
+		// TODO
 		return html`
-			<slick-icon-chart title="${attrs?.temperature} ${units.temperature}"   icon="mdi:thermometer-low"      .val="${attrs?.temperature}"  .min="${temperatureMin}"  .max="${temperatureMax}"></slick-icon-chart>
-			<slick-icon-chart title="${attrs?.brightness} ${units.brightness}"     icon="hass:white-balance-sunny" .val="${attrs?.brightness}"   .min="${brightnessMin}"   .max="${brightnessMax}"></slick-icon-chart>
-			<slick-icon-chart title="${attrs?.moisture} ${units.moisture}"         icon="mdi:water-outline"        .val="${attrs?.moisture}"     .min="${moistureMin}"     .max="${moistureMax}"></slick-icon-chart>
-			<slick-icon-chart title="${attrs?.conductivity} ${units.conductivity}" icon="mdi:emoticon-poop"        .val="${attrs?.conductivity}" .min="${conductivityMin}" .max="${conductivityMax}"></slick-icon-chart>
 			${DEBUG ? html`
 				<pre style="grid-column: span 2; white-space: pre-line; font-size: 12px">
 					temperature:  ${attrs?.temperature}  (min ${temperatureMin} max ${temperatureMax})
@@ -343,8 +373,7 @@ class IconChart extends slickElement() {
 			position: relative;
 			overflow: hidden;
 		}
-			:host::before {
-				content: attr(title);
+			slot {
 				position: absolute;
 				left: 24px;
 				top: 0px;
@@ -410,6 +439,7 @@ class IconChart extends slickElement() {
 	render() {
 		return html`
 			<ha-icon icon="${this.icon}"></ha-icon>
+			<slot></slot>
 			<div class="bar">
 				<div class="indicator" style="width: calc(${this.percentage}% - 0.25rem)"></div>
 			</div>

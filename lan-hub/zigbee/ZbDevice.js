@@ -151,7 +151,10 @@ export class Light extends ZbDevice {
 
 	willReportState = true
 
-	static matches = notExposesAction
+	static matches = whoami => {
+		return notExposesAction(whoami)
+			&& whoami.definition.exposes.some(e => e.type === 'light' || e.type === 'switch')
+	}
 
 	constructor(whoami) {
 		super(whoami)

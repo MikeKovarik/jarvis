@@ -1,3 +1,5 @@
+import Iridescent from 'iridescent'
+import ColorConverter from 'cie-rgb-color-converter'
 import actions from '../shared/actions.js'
 import * as zbTopics from './topics.js'
 import {GhomeDevice} from '../shared/GhomeDevice.js'
@@ -189,8 +191,27 @@ export class Light extends ZbDevice {
 		if (brightness) {
 			this.traits.push(TRAITS.Brightness)
 			this._stateProps.add('brightness')
-			this._brightnessMaxZb = brightness.value_max
 			this._brightnessMinZb = brightness.value_min
+			this._brightnessMaxZb = brightness.value_max
+		}
+
+		let colorTemp = features?.find(f => f.name === 'color_temp')
+		if (colorTemp) {
+			this.traits.push(TRAITS.TemperatureSetting)
+			this._stateProps.add('color_temp')
+			this._tempMinZb = colorTemp.value_min
+			this._tempMaxZb = colorTemp.value_max
+			this.attributes.colorTemperatureRange = {
+				temperatureMinK: miredScaleToKelvin(colorTemp.value_min),
+				temperatureMaxK: miredScaleToKelvin(colorTemp.value_max)
+			}
+		}
+
+		let colorXy = features?.find(f => f.name === 'color_xy')
+		if (colorXy) {
+			this.traits.push(TRAITS.ColorSetting)
+			this._stateProps.add('color_xy')
+			this.attributes.colorModel = 'rgb'
 		}
 
 	}
@@ -233,10 +254,10 @@ export class Light extends ZbDevice {
 
 		brightness: val => ({brightness: this.gh2zb._brightness(val)}),
 		on:         val => ({state: this.gh2zb._on(val)}),
-		color: ({temperatureK, spectrumRgb, spectrumHsv}) => ({
+		color: ({temperatureK, spectrumRgb/*, spectrumHsv*/}) => ({
 			...(temperatureK !== undefined ? {color_temp: kelvinToMiredScale(temperatureK)} : {}),
-			...(spectrumRgb  !== undefined ? {color_xy:   void(temperatureK)} : {}), // todo
-			...(spectrumHsv  !== undefined ? {color_hs:   void(temperatureK)} : {}), // todo
+			...(spectrumRgb  !== undefined ? {color_xy:   rgbToXy(spectrumRgb)} : {}),
+			//...(spectrumHsv  !== undefined ? {color_hs:   void(spectrumHsv)} : {}), // todo
 		}),
 	}
 
@@ -249,15 +270,12 @@ export class Light extends ZbDevice {
 			return clamp(round, this._brightnessMinGh + 1, this._brightnessMaxGh)
 		},
 		_state: val => val === this._stateOnZb,
-		_color_temp: miredScaleToKelvin,
-		_color_xy: val => undefined, // todo
-		_color_hs: val => undefined, // todo https://www.zigbee2mqtt.io/zbDevices/RB_285_C.html
 
 		brightness: val => ({brightness: this.zb2gh._brightness(val)}),
 		state:      val => ({on: this.zb2gh._state(val)}),
-		color_temp: val => ({color: {temperatureK: this.zb2gh._color_temp(val)}}),
-		color_xy:   val => ({color: {spectrumRgb:  this.zb2gh._color_xy(val)}}),
-		color_hs:   val => ({color: {spectrumHsv:  this.zb2gh._color_hs(val)}}),
+		color_temp: val => ({color: {temperatureK: miredScaleToKelvin(val)}}),
+		//color_xy:   xy => ({color: {spectrumRgb:  xyBriToRgb(xy, brightness)}}), // todo. get brightness in
+		//color_hs:   val => ({color: {spectrumHsv:  brightness(val)}}),
 	}
 
 	translateGhToZb(ghState) {
@@ -303,6 +321,21 @@ export class Sensor extends ZbDevice {
 const msMin = 153
 const msMax = 555
 const megaKelvin = 1000000
+
+// google home returns rgb value as integer (not string hex)
+const rgbToXy = rgbInt => {
+	const hex = rgbInt.toString(16).padStart(6, '0')
+	const {r, g, b} = Iridescent.hexToRgb(hex)
+	return ColorConverter.rgbToXy(r, g, b)
+}
+
+// google home accepts rgb as integer number (not object, nor hex string)
+const xyBriToRgb = ({x, y}, brightness) => {
+	const {r, g, b} = ColorConverter.xyBriToRgb(x, y, brightness)
+	const hex = Iridescent.rgbToHex({r, g, b})
+	const int = parseInt(hex.slice(1), 16)
+	return int
+}
 
 const kelvinToMiredScale = kelvin => clamp(Math.round((1 / kelvin) * megaKelvin), msMin, msMax)
 const miredScaleToKelvin = ms     => Math.round((1 / clamp(ms, msMin, msMax)) * megaKelvin)

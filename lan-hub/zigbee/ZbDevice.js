@@ -270,7 +270,9 @@ export class Light extends ZbDevice {
 
 export class Sensor extends ZbDevice {
 
-	static matches = whoami => false
+	static matches = whoami => true
+
+	willReportState = false
 
 	injectWhoami(whoami) {
 		super.injectWhoami(whoami)

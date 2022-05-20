@@ -1,5 +1,5 @@
 import {html, css} from 'lit'
-import {slickElement, hassData, onOff} from '../mixin/mixin.js'
+import {slickElement, hassData, onOff, resizeObserver} from '../mixin/mixin.js'
 import * as styles from '../util/styles.js'
 
 
@@ -50,7 +50,7 @@ class EnsureValue {
 
 }
 
-class AirHumidifierCard extends slickElement(hassData, onOff) {
+class AirHumidifierCard extends slickElement(hassData, onOff, resizeObserver) {
 
 	static entityType = 'humidifier'
 
@@ -179,8 +179,8 @@ class AirHumidifierCard extends slickElement(hassData, onOff) {
 			:host(.neutral) {--color: rgb(255, 255, 255)}
 			:host(.error)   {--slider-bg-opacity: 0.1;}
 
-			.value-label + .value-label {
-				margin-left: 0.5rem;
+			slick-card-title > *:not(:last-child) {
+				margin-right: 0.5rem;
 			}
 		`
 	]
@@ -189,36 +189,35 @@ class AirHumidifierCard extends slickElement(hassData, onOff) {
 		return this.error ? 'mdi:alert-outline' : 'mdi:air-humidifier'
 	}
 
+	get showModeLabel() {
+		return this.width >= 220 && this.config.showModeLabel
+	}
+
+	breakpoints = [220]
+
 	renderTitle() {
-		const {state, errorMessage, targetHumidity} = this
+		const {state, errorMessage, targetHumidity, showModeLabel} = this
 
 		if (this.error) {
 			return errorMessage
 		} else if (!this.isOn) {
 			return 'Off'
 		} else {
-			return html`
-				${this.config.showModeLabel ? html`
-					<strong class="value-label">${this.auto ? 'Auto' : this.mode}</strong>
-				` : ''}
-				<span class="value-label">
+			return [
+				showModeLabel ? html`<strong>${this.auto ? 'Auto' : this.mode}</strong>` : '',
+				html`
 					<strong>${this.currentHumidity}</strong> %
-					${(this.auto && targetHumidity) ? html`
-						/
-						<strong>${targetHumidity}</strong> %
-					` : ''}
-				</span>
-				${this.config.showOtherInfo ? html`
-					<span class="value-label">
-						<strong>${state.temperature?.state}</strong> °C
-					</span>
-				` : ''}
-			`
+					${(this.auto && targetHumidity) ? html`/ <strong>${targetHumidity}</strong> %` : ''}
+				`,
+				this.config.showOtherInfo ? html`<strong>${state.temperature?.state}</strong> °C` : ''
+			]
+			.filter(item => item)
+			.map(item => html`<span>${item}</span>`)
 		}
 	}
 
 	render() {
-		const {state, errorMessage, targetHumidity} = this
+		const {state, targetHumidity} = this
 
 		this.className = [
 			this.colorClass,

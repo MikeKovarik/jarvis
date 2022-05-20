@@ -13,6 +13,12 @@ console.log('Flora uploads path:', uploadsPath)
 const router = express.Router()
 export default router
 
+router.get('/', async (req, res) => {
+	const files = await fs.readdir(uploadsPath).catch(err => [])
+	res.status(200)
+	res.json(files)
+})
+
 router.post('/:entity', async (req, res) => {
 	await fs.mkdir(uploadsPath, {recursive: true}).catch(console.error)
 
@@ -42,7 +48,7 @@ router.delete('/:entity', async (req, res) => {
 	const filePath = path.join(uploadsPath, `${req.params.entity}.jpg`)
 
 	try {
-		await fs.unlink(uploadsPath)
+		await fs.unlink(filePath)
 		res.status(200)
 	} catch {
 		res.status(500)

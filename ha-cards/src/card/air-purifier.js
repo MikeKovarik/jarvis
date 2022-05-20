@@ -58,7 +58,7 @@ class AirPurifierCard extends slickElement(hassData, onOff, resizeObserver) {
 		const value = Number(this.state.pm2_5?.state)
 		if (!this.isOn || value === null || value === undefined)
 			return 0
-		else if (value >= 200)
+		else if (value >= 150)
 			return 3
 		else if (value >= 75)
 			return 2
@@ -87,12 +87,11 @@ class AirPurifierCard extends slickElement(hassData, onOff, resizeObserver) {
 			:host(.red)     {--color: rgb(255, 0, 0)}
 			:host(.neutral) {--color: rgb(255, 255, 255)}
 
-			.value-label + .value-label {
-				margin-left: 0.5rem;
+			slick-card-title > *:not(:last-child) {
+				margin-right: 0.5rem;
 			}
 		`
 	]
-
 
 	get showPm2() {
 		return this.width >= 160
@@ -104,10 +103,30 @@ class AirPurifierCard extends slickElement(hassData, onOff, resizeObserver) {
 
 	breakpoints = [160, 220]
 
-	render() {
-		const {state, mode} = this
-		const {showPm2, showPm2Unit} = this
+	renderTitle() {
+		const {state, mode, showPm2, showPm2Unit} = this
 		const {showModeLabel, showOtherInfo} = this.config
+
+		if (!this.isOn) {
+			return 'Off'
+		} else {
+			const nodes = [
+				showModeLabel ? html`<strong>${mode === 'Favorite' ? 'Custom' : mode}</strong>` : '',
+				showPm2 ? html`
+					<strong>${state.pm2_5?.state}</strong>
+					${showPm2Unit ? state.pm2_5?.attributes?.unit_of_measurement : ''}
+				` : '',
+				showOtherInfo ? html`<strong>${this.speed}</strong> rpm` : '',
+			]
+			.filter(item => item)
+			.map(item => html`<span>${item}</span>`)
+			return nodes
+		}
+
+	}
+
+	render() {
+		const {state} = this
 
 		this.className = [
 			this.colorClass,
@@ -131,20 +150,7 @@ class AirPurifierCard extends slickElement(hassData, onOff, resizeObserver) {
 						icon="mdi:air-filter"
 						title="${state.fan?.attributes?.friendly_name}"
 						>
-							${!this.isOn ? 'Off' : html`
-								${showModeLabel ? html`
-									<strong class="value-label">${mode === 'Favorite' ? 'Custom' : mode}</strong>
-								` : ''}
-								${showPm2 ? html`<span class="value-label">
-									<strong>${state.pm2_5?.state}</strong>
-									${showPm2Unit ? state.pm2_5?.attributes?.unit_of_measurement : ''}
-								</span>` : ''}
-								${showOtherInfo ? html`
-									<span class="value-label">
-										<strong>${this.speed}</strong> rpm
-									</span>
-								` : ''}
-							`}
+							${this.renderTitle()}
 						</slick-card-title>
 					</div>
 					<div slot="end">

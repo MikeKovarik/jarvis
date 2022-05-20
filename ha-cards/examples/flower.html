@@ -61,6 +61,8 @@
 
 			const demoStates = [
 				{},
+				// empty state?
+				{"plant":{"entity_id":"plant.plant_c47c8d6dca82","state":"problem","attributes":{"problem":"moisture unavailable, temperature unavailable, conductivity unavailable, brightness unavailable","sensors":{"moisture":"sensor.flora_c47c8d6dca82_moisture","battery":"sensor.flora_c47c8d6dca82_battery","temperature":"sensor.flora_c47c8d6dca82_temperature","conductivity":"sensor.flora_c47c8d6dca82_conductivity","brightness":"sensor.flora_c47c8d6dca82_light_intensity"},"unit_of_measurement_dict":{"temperature":"°C","brightness":"lx","moisture":"%","conductivity":"µS/cm","battery":"%"},"moisture":"unavailable","battery":45,"temperature":"unavailable","conductivity":"unavailable","brightness":"unavailable","friendly_name":"plant_c47c8d6dca82"},"last_changed":"2022-05-12T17:37:51.576660+00:00","last_updated":"2022-05-12T17:38:23.345724+00:00","context":{"id":"81b8d88c9865421dbbd585c5c353c239","parent_id":null,"user_id":null}}},
 			]
 
 			const demoConfigs = [
@@ -83,7 +85,10 @@
 				const cfg            = demoConfigs[y]
 				
 				const state = JSON.parse(JSON.stringify(baseState))
-				Object.assign(state.plant.attributes, stateExtension)
+				if (stateExtension.plant)
+					Object.assign(state, stateExtension)
+				else
+					Object.assign(state.plant.attributes, stateExtension)
 
 				card.setConfig({...baseConfig, ...cfg})
 				card.state = state

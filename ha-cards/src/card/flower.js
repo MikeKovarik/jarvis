@@ -1,6 +1,6 @@
 import {html, css} from 'lit'
 import {slickElement, hassData, resizeObserver} from '../mixin/mixin.js'
-import {clamp, DEBUG} from '../util/util.js'
+import {clamp, DEBUG, timeSince} from '../util/util.js'
 import api from '../util/backend.js'
 
 
@@ -48,7 +48,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		this.entityIdSlug = config.entity.split('.')[1]
 		const userImageParam = config.photo ?? config.image
 		this.customImagePath  = userImageParam ? localPath + userImageParam : undefined
-		this.uploadImagePath  = this.getImagePath(this.entityIdSlug, customUploadsPath)
+		this.uploadImagePath  = this.getImagePath(this.entityIdSlug, customUploadsPath, this.lastUploadDate)
 		this.titleImagePath   = this.getImagePath(getFlowerFileName(config.title), imageLibPath)   // user's card title: "Křoví"
 		this.nameImagePath    = this.getImagePath(getFlowerFileName(config.name), imageLibPath)    // flowers name: "Buxus microphylla var. insularis"
 		this.speciesImagePath = this.getImagePath(getFlowerFileName(config.species), imageLibPath) // flowers species: "buxus megistophylla"
@@ -67,6 +67,19 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		}
 	}
 
+	connectedCallback() {
+		super.connectedCallback()
+		// re-render every 2 minutes to change the "X minutes ago" label
+		this.tickInterval = setInterval(this.onTick, 2 * 60 *1000)
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback()
+		clearInterval(this.tickInterval)
+	}
+
+	onTick = () => this.requestUpdate()
+
 	static styles = css`
 		:host,
 		* {
@@ -80,26 +93,22 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		:host(.small) {
 			--aspect-ratio: 1 / 1;
 			--flower-header-size: 1rem;
-			--bg-position: center top;
 		}
 
 		:host,
 		:host(.medium) {
 			--aspect-ratio: 4 / 3;
 			--flower-header-size: 1.125rem;
-			--bg-position: center 80%;
 		}
 
 		:host(.large) {
 			--aspect-ratio: 16 / 9;
 			--flower-header-size: 1.5rem;
 			--flower-header-line-height: 2rem;
-			--bg-position: center 70%;
 		}
 
 		ha-card {
 			background-size: cover;
-			background-position: var(--bg-position);
 			position: relative;
 			overflow: hidden;
 		}
@@ -107,13 +116,15 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 			opacity: 0.6;
 		}
 
-			#content {
+			#image {
+				background-size: cover;
+				background-position: center;
 				aspect-ratio: var(--aspect-ratio);
 				max-height: 320px;
 				padding: 1rem;
 				position: relative;
 				display: flex;
-				flex-direction: row-reverse;
+				justify-content: space-between;
 			}
 				awesome-button {
 					width: 2.5rem;
@@ -131,6 +142,14 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 						inset: 0;
 						cursor: pointer;
 					}
+
+			#info {
+				opacity: 0.8;
+				grid-column: span 2;
+				font-size: 12px;
+				font-weight: 400;
+				margin-top: -0.25rem;
+			}
 
 			#details {
 				width: 100%;
@@ -164,19 +183,19 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 			}
 	`
 
-	getImagePath(name, root) {
+	getImagePath(name, root, cacheBustHash) {
 		if (!name) return undefined
 		if (name.startsWith('.') || name.startsWith('/')) return name
 		if (!root.endsWith('/')) root += '/'
 		name = encodeURIComponent(name.toLowerCase())
-		return `${root}${name}.jpg`
+		return `${root}${name}.jpg?cachebust=${cacheBustHash}`
 	}
 
 	get backgroundImage() {
 		return [
 			this.objectUrl,
 			this.customImagePath,
-			`${this.uploadImagePath}?random=${this.lastUploadHash}`,
+			this.uploadImagePath,
 			this.titleImagePath,
 			this.nameImagePath,
 			this.speciesImagePath,
@@ -189,9 +208,13 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 	breakpoints = [200, 300]
 
 	get sizeClass() {
-		if (this.width <= 200) return 'small'
-		if (this.width <= 300) return 'medium'
+		if (this.width < 200) return 'small'
+		if (this.width < 300) return 'medium'
 		return 'large'
+	}
+
+	get showLabels() {
+		return this.width >= 200
 	}
 
 	isDraggingOver = false
@@ -217,7 +240,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 
 	onFileSelect = e => this.handleFiles(e.target.files)
 
-	lastUploadHash = 0
+	lastUploadDate = new Date()
 
 	handleFiles = async files => {
 		if (files.length === 0) return
@@ -225,8 +248,8 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 
 		//http://localhost:3001/flower
 		await api.post(`/flower/${this.entityIdSlug}`, file)
-		this.lastUploadHash = Date.now()
-		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${this.lastUploadHash}`).then(res => res.blob())
+		this.lastUploadDate = Date.now()
+		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${this.lastUploadDate}`).then(res => res.blob())
 		this.objectUrl = URL.createObjectURL(resizedPhotoBlob)
 		this.requestUpdate()
 	}
@@ -247,12 +270,11 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		}
 
 		const [
-			name, species,
 			brightnessMin, brightnessMax,
 			temperatureMin, temperatureMax,
 			moistureMin, moistureMax,
 			conductivityMin, conductivityMax,
-		] = this.dbEntry ?? []
+		] = (this.dbEntry ?? []).slice(2)
 
 		const chartData = [{
 			unit: units.temperature,
@@ -283,7 +305,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		return chartData.map(({unit, val, min, max, icon}) => html`
 			<slick-icon-chart icon="${icon}" .val="${val}" .min="${min}" .max="${max}"
 			title="${val} ${unit} | min ${min} ${unit} | max ${max} ${unit}">
-				${val} ${unit}
+				${this.showLabels ? `${val} ${unit}` : ''} 
 			</slick-icon-chart>
 		`)
 
@@ -302,6 +324,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 
 	render() {
 		const {config, state, entity} = this
+
 		const title = config.title ?? config.name ?? config.species
 
 		this.className = [
@@ -309,13 +332,17 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 			this.isDraggingOver ? 'dragover' : ''
 		].join(' ')
 
+		const sysInfo = `${timeSince(new Date(entity.last_updated))} ${entity.attributes.battery}%`
+
 		return html`
-			<ha-card style="background-image: ${this.backgroundImage}">
-				<div id="content"
+			<ha-card title="${`${sysInfo} ${entity.entity_id.slice(-6)}`}">
+				<div id="image"
+				style="background-image: ${this.backgroundImage}"
 				@dragenter="${this.onDropEnter}"
 				@dragover="${this.onDropEnter}"
 				@dragleave="${this.onDropLeave}"
 				@drop="${this.onDrop}">
+					<span id="info">${sysInfo}</span>
 					${api.connected ? html`
 						<awesome-button icon="mdi:camera-outline">
 							<input type="file" id="file" accept="image/*;capture=camera" @change="${this.onFileSelect}">
@@ -414,7 +441,8 @@ class IconChart extends slickElement() {
 	percentageToColor(val) {
 		if (val <= 0 || val >= 100) return 'red'
 		if (val <= 15 || val >= 85) return 'orange'
-		return 'green'
+		// another 'if' and not just 'else', to prevent having value for 'unavailable'
+		if (val > 15 || val < 85) return 'green'
 	}
 
 	updated(map) {

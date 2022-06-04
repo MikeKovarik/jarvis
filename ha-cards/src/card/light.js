@@ -71,12 +71,11 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 	}
 
 	get error() {
-		//return !this.entity
 		return !!this.errorMessage
 	}
 
 	get errorMessage() {
-		if (!this.entity)
+		if (!this.entity) // todo: this is now handled in setConfig ny throwing error, but error-messages should be thought through again.
 			return 'Not found'
 		if (this.offline)
 			return 'Offline'

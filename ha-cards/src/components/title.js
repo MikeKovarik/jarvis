@@ -9,6 +9,8 @@ class SlickCardTitle extends mixin(LitElement) {
 		icon: {type: String},
 		title: {type: String},
 		subtitle: {type: String},
+		error: {type: Boolean},
+		warning: {type: Boolean},
 	}
 
 	static styles = css`
@@ -37,9 +39,14 @@ class SlickCardTitle extends mixin(LitElement) {
 	`
 
 	render() {
+		const icon = this.error
+			? 'mdi:alert-outline'
+			: this.icon
+
+
 		return html`
 			<div class="header">
-				<ha-icon icon="${this.icon}"></ha-icon>
+				<ha-icon icon="${icon}"></ha-icon>
 				<slot></slot>
 			</div>
 			<div class="title">${this.title}</div>

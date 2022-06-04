@@ -45,7 +45,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 
 	static properties = {
 		loading: {type: Boolean},
-		errorMessage: {type: String},
+		dbErrorMessage: {type: String},
 		dbEntry: {type: Object},
 	}
 
@@ -69,7 +69,28 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 
 			this.loading = false
 		} catch (err) {
-			this.errorMessage = err.message
+			this.dbErrorMessage = err.message
+		}
+	}
+
+	get error() {
+		return !!this.errorMessage
+	}
+
+	get errorMessage() {
+		if (!this.entity) // todo: this is now handled in setConfig ny throwing error, but error-messages should be thought through again.
+			return 'Entity not found'
+
+		if (this.dbErrorMessage)
+			return this.dbErrorMessage
+
+		if (!this.loading && !this.dbEntry) {
+			const {config} = this
+			const names = [config.name, config.species, config.title].filter(a => a)
+			if (names.length)
+				return `Couldn't find "${names.join('" or "')}"`
+			else
+				return `Flower name not defined`
 		}
 	}
 
@@ -194,7 +215,8 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		if (name.startsWith('.') || name.startsWith('/')) return name
 		if (!root.endsWith('/')) root += '/'
 		name = encodeURIComponent(name.toLowerCase())
-		return `${root}${name}.jpg?cachebust=${cacheBustHash}`
+		const filename = `${root}${name}.jpg`
+		return `${filename}?cachebust=${cacheBustHash}`
 	}
 
 	get backgroundImage() {
@@ -255,7 +277,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		//http://localhost:3001/flower
 		await api.post(`/flower/${this.entityIdSlug}`, file)
 		this.lastUploadDate = Date.now()
-		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${this.lastUploadDate}`).then(res => res.blob())
+		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${+this.lastUploadDate}`).then(res => res.blob())
 		this.objectUrl = URL.createObjectURL(resizedPhotoBlob)
 		this.requestUpdate()
 	}
@@ -265,16 +287,6 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 	renderCharts() {
 		const {config, state, entity} = this
 		const attrs = entity.attributes
-        
-		if (this.errorMessage) return this.errorMessage
-
-		if (!this.loading && !this.dbEntry) {
-			const names = [config.name, config.species, config.title].filter(a => a)
-			if (names.length)
-				return `Couldn't find any data for "${names.join('" or "')}"`
-			else
-				return `Couldn't find any data. No flower name was given`
-		}
 
 		const [
 			brightnessMin, brightnessMax,
@@ -336,7 +348,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 
 	render() {
 		if (!this.entity?.attributes) return
-		const {config, state, entity} = this
+		const {config, state, entity, error} = this
 		const attrs = entity.attributes
 
 		const title = config.title ?? config.name ?? config.species
@@ -352,6 +364,14 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		]
 		.filter(a => a)
 		.join(' ')
+
+		if (this.error) return html`
+			<ha-card style="padding: 1rem">
+				<slick-card-title error>
+					${this.errorMessage}
+				</slick-card-title>
+			</ha-card>
+		`
 
 		return html`
 			<ha-card title="${`${sysInfo} ${entity.entity_id.slice(-6)}`}">

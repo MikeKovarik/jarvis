@@ -254,9 +254,10 @@ export class Light extends ZbDevice {
 
 		brightness: val => ({brightness: this.gh2zb._brightness(val)}),
 		on:         val => ({state: this.gh2zb._on(val)}),
-		color: ({temperatureK, spectrumRgb/*, spectrumHsv*/}) => ({
+		// WARNING: GH command has uppercase RGB in spectrumRGB. whereas state returned back to GH has capital Rgb spectrumRgb
+		color: ({temperatureK, spectrumRGB/*, spectrumHsv*/}) => ({
 			...(temperatureK !== undefined ? {color_temp: kelvinToMiredScale(temperatureK)} : {}),
-			...(spectrumRgb  !== undefined ? {color_xy:   rgbToXy(spectrumRgb)} : {}),
+			...(spectrumRGB  !== undefined ? {color_xy:   rgbToXy(spectrumRGB)} : {}),
 			//...(spectrumHsv  !== undefined ? {color_hs:   void(spectrumHsv)} : {}), // todo
 		}),
 	}

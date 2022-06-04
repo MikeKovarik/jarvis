@@ -1,5 +1,5 @@
 import {html, css} from 'lit'
-import {slickElement, hassData, resizeObserver} from '../mixin/mixin.js'
+import {slickElement, hassData, resizeObserver, eventEmitter} from '../mixin/mixin.js'
 import {clamp, DEBUG, timeSince} from '../util/util.js'
 import api from '../util/backend.js'
 
@@ -29,7 +29,13 @@ const dbReady = new Promise(async (resolve, reject) => {
 const getFlowerFileName = str => str?.toLowerCase()
 const getFlowerKey      = str => getFlowerFileName(str)?.replace(/[^a-z ]/g, '')
 
-class FlowerCard extends slickElement(hassData, resizeObserver) {
+/*
+  private _handleClick(): void {
+    fireEvent(this, "hass-more-info", { entityId: this._config!.entity });
+  }
+*/
+
+class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 
 	static entityType = 'plant'
 
@@ -254,10 +260,11 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		this.requestUpdate()
 	}
 
+	openPopup = entityId => this.emit('hass-more-info', {entityId})
+
 	renderCharts() {
 		const {config, state, entity} = this
-		const attrs = entity?.attributes
-		const units = entity?.attributes?.unit_of_measurement_dict
+		const attrs = entity.attributes
         
 		if (this.errorMessage) return this.errorMessage
 
@@ -277,33 +284,38 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		] = (this.dbEntry ?? []).slice(2)
 
 		const chartData = [{
-			unit: units.temperature,
-			val: attrs?.temperature,
+			unit: '°C',
+			val: attrs.temperature ?? '?',
 			min: temperatureMin,
 			max: temperatureMax,
 			icon: "mdi:thermometer-low",
+			entityId: attrs.sensors.temperature,
 		}, {
-			unit: units.brightness,
-			val: attrs?.brightness,
+			unit: 'lx',
+			val: attrs.brightness ?? '?',
 			min: brightnessMin,
 			max: brightnessMax,
 			icon: "hass:white-balance-sunny",
+			entityId: attrs.sensors.brightness,
 		}, {
-			unit: units.moisture,
-			val: attrs?.moisture,
+			unit: '%',
+			val: attrs.moisture ?? '?',
 			min: moistureMin,
 			max: moistureMax,
 			icon: "mdi:water-outline",
+			entityId: attrs.sensors.moisture,
 		}, {
-			unit: units.conductivity,
-			val: attrs?.conductivity,
+			unit: 'µS/cm',
+			val: attrs.conductivity ?? '?',
 			min: conductivityMin,
 			max: conductivityMax,
 			icon: "mdi:emoticon-poop",
+			entityId: attrs.sensors.conductivity,
 		}]
 
-		return chartData.map(({unit, val, min, max, icon}) => html`
+		return chartData.map(({unit, val, min, max, icon, entityId}) => html`
 			<slick-icon-chart icon="${icon}" .val="${val}" .min="${min}" .max="${max}"
+			@click="${() => this.openPopup(entityId)}"
 			title="${val} ${unit} | min ${min} ${unit} | max ${max} ${unit}">
 				${this.showLabels ? `${val} ${unit}` : ''} 
 			</slick-icon-chart>
@@ -313,17 +325,19 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 		return html`
 			${DEBUG ? html`
 				<pre style="grid-column: span 2; white-space: pre-line; font-size: 12px">
-					temperature:  ${attrs?.temperature}  (min ${temperatureMin} max ${temperatureMax})
-					brightness:   ${attrs?.brightness}   (min ${brightnessMin} max ${brightnessMax})
-					moisture:     ${attrs?.moisture}     (min ${moistureMin} max ${moistureMax})
-					conductivity: ${attrs?.conductivity} (min ${conductivityMin} max ${conductivityMax})
+					temperature:  ${attrs.temperature}  (min ${temperatureMin} max ${temperatureMax})
+					brightness:   ${attrs.brightness}   (min ${brightnessMin} max ${brightnessMax})
+					moisture:     ${attrs.moisture}     (min ${moistureMin} max ${moistureMax})
+					conductivity: ${attrs.conductivity} (min ${conductivityMin} max ${conductivityMax})
 				</pre>
 			` : ''}
 		`
 	}
 
 	render() {
+		if (!this.entity?.attributes) return
 		const {config, state, entity} = this
+		const attrs = entity.attributes
 
 		const title = config.title ?? config.name ?? config.species
 
@@ -332,7 +346,12 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 			this.isDraggingOver ? 'dragover' : ''
 		].join(' ')
 
-		const sysInfo = `${timeSince(new Date(entity.last_updated))} ${entity.attributes.battery}%`
+		const sysInfo = [
+			entity.last_updated && timeSince(new Date(entity.last_updated)),
+			(attrs.battery ?? '?') + '%',
+		]
+		.filter(a => a)
+		.join(' ')
 
 		return html`
 			<ha-card title="${`${sysInfo} ${entity.entity_id.slice(-6)}`}">
@@ -342,7 +361,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver) {
 				@dragover="${this.onDropEnter}"
 				@dragleave="${this.onDropLeave}"
 				@drop="${this.onDrop}">
-					<span id="info">${sysInfo}</span>
+					<span id="info" @click="${() => this.openPopup(attrs.sensors.battery)}">${sysInfo}</span>
 					${api.connected ? html`
 						<awesome-button icon="mdi:camera-outline">
 							<input type="file" id="file" accept="image/*;capture=camera" @change="${this.onFileSelect}">
@@ -439,7 +458,8 @@ class IconChart extends slickElement() {
 	`
 
 	percentageToColor(val) {
-		if (val <= 0 || val >= 100) return 'red'
+		if (typeof val !== 'number' || Number.isNaN(val)) return
+		if (val < 0 || val > 100) return 'red'
 		if (val <= 15 || val >= 85) return 'orange'
 		// another 'if' and not just 'else', to prevent having value for 'unavailable'
 		if (val > 15 || val < 85) return 'green'
@@ -453,7 +473,7 @@ class IconChart extends slickElement() {
 		} else {
 			const shiftedVal = this.val - this.min
 			const shiftedMax = this.max - this.min
-			this.percentage = clamp((shiftedVal / shiftedMax) * 100, 0, 100)
+			this.percentage = (shiftedVal / shiftedMax) * 100
 			this.color = this.percentageToColor(this.percentage)
 		}
 	}

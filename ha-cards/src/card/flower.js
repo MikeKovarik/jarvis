@@ -84,14 +84,14 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		if (this.dbErrorMessage)
 			return this.dbErrorMessage
 
-		if (!this.loading && !this.dbEntry) {
-			const {config} = this
-			const names = [config.name, config.species, config.title].filter(a => a)
-			if (names.length)
-				return `Couldn't find "${names.join('" or "')}"`
-			else
-				return `Flower name not defined`
-		}
+		const {config} = this
+		const names = [config.name, config.species, config.title].filter(a => a)
+
+		if (names.length === 0)
+			return `Flower name not defined`
+
+		if (names.length > 0 && !this.loading && !this.dbEntry)
+			return `Couldn't find "${names.join('" or "')}"`
 	}
 
 	connectedCallback() {
@@ -367,6 +367,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		.filter(a => a)
 		.join(' ')
 
+        console.log('~ this.error', this.error)
 		if (this.error) return html`
 			<ha-card style="padding: 1rem">
 				<slick-card-title error>
@@ -374,8 +375,6 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 				</slick-card-title>
 			</ha-card>
 		`
-
-        console.log('~ this.backgroundImage', this.backgroundImage)
 
 		return html`
 			<ha-card title="${`${sysInfo} ${entity.entity_id.slice(-6)}`}">

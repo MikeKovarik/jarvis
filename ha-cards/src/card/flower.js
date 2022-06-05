@@ -367,7 +367,6 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		.filter(a => a)
 		.join(' ')
 
-        console.log('~ this.error', this.error)
 		if (this.error) return html`
 			<ha-card style="padding: 1rem">
 				<slick-card-title error>

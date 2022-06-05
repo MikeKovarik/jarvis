@@ -216,7 +216,9 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		if (!root.endsWith('/')) root += '/'
 		name = encodeURIComponent(name.toLowerCase())
 		const filename = `${root}${name}.jpg`
-		return `${filename}?cachebust=${cacheBustHash}`
+		let url = filename
+		if (cacheBustHash) url += `?cachebust=${sanitizeUrl(cacheBustHash)}`
+		return url
 	}
 
 	get backgroundImage() {
@@ -229,7 +231,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 			this.speciesImagePath,
 		]
 		.filter(a => a)
-		.map(path => `url('${path}')`)
+		.map(createCssUrl)
 		.join(', ')
 	}
 
@@ -277,7 +279,7 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		//http://localhost:3001/flower
 		await api.post(`/flower/${this.entityIdSlug}`, file)
 		this.lastUploadDate = Date.now()
-		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${+this.lastUploadDate}`).then(res => res.blob())
+		const resizedPhotoBlob = await fetch(this.uploadImagePath + `?random=${sanitizeUrl(this.lastUploadDate)}`).then(res => res.blob())
 		this.objectUrl = URL.createObjectURL(resizedPhotoBlob)
 		this.requestUpdate()
 	}
@@ -372,6 +374,8 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 				</slick-card-title>
 			</ha-card>
 		`
+
+        console.log('~ this.backgroundImage', this.backgroundImage)
 
 		return html`
 			<ha-card title="${`${sysInfo} ${entity.entity_id.slice(-6)}`}">
@@ -510,6 +514,17 @@ class IconChart extends slickElement() {
 
 }
 
+const createCssUrl = path => {
+	let separator = path.includes(`'`) ? `"` : `'`
+	return `url(${separator}${path}${separator})`
+}
+
+const sanitizeUrl = arg => {
+	arg = arg.getTime?.() ?? arg
+	arg = arg.toString?.() ?? arg
+	arg = encodeURIComponent(arg)
+	return arg
+}
 
 /*
 EXAMPLE OF THE FORMAT:

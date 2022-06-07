@@ -1,8 +1,18 @@
 import {html, css} from 'lit'
-import {slickElement, hassData, resizeObserver, eventEmitter} from '../mixin/mixin.js'
-import {clamp, DEBUG, timeSince} from '../util/util.js'
+import {slickElement, hassData, resizeObserver, eventEmitter, history} from '../mixin/mixin.js'
+import {DEBUG, timeSince} from '../util/util.js'
 import api from '../util/backend.js'
+import { Chart, registerables } from 'chart.js'
+import 'moment'
+import 'chartjs-adapter-moment'
 
+
+Chart.register(...registerables)
+
+let cardTools
+customElements.whenDefined('card-tools').then(() => {
+	cardTools = customElements.get('card-tools')
+})
 
 const isDev = !window.hassConnection
 const localPath = isDev ? 'http://localhost/' : '/local/'
@@ -28,12 +38,6 @@ const dbReady = new Promise(async (resolve, reject) => {
 
 const getFlowerFileName = str => str?.toLowerCase()
 const getFlowerKey      = str => getFlowerFileName(str)?.replace(/[^a-z ]/g, '')
-
-/*
-  private _handleClick(): void {
-    fireEvent(this, "hass-more-info", { entityId: this._config!.entity });
-  }
-*/
 
 class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 
@@ -284,7 +288,18 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		this.requestUpdate()
 	}
 
-	openPopup = entityId => this.emit('hass-more-info', {entityId})
+	openPopup = (entityId, min, max, absMin, absMax) => {
+		//this.emit('hass-more-info', {entityId})
+
+		cardTools.popUp('Last 2 days', {
+			type: 'custom:slick-flower-chart',
+			entity: entityId,
+			min,
+			max,
+			absMin,
+			absMax
+		})
+	}
 
 	renderCharts() {
 		const {config, state, entity} = this
@@ -297,39 +312,48 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 			conductivityMin, conductivityMax,
 		] = (this.dbEntry ?? []).slice(2)
 
+		const temperatureCfg = config.temperature ?? config.temp
+		const brightnessCfg = config.brightness ?? config.light
+		const moistureCfg = config.moisture ?? config.water
+		const conductivityCfg = config.conductivity ?? config.fertility ?? config.fert
+
 		const chartData = [{
 			unit: '°C',
 			val: attrs.temperature ?? '?',
-			min: temperatureMin,
-			max: temperatureMax,
+			min: temperatureCfg?.min ?? temperatureMin,
+			max: temperatureCfg?.max ?? temperatureMax,
 			icon: "mdi:thermometer-low",
 			entityId: attrs.sensors.temperature,
+			absMin: 0,
+			absMax: 45,
 		}, {
 			unit: 'lx',
 			val: attrs.brightness ?? '?',
-			min: brightnessMin,
-			max: brightnessMax,
+			min: brightnessCfg?.min ?? brightnessMin,
+			max: brightnessCfg?.max ?? brightnessMax,
 			icon: "hass:white-balance-sunny",
 			entityId: attrs.sensors.brightness,
 		}, {
 			unit: '%',
 			val: attrs.moisture ?? '?',
-			min: moistureMin,
-			max: moistureMax,
+			min: moistureCfg?.min ?? moistureMin,
+			max: moistureCfg?.max ?? moistureMax,
 			icon: "mdi:water-outline",
 			entityId: attrs.sensors.moisture,
+			absMin: 0,
+			absMax: 100,
 		}, {
 			unit: 'µS/cm',
 			val: attrs.conductivity ?? '?',
-			min: conductivityMin,
-			max: conductivityMax,
+			min: conductivityCfg?.min ?? conductivityMin,
+			max: conductivityCfg?.max ?? conductivityMax,
 			icon: "mdi:emoticon-poop",
 			entityId: attrs.sensors.conductivity,
 		}]
 
-		return chartData.map(({unit, val, min, max, icon, entityId}) => html`
+		return chartData.map(({unit, val, min, max, icon, entityId, absMin, absMax}) => html`
 			<slick-icon-chart icon="${icon}" .val="${val}" .min="${min}" .max="${max}"
-			@click="${() => this.openPopup(entityId)}"
+			@click="${() => this.openPopup(entityId, min, max, absMin, absMax)}"
 			title="${val} ${unit} | min ${min} ${unit} | max ${max} ${unit}">
 				${this.showLabels ? `${val} ${unit}` : ''} 
 			</slick-icon-chart>
@@ -402,6 +426,24 @@ class FlowerCard extends slickElement(hassData, resizeObserver, eventEmitter) {
 		<br>battery: ${attrs?.battery} ${units.battery}
 		*/
 	}
+
+/*
+	fetchHistoryData(entityId) {
+		const {sensors} = this.entity.attributes
+
+		const entities = [
+			sensors.brightness,
+			sensors.conductivity,
+			sensors.moisture,
+			sensors.temperature,
+		].join(',')
+
+		const end = new Date
+		const start = new Date(end - (1000 * 60 * 60 * 24 * 2))
+
+		const history = await this.fetchHistory(start, end, entities)
+	}
+*/
 
 }
 
@@ -512,6 +554,198 @@ class IconChart extends slickElement() {
 
 }
 
+
+class FlowerChart extends slickElement(history, hassData) {
+
+	static entityType = 'sensor'
+
+	static styles = css`
+		:host,
+		* {
+			box-sizing: border-box;
+		}
+		:host {
+			display: block;
+			position: relative;
+			padding: 1rem;
+		}
+	`
+
+	setConfig(arg) {
+		super.setConfig(arg)
+		setTimeout(() => {
+			// wait for defining this.hass
+			this.historyDataReady = this.fetchHistoryData()
+		})
+	}
+
+	async fetchHistoryData() {
+
+		const end = new Date
+		const start = new Date(end - (1000 * 60 * 60 * 24 * 2))
+
+		const [entityData] = await this.fetchHistory(start, end, this.config.entity)
+		this.historyData = entityData
+		return this.historyData
+	}
+
+	connectedCallback() {
+		super.connectedCallback()
+		setTimeout(this.onConnectedTimeout)
+	}
+
+	onConnectedTimeout = async () => {
+		//const canvas = document.createElement('canvas')
+		const canvas = this.renderRoot.querySelector('canvas')
+		//this.append(canvas)
+		await this.historyDataReady
+		this.renderHistoryChart(canvas, this.historyData)
+	}
+
+	renderHistoryChart(ctx, historyData) {
+		const datapoints = historyData.map(h => ({
+			x: +(new Date(h.last_changed)),
+			y: Number(h.state),
+		})).filter(o => !Number.isNaN(o.y))
+
+		const values = datapoints.map(o => o.y)
+
+		const {min, max, absMin, absMax} = this.config
+		const gradientStops = calculateGradientStops(values, min, max, absMin, absMax)
+
+		function createGradient(ctx, chartArea) {
+			const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top)
+			for (const [stop, color] of gradientStops)
+				gradient.addColorStop(stop, color)
+			return gradient
+		}
+
+		let width, height, gradient
+
+		function getGradient(ctx, chartArea) {
+			const chartWidth = chartArea.right - chartArea.left
+			const chartHeight = chartArea.bottom - chartArea.top
+
+			if (!gradient || width !== chartWidth || height !== chartHeight) {
+				// Create the gradient because this is either the first render
+				// or the size of the chart has changed
+				width = chartWidth
+				height = chartHeight
+				gradient = createGradient(ctx, chartArea)
+			}
+
+			return gradient
+		}
+
+		const config = {
+			type: 'line',
+			data: {
+				labels: datapoints.map(v => ''),
+				datasets: [{
+					data: datapoints,
+					fill: false,
+					radius: 0, // turns off points
+					borderWidth: 2,
+					cubicInterpolationMode: 'monotone',
+					tension: 0.4,
+					borderColor: context => {
+						const {ctx, chartArea} = context.chart
+						// This case happens on initial chart load
+						if (!chartArea) return
+						return getGradient(ctx, chartArea)
+					},
+				}]
+			},
+			options: {
+				responsive: true,
+				plugins: {
+					legend: {
+						display: false,
+					},
+				},
+				interaction: {
+					intersect: false,
+				},
+				scales: {
+					x: {
+						display: false,
+						type: 'time',
+						min: datapoints[0].x,
+						max: datapoints[datapoints.length - 1].x,
+					},
+					y: {
+						display: true,
+						//min: 0,
+						//max: 100,
+						suggestedMin: this.config.absMin,
+						suggestedMax: this.config.absMax
+					}
+				}
+			},
+		}
+
+		const myChart = new Chart(ctx, config)
+	}
+
+	render() {
+		return html`<canvas></canvas>`
+		//return html`<ha-card><canvas></canvas></ha-card>`
+	}
+	//<canvas id="chart" width="200" height="100"></canvas>
+
+}
+
+const calculateGradientStops = (values, redValMin, redValMax, chartMin, chartMax) => {
+	const valMin = Math.min(...values)
+	const valMax = Math.max(...values)
+
+	chartMin = chartMin ?? valMin
+	chartMax = chartMax ?? valMax
+
+	const [greenValMin, greenValMax] = calculateOrangeRange(redValMin, redValMax)
+
+	const redRatioMin    = map(redValMin, chartMin, chartMax, 0, 1)
+	const redRatioMax    = map(redValMax, chartMin, chartMax, 0, 1)
+	const greenRatioMin  = map(greenValMin, chartMin, chartMax, 0, 1)
+	const greenRatioMax  = map(greenValMax, chartMin, chartMax, 0, 1)
+	const orangeRatioMin = redRatioMin + ((greenRatioMin - redRatioMin) / 2)
+	const orangeRatioMax = redRatioMax + ((greenRatioMax - redRatioMax) / 2)
+
+	let stops = [
+		[redRatioMin, 'red'],
+		[orangeRatioMin, 'orange'],
+		[greenRatioMin, 'green'],
+		[greenRatioMax, 'green'],
+		[orangeRatioMax, 'orange'],
+		[redRatioMax, 'red'],
+	]
+
+	stops = stops.filter(([stop]) => stop >= 0 && stop <= 1)
+
+	if (stops.length === 0) {
+		let avgValue = (valMin + valMax) / 2
+		if (greenValMin <= avgValue && avgValue <= greenValMax)
+			return [[0, 'green']]
+		else
+			return [[0, 'red']]
+	}
+
+	return stops
+}
+
+const orangeRangePercent = 15
+
+const calculateOrangeRange = (min, max) => {
+	const shiftedMax = max - min
+	const scaledOrange = shiftedMax * (orangeRangePercent / 100)
+	return [
+		min + scaledOrange,
+		max - scaledOrange,
+	]
+}
+
+const map = (value, x1, y1, x2, y2) => (value - x1) * (y2 - x2) / (y1 - x1) + x2
+
 const createCssUrl = path => {
 	let separator = path.includes(`'`) ? `"` : `'`
 	return `url(${separator}${path}${separator})`
@@ -537,4 +771,5 @@ first is name, second is species
 
 
 customElements.define('slick-icon-chart', IconChart)
+customElements.define('slick-flower-chart', FlowerChart)
 customElements.define('slick-flower-card', FlowerCard)

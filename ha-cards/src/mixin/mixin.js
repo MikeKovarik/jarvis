@@ -29,6 +29,7 @@ export const slickElement = (...args) => {
 
 export * from './eventEmitter.js'
 export * from './hass.js'
+export * from './history.js'
 export * from './onOff.js'
 export * from './holdGesture.js'
 export * from './resizeObserver.js'

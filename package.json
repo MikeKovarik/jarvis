@@ -8,7 +8,7 @@
   },
   "scripts": {
     "z2m:dev": "node --no-expose-wasm lan-hub/zigbee2mqtt.js",
-    "hub:dev": "node --no-expose-wasm lan-hub/index.js",
+    "hub:dev": "node --no-expose-wasm lan-hub/index.js dev",
     "proxy-hub:dev": "node internet-proxy/proxy-hub.cjs",
     "proxy-hass:dev": "node internet-proxy/proxy-hass.cjs",
     "proxy-test:dev": "node internet-proxy/proxy-test.cjs",

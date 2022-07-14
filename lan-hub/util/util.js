@@ -4,6 +4,7 @@ import path from 'path'
 import {fileURLToPath} from 'url'
 import chokidar from 'chokidar'
 import YAML from 'yaml'
+import EventEmitter from 'events'
 import '../util/proto.js'
 
 export const HOSTNAME_PREFIX = 'jarvis-'
@@ -23,17 +24,28 @@ export function getAbsolutePath(importMetaUrl, relativePath) {
 }
 
 export function readYaml(filePath, cb) {
-	let handler = handlerFactory(filePath, cb, YAML)
+	const handler = handlerFactory(filePath, cb, YAML)
 	return handler(readFileSync(filePath))
 }
 
 export function readJson(filePath, cb) {
-	let handler = handlerFactory(filePath, cb, JSON)
+	const handler = handlerFactory(filePath, cb, JSON)
 	return handler(readFileSync(filePath))
 }
 
 export function readAndWatchJson(filePath, cb) {
-	let handler = handlerFactory(filePath, cb, JSON)
+	const handler = handlerFactory(filePath, cb, JSON)
+	watch(filePath, handler)
+	return handler(readFileSync(filePath))
+}
+
+export function readAndWatchYaml(filePath, cb) {
+	const handler = handlerFactory(filePath, cb, YAML)
+	watch(filePath, handler)
+	return handler(readFileSync(filePath))
+}
+
+function watch(filePath, handler) {
 	let watcher = chokidar.watch(filePath, { persistent: true })
 	watchedFiles.push(filePath)
 	watcher.on('change', async () => {
@@ -41,7 +53,6 @@ export function readAndWatchJson(filePath, cb) {
 		await Promise.timeout(100)
 		handler(await readFile(filePath))
 	})
-	return handler(readFileSync(filePath))
 }
 
 function handlerFactory(filePath, cb, parser = JSON) {
@@ -114,3 +125,27 @@ export async function callWithExpBackoff(fn, attempt = 0, maxAttempts = 7) {
 		return callWithExpBackoff(fn, attempt + 1)
 	}
 }
+
+export function mapReplace(map, newEntries) {
+	map.clear()
+	for (let entry of newEntries) map.set(...entry)
+	map.emit?.('change')
+}
+
+export class EventedMap extends Map {
+
+	emitter = new EventEmitter
+
+	replace(newEntries) {
+		mapReplace(this, newEntries)
+	}
+
+}
+
+Object.entries(EventEmitter.prototype).map(([key, val]) => {
+	if (typeof val === 'function') {
+		EventedMap.prototype[key] = function(...args) {
+			this.emitter[key](...args)
+		}
+	}
+})

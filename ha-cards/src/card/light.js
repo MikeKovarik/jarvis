@@ -93,9 +93,11 @@ class LightCard extends slickElement(hassData, onOff, eventEmitter, holdGesture)
 	}
 
 	get online() {
-		return this.entity?.attributes
-			&& 'linkquality' in this.entity?.attributes
-			&& this.entity?.attributes.linkquality !== null
+		return !!this.entity?.attributes && (
+		'linkquality' in this.entity?.attributes
+			? this.entity?.attributes.linkquality !== null
+			: true
+		)
 	}
 
 	get brightness() {

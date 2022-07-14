@@ -1,5 +1,6 @@
 import './jarvisCore.js'
 import './zigbeeCore.js'
+import './hassCore.js'
 //import './util/gitLog.js'
 
 process.on('unhandledRejection', error => {

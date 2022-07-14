@@ -1,5 +1,6 @@
 import actions from './actions.js'
 import * as scenes from './scenes.js'
+import * as scenes2 from './scenes2.js'
 import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
 
 

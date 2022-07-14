@@ -4,6 +4,7 @@ import {getAbsolutePath, readJson, readYaml} from './util/util.js'
 
 let envPath = getAbsolutePath(import.meta.url, '../.env')
 const [,,envType] = process.argv
+console.log('~ envType', envType)
 if (envType) envPath += `.${envType}`
 
 dotenv.config({path: envPath})

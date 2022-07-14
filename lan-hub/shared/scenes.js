@@ -1,5 +1,5 @@
 import devices from '../shared/devices.js'
-import {getAbsolutePath, readAndWatchJson} from '../util/util.js'
+import {getAbsolutePath, readAndWatchJson, mapReplace} from '../util/util.js'
 
 
 const isString = arg => typeof arg === 'string'
@@ -38,9 +38,4 @@ export function set(sceneName) {
 function sanitizeNumberOrBool(arg) {
 	let num = Number(arg)
 	return Number.isNaN(num) ? arg === 'true' : num
-}
-
-function mapReplace(map, newEntries) {
-	map.clear()
-	for (let entry of newEntries) map.set(...entry)
 }

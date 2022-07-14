@@ -51,6 +51,7 @@ export const hassData = Base => class extends Base {
 
 	set hass(hass) {
 		this._hass = hass
+		window.hass = hass
 		const {states} = hass
 		const {state, config, entityType} = this
 		const entityNameStub = `.${this.entityId}_`

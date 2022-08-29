@@ -17,14 +17,18 @@ export async function callService(service, body) {
 		options.body = JSON.stringify(body)
 	}
 
-    console.log('calling service', service, options.body)
+	const id = Math.round(Math.random() * 1000).toString()
+    console.log(`callService: ${id}`, service, options.body)
     console.log(url)
+	console.time(`callService: ${id}`)
+	let result
 	try {
-		return await fetch(url, options).then(res => res.json())
+		result = await fetch(url, options).then(res => res.json())
 	} catch (err) {
 		console.error(err)
 	}
-    console.log('called service', service)
+	console.timeEnd(`callService: ${id}`)
+	return result
 }
 
 /*

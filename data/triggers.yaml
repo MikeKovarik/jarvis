@@ -5,7 +5,7 @@
   - bedroom_bulbs
   - bedroom_dim
   - bedroom_cosy
-  on: bedroom_partial_full
+  on: bedroom_partial_on
   off: bedroom_partial_off
   brightness_move_up: bedroom_all_on
   brightness_move_down: bedroom_all_off
@@ -41,6 +41,7 @@
   - styrbar-4
   scenes:
   - living_room_bulbs
+  - living_room_bulbs_2
   - living_room_dim  # dim variant of normal on state
   - living_room_cosy # stringlights & bulbstring
   on: living_room_partial_on

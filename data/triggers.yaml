@@ -4,7 +4,6 @@
   scenes:
   - bedroom_bulbs
   - bedroom_dim
-  - bedroom_cosy
   on: bedroom_partial_on
   off: bedroom_partial_off
   brightness_move_up: bedroom_all_on

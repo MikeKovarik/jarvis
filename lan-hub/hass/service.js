@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 import config from '../config.js'
 
 
-export function callService(service, body) {
+export async function callService(service, body) {
 	const url = `${process.env.HASS_API_URL}/services/${service.replace(/\./g, '/')}`
 	
 	const options = {
@@ -17,13 +17,14 @@ export function callService(service, body) {
 		options.body = JSON.stringify(body)
 	}
 
-    console.log('callService')
-    console.log('url', url)
-    console.log('options', options)
-
-	return fetch(url, options)
-		.then(res => res.json())
-		.catch(console.error)
+    console.log('calling service', service, options.body)
+    console.log(url)
+	try {
+		return await fetch(url, options).then(res => res.json())
+	} catch (err) {
+		console.error(err)
+	}
+    console.log('called service', service)
 }
 
 /*

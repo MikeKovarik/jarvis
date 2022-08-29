@@ -13,7 +13,7 @@ export const app = express()
 app.use(bodyParser.json({limit: '100mb'}))
 app.use(bodyParser.urlencoded({limit: '100mb', extended: true}))
 app.set('json spaces', 2)
-app.use(express.static(path.join(__dirname, '../static')))
+app.use(express.static(path.join(__dirname, '../../static')))
 
 app.listen(config.appPort, () => {
 	console.log(`Listening on port ${config.appPort}`)

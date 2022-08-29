@@ -1,0 +1,54 @@
+- source:
+  - styrbar-1
+  - styrbar-2
+  scenes:
+  - bedroom_bulbs
+  - bedroom_dim
+  - bedroom_cosy
+  on: bedroom_partial_full
+  off: bedroom_partial_off
+  brightness_move_up: bedroom_all_on
+  brightness_move_down: bedroom_all_off
+
+#- source: switch-4
+#  brightness_move_up: cagelight:100
+#  on: cagelight:true
+#  off: cagelight:false
+
+- source:
+  - switch-9
+  - switch-10
+  on: terrace_on
+  off: terrace_off
+
+- source: shortcut-1
+  on: bedroom_reading
+  brightness_move_up: bedroom_off
+
+#- source: shortcut-5
+#  on: bedroom_cosy
+#  brightness_move_up: bedroom_off
+
+- source:
+  - shortcut-2
+  on: bedroom_cosy_bedside
+  brightness_move_up: all_off
+
+
+
+- source:
+  - styrbar-3
+  - styrbar-4
+  scenes:
+  - living_room_bulbs
+  - living_room_dim  # dim variant of normal on state
+  - living_room_cosy # stringlights & bulbstring
+  on: living_room_partial_on
+  off: living_room_partial_off
+  brightness_move_up: living_room_all_on
+  brightness_move_down: living_room_all_off
+
+- source:
+  - shortcut-3
+  on: living_room_cosy
+  brightness_move_up: living_room_all_off

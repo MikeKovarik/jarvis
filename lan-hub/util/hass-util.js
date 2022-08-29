@@ -1,6 +1,3 @@
-import fetch from 'node-fetch'
-import config from '../config.js'
-
 export const nameToEntityId = name => name.toLowerCase().replace(/\s+/g, '_')
 export const sceneNameToEntityId = name => 'scene.' + nameToEntityId(name)
 
